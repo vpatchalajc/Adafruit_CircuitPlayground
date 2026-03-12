@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/vue3';
 
 const meta = {
-  title: 'Projects/Veera Playground/Welcome',
+  title: 'PROJECTS/Veera Playground/Welcome',
   render: () => ({
     template: '<button style="background: blue; color: white; padding: 20px;">Hello from Veera!</button>',
   }),
