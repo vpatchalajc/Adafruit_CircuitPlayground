@@ -12,7 +12,7 @@ defineOptions({
   name: 'MfaConfigurationPage',
 });
 
-const factors = ref<MfaFactor[]>(defaultMfaFactors);
+const factors = ref<MfaFactor[]>(defaultMfaFactors.map((item) => ({ ...item })));
 
 function updateFactorEnabled(id: string, enabled: boolean) {
   const f = factors.value.find((x) => x.id === id);

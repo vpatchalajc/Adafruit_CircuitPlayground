@@ -8,7 +8,6 @@ import {
   UserGroupIcon,
   Squares2X2Icon,
   ComputerDesktopIcon,
-  DevicePhoneMobileIcon,
   GlobeAltIcon,
 } from '@heroicons/vue/24/outline';
 import type { Component } from 'vue';
@@ -33,7 +32,7 @@ export interface MfaFactor {
 const userPortal = { icon: markRaw(UserGroupIcon), label: 'User Portal' };
 const ssoApplications = { icon: markRaw(Squares2X2Icon), label: 'SSO Applications' };
 const windows = { icon: markRaw(ComputerDesktopIcon), label: 'Windows' };
-const macos = { icon: markRaw(DevicePhoneMobileIcon), label: 'MacOS' };
+const macos = { icon: markRaw(ComputerDesktopIcon), label: 'MacOS' };
 const linux = { icon: markRaw(ComputerDesktopIcon), label: 'Linux' };
 const chrome = { icon: markRaw(GlobeAltIcon), label: 'Chrome' };
 const edge = { icon: markRaw(GlobeAltIcon), label: 'Edge' };
