@@ -128,20 +128,11 @@ const menuItems = [
       { label: 'Access Requests', leftIcon: markRaw(ClipboardDocumentCheckIcon) },
       { label: 'AI & SaaS Management', leftIcon: markRaw(SaasManagementIcon) },
       { label: 'Password Vault', leftIcon: markRaw(PasswordManagerIcon), isNew: true },
+      { label: 'Privileged Resources', leftIcon: markRaw(ServerStackIcon), isNew: true },
       { separator: true },
       { label: 'LDAP' },
       { label: 'RADIUS' },
-    ],
-  },
-  {
-    label: 'PAM',
-    leftIcon: markRaw(ServerStackIcon),
-    isNew: true,
-    items: [
-      { label: 'Privileged Resources', isNew: true },
-      { label: 'Blocking Rules', isNew: true },
-      { label: 'Session History', isNew: true },
-      { label: 'Jump Servers', isNew: true },
+      { label: 'PAM', isNew: true },
     ],
   },
   {
@@ -257,6 +248,11 @@ const AdminPortalStory = defineComponent({
     const passwordVaultEnabled = ref(false);
     const currentPage = ref('home');
     const activeItem = ref('home');
+    const passwordVaultTab = ref('overview');
+    const passwordVaultTabs = [
+      { label: 'Overview', value: 'overview' },
+      { label: 'Credentials', value: 'credentials' },
+    ];
     const privilegedResourcesTab = ref('overview');
     const privilegedResourcesTabs = [
       { label: 'Overview', value: 'overview' },
@@ -264,11 +260,17 @@ const AdminPortalStory = defineComponent({
       { label: 'Servers', value: 'servers' },
       { label: 'Databases', value: 'databases' },
     ];
+    const pamTab = ref('blocking-rules');
+    const pamTabs = [
+      { label: 'Blocking Rules', value: 'blocking-rules' },
+      { label: 'Session History', value: 'session-history' },
+      { label: 'Jump Servers', value: 'jump-servers' },
+    ];
 
     const pageKeyByLabel: Record<string, string> = {
       Home: 'home',
       'Password Vault': 'password-vault',
-      PAM: 'pam-privileged-resources',
+      PAM: 'pam',
       'Privileged Resources': 'pam-privileged-resources',
       'Blocking Rules': 'pam-blocking-rules',
       'Session History': 'pam-session-history',
@@ -278,6 +280,7 @@ const AdminPortalStory = defineComponent({
     const pageTitleByKey: Record<string, string> = {
       home: 'Home',
       'password-vault': 'Password Vault',
+      pam: 'PAM',
       'pam-privileged-resources': 'Privileged Resources',
       'pam-blocking-rules': 'Blocking Rules',
       'pam-session-history': 'Session History',
@@ -322,14 +325,26 @@ const AdminPortalStory = defineComponent({
 
     function goToPage(pageKey: string, activeLabel: string) {
       currentPage.value = pageKey;
+      if (pageKey === 'password-vault') {
+        passwordVaultTab.value = 'overview';
+      }
       if (pageKey === 'pam-privileged-resources') {
         privilegedResourcesTab.value = 'overview';
+      }
+      if (pageKey === 'pam') {
+        pamTab.value = 'blocking-rules';
       }
       setActiveItemFromLabel(activeLabel);
     }
 
+    function goToPamTab(tabValue: string) {
+      currentPage.value = 'pam';
+      pamTab.value = tabValue;
+      setActiveItemFromLabel('PAM');
+    }
+
     function goToSessionHistory() {
-      goToPage('pam-session-history', 'Session History');
+      goToPamTab('session-history');
     }
 
     function onNavClick(processedItem: { item?: { label?: string } }) {
@@ -470,23 +485,37 @@ const AdminPortalStory = defineComponent({
       { icon: markRaw(DocumentTextIcon), ariaLabel: 'View keystroke audit' },
     ];
 
-    const availabilityTokenMapping: Record<string, { label: string; severity: string }> = {
+    const credentialActionButtons = [
+      { icon: markRaw(PencilSquareIcon), ariaLabel: 'Edit' },
+      { icon: markRaw(TrashIcon), ariaLabel: 'Delete' },
+    ];
+
+    const credentialActionMenuItems = [
+      { id: 'view', label: 'View Details' },
+      { id: 'rotate', label: 'Rotate Secret' },
+      { id: 'audit', label: 'Audit Activity' },
+    ];
+
+    const privilegedAvailabilityTokenMapping: Record<string, { label: string; severity: string }> = {
       'In Use': { label: 'In Use', severity: 'danger' },
       Available: { label: 'Available', severity: 'success' },
     };
 
+    const jumpServerAvailabilityTokenMapping: Record<string, { label: string; severity: string }> = {
+      Offline: { label: 'Offline', severity: 'danger' },
+      Online: { label: 'Online', severity: 'success' },
+    };
+
     const blockingSeverityTokenMapping = {
       Alert: { label: 'Alert', severity: 'warn' },
+      Warning: { label: 'Warning', severity: 'warn' },
       Critical: { label: 'Critical', severity: 'danger' },
       Emergency: { label: 'Emergency', severity: 'danger' },
-      Warning: { label: 'Warning', severity: 'warn' },
     };
 
     const sessionStatusTokenMapping = {
-      Active: { label: 'Active', severity: 'success' },
-      Ended: { label: 'Ended', severity: 'info' },
-      Failed: { label: 'Failed', severity: 'danger' },
-      Recording: { label: 'Recording', severity: 'info' },
+      Available: { label: 'Available', severity: 'success' },
+      Pending: { label: 'Pending', severity: 'warning' },
     };
 
     const pamStatCards = [
@@ -496,6 +525,129 @@ const AdminPortalStory = defineComponent({
       { header: 'Active Sessions', value: '91', icon: markRaw(PowerIcon) },
       { header: 'Blocking Rules', value: '11', icon: markRaw(NoSymbolIcon) },
       { header: 'Jump Servers', value: '5', icon: markRaw(ArrowsRightLeftIcon) },
+    ];
+
+    const passwordVaultStatCards = [
+      {
+        header: 'Password Vault Users',
+        value: '128',
+        icon: markRaw(UsersIcon),
+        changeValue: '12%',
+        changeLabel: 'vs last month',
+        showArrow: true,
+      },
+      {
+        header: 'Total Secrets',
+        value: '3,482',
+        icon: markRaw(ClipboardDocumentListIcon),
+        changeValue: '9%',
+        changeLabel: 'vs last month',
+        showArrow: true,
+      },
+    ];
+
+    const passwordVaultLoginCount = 26;
+    const passwordVaultLastLogins = [
+      { name: 'Sarah Chen', email: 'sarah.chen@acme.com', time: '8 minutes ago' },
+      { name: 'Marcus Rodriguez', email: 'marcus.rodriguez@acme.com', time: '36 minutes ago' },
+      { name: 'Emily Johnson', email: 'emily.johnson@acme.com', time: '2 hours ago' },
+      { name: 'Michael Smith', email: 'michael.smith@acme.com', time: '16 hours ago' },
+      { name: 'Olivia Patel', email: 'olivia.patel@acme.com', time: '22 hours ago' },
+    ];
+
+    const expiringSecretsSummary = { count: 9, label: 'Expiring in the next 7 days' };
+    const expiringSecrets = [
+      { name: 'AWS Root Key', metaLabel: 'Expires in', metaValue: '3 days' },
+      { name: 'Okta Admin', metaLabel: 'Expires in', metaValue: '5 days' },
+      { name: 'Finance MySQL', metaLabel: 'Expires in', metaValue: '6 days' },
+      { name: 'GitHub Deploy Key', metaLabel: 'Expires in', metaValue: '7 days' },
+      { name: 'Azure AD App', metaLabel: 'Expires in', metaValue: '7 days' },
+    ];
+
+    const weakSecretsSummary = { count: 11, label: 'Secrets' };
+    const weakSecrets = [
+      { name: 'AWS Billing', risk: 'Weak API Key' },
+      { name: 'Payroll Admin', risk: 'Weak Password' },
+      { name: 'ServiceNow Admin', risk: 'Weak Password' },
+      { name: 'Datadog Root', risk: 'Weak API Key' },
+    ];
+
+    const unusedSecretsSummary = { count: 14, label: 'Unused' };
+    const unusedSecrets = [
+      { name: 'AWS Ops Key', metaLabel: 'Last Used', metaValue: '46 days ago' },
+      { name: 'Stripe Admin', metaLabel: 'Last Used', metaValue: '123 days ago' },
+      { name: 'Grafana Admin', metaLabel: 'Last Used', metaValue: '53 days ago' },
+      { name: 'MySQL Prod', metaLabel: 'Last Used', metaValue: '66 days ago' },
+    ];
+
+    const credentialTypeOptions = [
+      { label: 'Password', value: 'Password' },
+      { label: 'Key', value: 'Key' },
+      { label: 'MFA', value: 'MFA' },
+    ];
+
+    const credentialTagOptions = ['cloud', 'linux', 'windows', 'prod', 'infra'];
+
+    const credentialsData = [
+      { name: 'AWS Root Key', type: 'Key', expirationDate: 'May 12, 2026', tags: 'cloud, prod', lastUsed: 'Apr 6, 2026', favorite: true },
+      { name: 'GitHub Deploy Key', type: 'Key', expirationDate: '--', tags: 'infra', lastUsed: 'Apr 4, 2026', favorite: false },
+      { name: 'Ubuntu MFA', type: 'MFA', expirationDate: '--', tags: 'linux', lastUsed: 'Apr 1, 2026', favorite: false },
+      { name: 'Windows Admin', type: 'Password', expirationDate: 'Jun 2, 2026', tags: 'windows, prod', lastUsed: 'Apr 5, 2026', favorite: true },
+      { name: 'MySQL Root', type: 'Password', expirationDate: '--', tags: 'prod', lastUsed: '--', favorite: false },
+      { name: 'Okta Admin', type: 'Password', expirationDate: 'May 30, 2026', tags: 'cloud', lastUsed: 'Apr 6, 2026', favorite: true },
+      { name: 'Prod SSH Key', type: 'Key', expirationDate: '--', tags: 'infra, prod', lastUsed: 'Mar 28, 2026', favorite: false },
+      { name: 'Azure Service Principal', type: 'Key', expirationDate: 'Jul 9, 2026', tags: 'cloud', lastUsed: 'Apr 2, 2026', favorite: false },
+      { name: 'Datadog API Key', type: 'Key', expirationDate: '--', tags: 'infra', lastUsed: 'Mar 22, 2026', favorite: false },
+      { name: 'Linux Root', type: 'Password', expirationDate: '--', tags: 'linux', lastUsed: '--', favorite: false },
+      { name: 'Billing Portal', type: 'Password', expirationDate: 'May 18, 2026', tags: '--', lastUsed: 'Apr 6, 2026', favorite: false },
+      { name: 'GCP Admin', type: 'Password', expirationDate: '--', tags: 'cloud', lastUsed: 'Apr 3, 2026', favorite: true },
+      { name: 'Jira Admin', type: 'Password', expirationDate: '--', tags: '--', lastUsed: 'Mar 30, 2026', favorite: false },
+      { name: 'Snowflake Admin', type: 'Password', expirationDate: 'Jun 15, 2026', tags: 'cloud, prod', lastUsed: '--', favorite: false },
+      { name: 'VPN Credentials', type: 'Password', expirationDate: '--', tags: 'prod', lastUsed: 'Apr 1, 2026', favorite: false },
+      { name: 'Backup Agent Key', type: 'Key', expirationDate: 'Aug 1, 2026', tags: 'infra', lastUsed: 'Mar 18, 2026', favorite: false },
+      { name: 'Finance Portal', type: 'MFA', expirationDate: '--', tags: 'prod', lastUsed: 'Apr 4, 2026', favorite: false },
+      { name: 'CI Runner Key', type: 'Key', expirationDate: '--', tags: 'infra', lastUsed: 'Apr 5, 2026', favorite: false },
+      { name: 'Staging SSH Key', type: 'Key', expirationDate: '--', tags: 'infra', lastUsed: '--', favorite: false },
+      { name: 'Docker Hub', type: 'Password', expirationDate: '--', tags: '--', lastUsed: 'Mar 27, 2026', favorite: false },
+    ];
+
+    const secretsAddedBars = [
+      { date: 'Aug 1', value: 68 },
+      { date: 'Sep 1', value: 74 },
+      { date: 'Oct 1', value: 88 },
+      { date: 'Nov 1', value: 92 },
+      { date: 'Dec 1', value: 124 },
+      { date: 'Jan 1', value: 158 },
+      { date: 'Feb 1', value: 142 },
+      { date: 'Mar 1', value: 176 },
+      { date: 'Apr 1', value: 168 },
+      { date: 'Apr 7', value: 132 },
+    ];
+    const maxSecretsAddedValue = computed(() =>
+      Math.max(...secretsAddedBars.map(item => item.value)),
+    );
+
+    const credentialColumns = [
+      {
+        field: 'name',
+        header: 'Name',
+        sortable: true,
+        component: markRaw(DataTableCellLink),
+        componentProps: (sp: { data: Record<string, unknown> }) => ({
+          label: sp.data.name,
+          href: '#',
+        }),
+      },
+      { field: 'type', header: 'Type', sortable: true, component: markRaw(DataTableCellText), componentProps: (sp: { data: Record<string, unknown> }) => ({ label: sp.data.type }) },
+      { field: 'expirationDate', header: 'Expiration Date', sortable: true, component: markRaw(DataTableCellText), componentProps: (sp: { data: Record<string, unknown> }) => ({ label: sp.data.expirationDate }) },
+      { field: 'tags', header: 'Tags', component: markRaw(DataTableCellText), componentProps: (sp: { data: Record<string, unknown> }) => ({ label: sp.data.tags }) },
+      { field: 'lastUsed', header: 'Last Time Used', sortable: true, component: markRaw(DataTableCellText), componentProps: (sp: { data: Record<string, unknown> }) => ({ label: sp.data.lastUsed }) },
+      {
+        field: 'actions',
+        header: 'Actions',
+        component: markRaw(ActionMenuCell),
+        componentProps: () => ({ iconButtons: credentialActionButtons, menuItems: credentialActionMenuItems }),
+      },
     ];
 
     const mostAccessedResources = [
@@ -634,7 +786,7 @@ const AdminPortalStory = defineComponent({
         component: markRaw(DataTableCellStatus),
         componentProps: (sp: { data: Record<string, unknown> }) => {
           const status = String(sp.data.status ?? '');
-          return availabilityTokenMapping[status] ?? { label: status, severity: 'info' };
+          return privilegedAvailabilityTokenMapping[status] ?? { label: status, severity: 'info' };
         },
       },
       { field: 'lastConnection', header: 'Last Connection', component: markRaw(DataTableCellText), componentProps: (sp: { data: Record<string, unknown> }) => ({ label: sp.data.lastConnection }) },
@@ -657,7 +809,7 @@ const AdminPortalStory = defineComponent({
         component: markRaw(DataTableCellStatus),
         componentProps: (sp: { data: Record<string, unknown> }) => {
           const status = String(sp.data.status ?? '');
-          return availabilityTokenMapping[status] ?? { label: status, severity: 'info' };
+          return privilegedAvailabilityTokenMapping[status] ?? { label: status, severity: 'info' };
         },
       },
       { field: 'lastConnection', header: 'Last Connection', component: markRaw(DataTableCellText), componentProps: (sp: { data: Record<string, unknown> }) => ({ label: sp.data.lastConnection }) },
@@ -682,7 +834,15 @@ const AdminPortalStory = defineComponent({
     const blockingRulesColumns = [
       { field: 'name', header: 'Name', component: markRaw(DataTableCellText), componentProps: (sp: { data: Record<string, unknown> }) => ({ label: sp.data.name, description: sp.data.type }) },
       { field: 'priority', header: 'Priority', component: markRaw(DataTableCellText), componentProps: (sp: { data: Record<string, unknown> }) => ({ label: sp.data.priority }) },
-      { field: 'severity', header: 'Severity', component: markRaw(DataTableCellStatus), tokenMapping: blockingSeverityTokenMapping },
+      {
+        field: 'severity',
+        header: 'Severity',
+        component: markRaw(DataTableCellStatus),
+        componentProps: (sp: { data: Record<string, unknown> }) => {
+          const severity = String(sp.data.severity ?? '');
+          return blockingSeverityTokenMapping[severity] ?? { label: severity, severity: 'info' };
+        },
+      },
       { field: 'tags', header: 'Tags', component: markRaw(DataTableCellText), componentProps: (sp: { data: Record<string, unknown> }) => ({ label: sp.data.tags }) },
       {
         field: 'actions',
@@ -693,11 +853,16 @@ const AdminPortalStory = defineComponent({
     ];
 
     const sessionHistoryData = [
-      { name: 'Finance Admin Console', sessionId: 'S-10291', connector: 'Connector-01', credential: 'aws-root', category: 'Website', email: 'gabriel.ramos@jumpcloud.com', start: 'Apr 6, 2026 09:42', end: 'Apr 6, 2026 10:01', status: 'Ended' },
-      { name: 'Prod PostgreSQL', sessionId: 'S-10288', connector: 'Connector-02', credential: 'svc-pam', category: 'Computer', email: 'albert.weihermann@jumpcloud.com', start: 'Apr 6, 2026 08:12', end: 'Apr 6, 2026 08:54', status: 'Ended' },
-      { name: 'HR Admin Console', sessionId: 'S-10277', connector: 'Connector-03', credential: 'hr-admin', category: 'Website', email: 'gabriel.ramos@jumpcloud.com', start: 'Apr 5, 2026 17:20', end: 'Apr 5, 2026 17:43', status: 'Ended' },
-      { name: 'EU MSSQL', sessionId: 'S-10261', connector: 'Connector-04', credential: 'db-admin', category: 'Computer', email: 'albert.weihermann@jumpcloud.com', start: 'Apr 5, 2026 14:02', end: 'Apr 5, 2026 14:36', status: 'Failed' },
-      { name: 'Payroll Admin Console', sessionId: 'S-10244', connector: 'Connector-01', credential: 'payroll-admin', category: 'Website', email: 'gabriel.ramos@jumpcloud.com', start: 'Apr 4, 2026 12:18', end: 'Apr 4, 2026 12:49', status: 'Ended' },
+      { name: 'Finance Admin Console', sessionId: 'S-10291', connector: 'Connector-01', credential: 'aws-root', category: 'Website', email: 'gabriel.ramos@jumpcloud.com', start: 'Apr 6, 2026 09:42', end: 'Apr 6, 2026 10:01', status: 'Available' },
+      { name: 'Prod PostgreSQL', sessionId: 'S-10288', connector: 'Connector-02', credential: 'svc-pam', category: 'Computer', email: 'albert.weihermann@jumpcloud.com', start: 'Apr 6, 2026 08:12', end: 'Apr 6, 2026 08:54', status: 'Available' },
+      { name: 'HR Admin Console', sessionId: 'S-10277', connector: 'Connector-03', credential: 'hr-admin', category: 'Website', email: 'gabriel.ramos@jumpcloud.com', start: 'Apr 5, 2026 17:20', end: 'Apr 5, 2026 17:43', status: 'Available' },
+      { name: 'EU MSSQL', sessionId: 'S-10261', connector: 'Connector-04', credential: 'db-admin', category: 'Computer', email: 'albert.weihermann@jumpcloud.com', start: 'Apr 5, 2026 14:02', end: 'Apr 5, 2026 14:36', status: 'Available' },
+      { name: 'Payroll Admin Console', sessionId: 'S-10244', connector: 'Connector-01', credential: 'payroll-admin', category: 'Website', email: 'gabriel.ramos@jumpcloud.com', start: 'Apr 4, 2026 12:18', end: 'Apr 4, 2026 12:49', status: 'Available' },
+      { name: 'AWS Billing Console', sessionId: 'S-10238', connector: 'Connector-02', credential: 'billing-admin', category: 'Website', email: 'bruno.souza@jumpcloud.com', start: 'Apr 4, 2026 10:05', end: 'Apr 4, 2026 10:28', status: 'Available' },
+      { name: 'EU Jump Server', sessionId: 'S-10222', connector: 'Connector-04', credential: 'js-admin', category: 'Computer', email: 'albert.weihermann@jumpcloud.com', start: 'Apr 3, 2026 15:14', end: 'Apr 3, 2026 15:49', status: 'Available' },
+      { name: 'Okta Admin', sessionId: 'S-10215', connector: 'Connector-03', credential: 'okta-admin', category: 'Website', email: 'gabriel.ramos@jumpcloud.com', start: 'Apr 3, 2026 11:42', end: 'Apr 3, 2026 12:07', status: 'Available' },
+      { name: 'EU Reporting DB', sessionId: 'S-10203', connector: 'Connector-04', credential: 'reporting-read', category: 'Computer', email: 'bruno.souza@jumpcloud.com', start: 'Apr 2, 2026 09:30', end: 'Apr 2, 2026 10:02', status: 'Available' },
+      { name: 'PagerDuty Admin', sessionId: 'S-10196', connector: 'Connector-01', credential: 'pd-admin', category: 'Website', email: 'albert.weihermann@jumpcloud.com', start: 'Apr 1, 2026 16:20', end: 'Apr 1, 2026 16:44', status: 'Available' },
     ];
 
     const sessionHistoryColumns = [
@@ -727,10 +892,10 @@ const AdminPortalStory = defineComponent({
     ];
 
     const jumpServersData = [
-      { name: 'JS-AWS-E1', address: '10.14.8.10', connector: 'Connector-01', tags: 'AWS, Prod', lastConnection: 'Today 9:31 AM', status: 'In Use' },
-      { name: 'JS-EU-DC', address: '10.22.17.40', connector: 'Connector-04', tags: 'EU, DC', lastConnection: 'Mar 24, 2026', status: 'Available' },
-      { name: 'JS-PROD-01', address: '10.33.2.18', connector: 'Connector-02', tags: 'Prod, PCI', lastConnection: 'Today 8:45 AM', status: 'In Use' },
-      { name: 'JS-LEGACY-01', address: '10.40.11.7', connector: 'Connector-05', tags: 'Legacy', lastConnection: 'Mar 20, 2026', status: 'Available' },
+      { name: 'JS-AWS-E1', address: '10.14.8.10', connector: 'Connector-01', tags: 'AWS, Prod', lastConnection: 'Today 9:31 AM', status: 'Offline' },
+      { name: 'JS-EU-DC', address: '10.22.17.40', connector: 'Connector-04', tags: 'EU, DC', lastConnection: 'Mar 24, 2026', status: 'Online' },
+      { name: 'JS-PROD-01', address: '10.33.2.18', connector: 'Connector-02', tags: 'Prod, PCI', lastConnection: 'Today 8:45 AM', status: 'Offline' },
+      { name: 'JS-LEGACY-01', address: '10.40.11.7', connector: 'Connector-05', tags: 'Legacy', lastConnection: 'Mar 20, 2026', status: 'Online' },
     ];
 
     const jumpServersColumns = [
@@ -745,7 +910,7 @@ const AdminPortalStory = defineComponent({
         component: markRaw(DataTableCellStatus),
         componentProps: (sp: { data: Record<string, unknown> }) => {
           const status = String(sp.data.status ?? '');
-          return availabilityTokenMapping[status] ?? { label: status, severity: 'info' };
+          return jumpServerAvailabilityTokenMapping[status] ?? { label: status, severity: 'info' };
         },
       },
       {
@@ -891,6 +1056,90 @@ const AdminPortalStory = defineComponent({
       if (chipId === 'jump-server') appliedResourceJumpServers.value = [];
     }
 
+    const showCredentialFilterDialog = ref(false);
+    const appliedCredentialTypes = ref([] as string[]);
+    const appliedCredentialTags = ref([] as string[]);
+    const draftCredentialTypes = ref([] as string[]);
+    const draftCredentialTags = ref([] as string[]);
+    const credentialSearch = ref('');
+
+    const credentialDraftFilterCount = computed(() => {
+      let count = 0;
+      if (draftCredentialTypes.value.length > 0) count += 1;
+      if (draftCredentialTags.value.length > 0) count += 1;
+      return count;
+    });
+
+    const credentialFilterChips = computed(() => {
+      const chips: { id: string; key: string; operator: string; value: string }[] = [];
+      if (appliedCredentialTypes.value.length > 0) {
+        chips.push({
+          id: 'type',
+          key: 'Type',
+          operator: 'is',
+          value: formatGroupedValues(appliedCredentialTypes.value),
+        });
+      }
+      if (appliedCredentialTags.value.length > 0) {
+        chips.push({
+          id: 'tags',
+          key: 'Tags',
+          operator: 'is',
+          value: formatGroupedValues(appliedCredentialTags.value),
+        });
+      }
+      return chips;
+    });
+
+    const filteredCredentialsData = computed(() => {
+      if (!credentialSearch.value) return credentialsData;
+      const searchTerm = credentialSearch.value.toLowerCase();
+      return credentialsData.filter(item =>
+        [item.name, item.type, item.tags, item.lastUsed, item.expirationDate]
+          .join(' ')
+          .toLowerCase()
+          .includes(searchTerm),
+      );
+    });
+
+    function openCredentialFilterDialog() {
+      draftCredentialTypes.value = [...appliedCredentialTypes.value];
+      draftCredentialTags.value = [...appliedCredentialTags.value];
+      showCredentialFilterDialog.value = true;
+    }
+
+    function applyCredentialFilters() {
+      appliedCredentialTypes.value = [...draftCredentialTypes.value];
+      appliedCredentialTags.value = [...draftCredentialTags.value];
+      showCredentialFilterDialog.value = false;
+    }
+
+    function cancelCredentialFilters() {
+      showCredentialFilterDialog.value = false;
+    }
+
+    function clearDraftCredentialFilters() {
+      draftCredentialTypes.value = [];
+      draftCredentialTags.value = [];
+    }
+
+    function clearAllCredentialFilters() {
+      appliedCredentialTypes.value = [];
+      appliedCredentialTags.value = [];
+    }
+
+    function removeCredentialFilterChip(chip: { id?: string }) {
+      const chipId = chip.id ?? '';
+      if (chipId === 'type') appliedCredentialTypes.value = [];
+      if (chipId === 'tags') appliedCredentialTags.value = [];
+    }
+
+    function handleCredentialSearch(value: string) {
+      credentialSearch.value = value;
+    }
+
+    function openCredentialDialog() {}
+
     const showWebShieldDialog = ref(false);
     const showServersDialog = ref(false);
     const showDatabasesDialog = ref(false);
@@ -974,10 +1223,31 @@ const AdminPortalStory = defineComponent({
       activeItem,
       privilegedResourcesTab,
       privilegedResourcesTabs,
+      pamTab,
+      pamTabs,
       pageTitle,
       overlayConfig,
       overlayActive,
+      passwordVaultTab,
+      passwordVaultTabs,
       pamStatCards,
+      passwordVaultStatCards,
+      passwordVaultLoginCount,
+      passwordVaultLastLogins,
+      expiringSecretsSummary,
+      expiringSecrets,
+      weakSecretsSummary,
+      weakSecrets,
+      unusedSecretsSummary,
+      unusedSecrets,
+      credentialTypeOptions,
+      credentialTagOptions,
+      credentialColumns,
+      filteredCredentialsData,
+      draftCredentialTypes,
+      draftCredentialTags,
+      secretsAddedBars,
+      maxSecretsAddedValue,
       mostAccessedResources,
       recentConnections,
       sessionActivityBars,
@@ -1013,6 +1283,17 @@ const AdminPortalStory = defineComponent({
       clearDraftResourceFilters,
       clearAllResourceFilters,
       removeResourceFilterChip,
+      credentialFilterChips,
+      credentialDraftFilterCount,
+      showCredentialFilterDialog,
+      openCredentialFilterDialog,
+      applyCredentialFilters,
+      cancelCredentialFilters,
+      clearDraftCredentialFilters,
+      clearAllCredentialFilters,
+      removeCredentialFilterChip,
+      handleCredentialSearch,
+      openCredentialDialog,
       showWebShieldDialog,
       showServersDialog,
       showDatabasesDialog,
@@ -1025,6 +1306,7 @@ const AdminPortalStory = defineComponent({
       sessionActivityCollapsed,
       lastRecordingCollapsed,
       goToSessionHistory,
+      goToPamTab,
       openWebShieldDialog,
       openServersDialog,
       openDatabasesDialog,
@@ -1053,6 +1335,22 @@ const AdminPortalStory = defineComponent({
             :tabs="privilegedResourcesTabs"
             :activeTab="privilegedResourcesTab"
             @update:activeTab="privilegedResourcesTab = $event"
+          />
+        </template>
+        <template v-else-if="currentPage === 'pam'">
+          <PageHeader
+            :title="pageTitle"
+            :tabs="pamTabs"
+            :activeTab="pamTab"
+            @update:activeTab="pamTab = $event"
+          />
+        </template>
+        <template v-else-if="currentPage === 'password-vault' && !overlayConfig">
+          <PageHeader
+            :title="pageTitle"
+            :tabs="passwordVaultTabs"
+            :activeTab="passwordVaultTab"
+            @update:activeTab="passwordVaultTab = $event"
           />
         </template>
         <PageHeader v-else :title="pageTitle" />
@@ -1206,10 +1504,336 @@ const AdminPortalStory = defineComponent({
           </template>
         </DashboardPageLayout>
 
-        <ListPageLayout
-          v-else-if="currentPage === 'pam-privileged-resources'"
-          class="w-full! h-full!"
-        >
+        <template v-else-if="currentPage === 'password-vault'">
+          <div style="background-color: #FFFFFF;">
+            <DashboardPageLayout
+              v-if="passwordVaultTab === 'overview'"
+              class="w-full! h-full!"
+            >
+              <div class="flex flex-col gap-lg w-full">
+                <div class="grid grid-cols-[max-content_1fr] gap-6 items-stretch">
+                  <div class="flex flex-col gap-6 items-start">
+                    <DashboardStatCard
+                      v-for="stat in passwordVaultStatCards"
+                      :key="stat.header"
+                      :header="stat.header"
+                      :value="stat.value"
+                      :icon="stat.icon"
+                      :changeValue="stat.changeValue"
+                      :changeLabel="stat.changeLabel"
+                      :showArrow="stat.showArrow"
+                      class="w-fit h-fit"
+                    />
+                  </div>
+
+                  <CollapsiblePanel header="Secrets Added Over Time" class="w-full h-full">
+                    <template #titleicon="iconProps">
+                      <ChartBarSquareIcon :class="iconProps.class" />
+                    </template>
+                    <div class="flex flex-col h-full">
+                      <div class="flex flex-col gap-sm flex-1">
+                        <div
+                          v-for="item in secretsAddedBars"
+                          :key="item.date"
+                          class="flex items-center gap-sm"
+                        >
+                          <div class="w-12 text-body-sm text-neutral-subtle text-right shrink-0">
+                            {{ item.date }}
+                          </div>
+                          <div class="flex-1">
+                            <div class="w-full h-4 rounded-sm bg-neutral-surface overflow-hidden">
+                              <div
+                                class="h-4 rounded-sm bg-branding-base"
+                                :style="{ width: ((item.value / maxSecretsAddedValue) * 100) + '%' }"
+                              />
+                            </div>
+                          </div>
+                          <div class="w-8 text-body-sm text-neutral-base text-right shrink-0">
+                            {{ item.value }}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </CollapsiblePanel>
+                </div>
+
+                <div class="grid grid-cols-2 gap-6">
+                  <CollapsiblePanel header="Last Logins" class="w-full overflow-hidden flex flex-col h-[264px]">
+                    <template #actions>
+                      <PvButton label="View All" severity="secondary" variant="outlined" size="small" />
+                    </template>
+                    <div class="flex flex-col gap-sm h-full">
+                      <div class="flex items-center gap-xs flex-shrink-0">
+                        <span class="text-body-sm-bold text-error-base">{{ passwordVaultLoginCount }}</span>
+                        <span class="text-body-sm text-neutral-base">Logins in the last 48 hours</span>
+                      </div>
+                      <div class="flex flex-col divide-y divide-neutral-default_solid border-t border-neutral-default_solid flex-1 overflow-y-auto">
+                        <div
+                          v-for="login in passwordVaultLastLogins"
+                          :key="login.email"
+                          class="flex items-center justify-between py-2"
+                        >
+                          <div class="flex flex-col">
+                            <span class="text-body-sm-semi-bold text-neutral-base">{{ login.name }}</span>
+                            <span class="text-body-xs text-neutral-subtle">{{ login.email }}</span>
+                          </div>
+                          <div class="flex items-center gap-xs text-body-sm">
+                            <span class="text-neutral-subtle">Logged in:</span>
+                            <span class="text-body-sm-semi-bold text-error-base">{{ login.time }}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </CollapsiblePanel>
+
+                  <CollapsiblePanel header="Expiring Secrets" class="w-full overflow-hidden flex flex-col h-[264px]">
+                    <template #actions>
+                      <PvButton label="View All" severity="secondary" variant="outlined" size="small" />
+                    </template>
+                    <div class="flex flex-col gap-sm h-full">
+                      <div class="flex items-center gap-xs flex-shrink-0">
+                        <span class="text-body-sm-bold text-error-base">{{ expiringSecretsSummary.count }}</span>
+                        <span class="text-body-sm text-neutral-base">{{ expiringSecretsSummary.label }}</span>
+                      </div>
+                      <div class="flex flex-col divide-y divide-neutral-default_solid border-t border-neutral-default_solid flex-1 overflow-y-auto">
+                        <div
+                          v-for="secret in expiringSecrets"
+                          :key="secret.name"
+                          class="flex items-center justify-between py-3"
+                        >
+                          <span class="text-body-sm-semi-bold text-neutral-base">{{ secret.name }}</span>
+                          <div class="flex items-center gap-xs text-body-sm">
+                            <span class="text-neutral-subtle">{{ secret.metaLabel }}</span>
+                            <span class="text-body-sm-semi-bold text-error-base">{{ secret.metaValue }}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </CollapsiblePanel>
+                </div>
+
+                <div class="grid grid-cols-2 gap-6">
+                  <CollapsiblePanel header="Weak Secrets" class="w-full overflow-hidden flex flex-col h-[264px]">
+                    <template #actions>
+                      <PvButton label="View All" severity="secondary" variant="outlined" size="small" />
+                    </template>
+                    <div class="flex flex-col gap-sm h-full">
+                      <div class="flex items-center gap-xs flex-shrink-0">
+                        <span class="text-body-sm-bold text-error-base">{{ weakSecretsSummary.count }}</span>
+                        <span class="text-body-sm text-neutral-base">{{ weakSecretsSummary.label }}</span>
+                      </div>
+                      <div class="flex flex-col divide-y divide-neutral-default_solid border-t border-neutral-default_solid flex-1 overflow-y-auto">
+                        <div
+                          v-for="secret in weakSecrets"
+                          :key="secret.name"
+                          class="flex items-center justify-between py-3"
+                        >
+                          <span class="text-body-sm-semi-bold text-neutral-base">{{ secret.name }}</span>
+                          <span class="text-body-sm-semi-bold text-error-base">{{ secret.risk }}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </CollapsiblePanel>
+
+                  <CollapsiblePanel header="Unused Secrets" class="w-full overflow-hidden flex flex-col h-[264px]">
+                    <template #actions>
+                      <PvButton label="View All" severity="secondary" variant="outlined" size="small" />
+                    </template>
+                    <div class="flex flex-col gap-sm h-full">
+                      <div class="flex items-center gap-xs flex-shrink-0">
+                        <span class="text-body-sm-bold text-error-base">{{ unusedSecretsSummary.count }}</span>
+                        <span class="text-body-sm text-neutral-base">{{ unusedSecretsSummary.label }}</span>
+                      </div>
+                      <div class="flex flex-col divide-y divide-neutral-default_solid border-t border-neutral-default_solid flex-1 overflow-y-auto">
+                        <div
+                          v-for="secret in unusedSecrets"
+                          :key="secret.name"
+                          class="flex items-center justify-between py-3"
+                        >
+                          <span class="text-body-sm-semi-bold text-neutral-base">{{ secret.name }}</span>
+                          <div class="flex items-center gap-xs text-body-sm">
+                            <span class="text-neutral-subtle">{{ secret.metaLabel }}</span>
+                            <span class="text-body-sm-semi-bold text-error-base">{{ secret.metaValue }}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </CollapsiblePanel>
+                </div>
+              </div>
+            </DashboardPageLayout>
+
+            <ListPageLayout
+              v-else-if="passwordVaultTab === 'credentials'"
+              class="w-full! h-full!"
+            >
+              <div class="flex flex-col h-full relative">
+                <template v-if="passwordVaultTab === 'credentials'">
+                  <div class="flex flex-col h-full min-h-0">
+                    <CircuitDataTable
+                      :columns="credentialColumns"
+                      :data="filteredCredentialsData"
+                      :card="true"
+                      :scrollable="true"
+                      scrollHeight="flex"
+                      :paginator="true"
+                      :rows="100"
+                      :pt="{
+                        root: { class: 'flex flex-col h-full min-h-0' },
+                        tableContainer: { class: 'flex-1 min-h-0 overflow-auto' },
+                        footer: { class: 'shrink-0' },
+                      }"
+                      :ptOptions="{ mergeSections: true, mergeProps: true }"
+                    >
+                      <template #toolbar>
+                        <DataTableToolbar
+                          addButtonLabel="Add Credential"
+                          searchPlaceholder="Search credentials..."
+                          :showAddButton="true"
+                          :showFilterButton="true"
+                          :showRefreshButton="false"
+                          :showColumnsButton="false"
+                          :showDownloadButton="false"
+                          :showSaveViewButton="false"
+                          :activeFilters="credentialFilterChips"
+                          :maxVisibleFilters="5"
+                          @add="openCredentialDialog"
+                          @search="handleCredentialSearch"
+                          @filter="openCredentialFilterDialog"
+                          @clear-all="clearAllCredentialFilters"
+                          @filter-remove="removeCredentialFilterChip"
+                        />
+                      </template>
+                    </CircuitDataTable>
+                  </div>
+                </template>
+              </div>
+            </ListPageLayout>
+
+            <PvDialog
+              v-model:visible="showCredentialFilterDialog"
+              :draggable="false"
+              modal
+              header="Apply filters"
+              :style="{ width: '560px' }"
+              @update:visible="!$event && cancelCredentialFilters()"
+            >
+              <template #closeicon><XMarkIcon /></template>
+              <div class="flex flex-col gap-md">
+                <FormField label="Type">
+                  <template #default="{ inputId }">
+                    <PvMultiSelect
+                      :id="inputId"
+                      v-model="draftCredentialTypes"
+                      :options="credentialTypeOptions"
+                      optionLabel="label"
+                      optionValue="value"
+                      placeholder="All types"
+                      :maxSelectedLabels="2"
+                      class="w-full"
+                    />
+                  </template>
+                </FormField>
+                <FormField label="Tags">
+                  <template #default="{ inputId }">
+                    <PvMultiSelect
+                      :id="inputId"
+                      v-model="draftCredentialTags"
+                      :options="credentialTagOptions"
+                      placeholder="All tags"
+                      :maxSelectedLabels="2"
+                      class="w-full"
+                    />
+                  </template>
+                </FormField>
+              </div>
+              <template #footer>
+                <div class="flex items-center flex-1 min-w-0">
+                  <span class="text-body-sm text-neutral-subtle">{{ credentialDraftFilterCount }} Filters applied</span>
+                </div>
+                <div class="flex gap-sm shrink-0">
+                  <PvButton label="Cancel" severity="secondary" variant="text" @click="cancelCredentialFilters" />
+                  <PvButton label="Clear All" severity="secondary" variant="outlined" @click="clearDraftCredentialFilters" />
+                  <PvButton label="Apply" @click="applyCredentialFilters" />
+                </div>
+              </template>
+            </PvDialog>
+      </div>
+    </template>
+
+        <ListPageLayout v-else-if="currentPage === 'pam'" class="w-full! h-full!">
+          <div v-if="pamTab === 'blocking-rules'" class="flex flex-col h-full relative">
+            <CircuitDataTable
+              :columns="blockingRulesColumns"
+              :data="blockingRulesData"
+              :card="true"
+              :scrollable="true"
+              scrollHeight="flex"
+              :paginator="true"
+              :rows="10"
+            >
+              <template #toolbar>
+                <DataTableToolbar
+                  addButtonLabel="Add Blocking Rule"
+                  :showAddButton="true"
+                  :showFilterButton="false"
+                  :showRefreshButton="false"
+                  :showColumnsButton="false"
+                  :showDownloadButton="false"
+                  :showSaveViewButton="false"
+                />
+              </template>
+            </CircuitDataTable>
+          </div>
+          <div v-else-if="pamTab === 'session-history'" class="flex flex-col h-full relative">
+            <CircuitDataTable
+              :columns="sessionHistoryColumns"
+              :data="sessionHistoryData"
+              :card="true"
+              :scrollable="true"
+              scrollHeight="flex"
+              :paginator="true"
+              :rows="10"
+            >
+              <template #toolbar>
+                <DataTableToolbar
+                  :showAddButton="false"
+                  :showFilterButton="false"
+                  :showRefreshButton="false"
+                  :showColumnsButton="false"
+                  :showDownloadButton="true"
+                  :showSaveViewButton="false"
+                  :exportOptions="sessionHistoryExportOptions"
+                />
+              </template>
+            </CircuitDataTable>
+          </div>
+          <div v-else class="flex flex-col h-full relative">
+            <CircuitDataTable
+              :columns="jumpServersColumns"
+              :data="jumpServersData"
+              :card="true"
+              :scrollable="true"
+              scrollHeight="flex"
+              :paginator="true"
+              :rows="10"
+            >
+              <template #toolbar>
+                <DataTableToolbar
+                  addButtonLabel="Add"
+                  :showAddButton="true"
+                  :showFilterButton="false"
+                  :showRefreshButton="false"
+                  :showColumnsButton="false"
+                  :showDownloadButton="false"
+                  :showSaveViewButton="false"
+                />
+              </template>
+            </CircuitDataTable>
+          </div>
+        </ListPageLayout>
+
+        <ListPageLayout v-else-if="currentPage === 'pam-privileged-resources'" class="w-full! h-full!">
           <div class="flex flex-col h-full relative">
             <template v-if="privilegedResourcesTab === 'web-shield'">
               <div class="flex flex-col h-full min-h-0">
@@ -1716,83 +2340,6 @@ const AdminPortalStory = defineComponent({
           </PvDialog>
         </ListPageLayout>
 
-        <ListPageLayout v-else-if="currentPage === 'pam-blocking-rules'" class="w-full! h-full!">
-          <div class="flex flex-col h-full relative">
-            <CircuitDataTable
-              :columns="blockingRulesColumns"
-              :data="blockingRulesData"
-              :card="true"
-              :scrollable="true"
-              scrollHeight="flex"
-              :paginator="true"
-              :rows="10"
-            >
-              <template #toolbar>
-                <DataTableToolbar
-                  addButtonLabel="Add Blocking Rule"
-                  :showAddButton="true"
-                  :showFilterButton="false"
-                  :showRefreshButton="false"
-                  :showColumnsButton="false"
-                  :showDownloadButton="false"
-                  :showSaveViewButton="false"
-                />
-              </template>
-            </CircuitDataTable>
-          </div>
-        </ListPageLayout>
-
-        <ListPageLayout v-else-if="currentPage === 'pam-session-history'" class="w-full! h-full!">
-          <div class="flex flex-col h-full relative">
-            <CircuitDataTable
-              :columns="sessionHistoryColumns"
-              :data="sessionHistoryData"
-              :card="true"
-              :scrollable="true"
-              scrollHeight="flex"
-              :paginator="true"
-              :rows="10"
-            >
-              <template #toolbar>
-                <DataTableToolbar
-                  :showAddButton="false"
-                  :showFilterButton="false"
-                  :showRefreshButton="false"
-                  :showColumnsButton="false"
-                  :showDownloadButton="true"
-                  :showSaveViewButton="false"
-                  :exportOptions="sessionHistoryExportOptions"
-                />
-              </template>
-            </CircuitDataTable>
-          </div>
-        </ListPageLayout>
-
-        <ListPageLayout v-else-if="currentPage === 'pam-jump-servers'" class="w-full! h-full!">
-          <div class="flex flex-col h-full relative">
-            <CircuitDataTable
-              :columns="jumpServersColumns"
-              :data="jumpServersData"
-              :card="true"
-              :scrollable="true"
-              scrollHeight="flex"
-              :paginator="true"
-              :rows="10"
-            >
-              <template #toolbar>
-                <DataTableToolbar
-                  addButtonLabel="Add"
-                  :showAddButton="true"
-                  :showFilterButton="false"
-                  :showRefreshButton="false"
-                  :showColumnsButton="false"
-                  :showDownloadButton="false"
-                  :showSaveViewButton="false"
-                />
-              </template>
-            </CircuitDataTable>
-          </div>
-        </ListPageLayout>
 
         <ListPageLayout v-else class="w-full! h-full!">
           <div class="flex min-h-full w-full items-center justify-center">

@@ -1249,7 +1249,7 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
 });
 
 const meta: Meta<typeof UserPortalAllAppsWithPrivilegedResourcesPage> = {
-  title: "Projects/Gabriel's Playground/User Portal/User Portal - All Apps with Privileged Resources",
+  title: "Projects/Gabriel's Playground/User Portal/All Apps with Privileged Resources",
   component: UserPortalAllAppsWithPrivilegedResourcesPage,
   parameters: {
     layout: 'fullscreen',
