@@ -128,11 +128,19 @@ const menuItems = [
       { label: 'Access Requests', leftIcon: markRaw(ClipboardDocumentCheckIcon) },
       { label: 'AI & SaaS Management', leftIcon: markRaw(SaasManagementIcon) },
       { label: 'Password Vault', leftIcon: markRaw(PasswordManagerIcon), isNew: true },
-      { label: 'Privileged Resources', leftIcon: markRaw(ServerStackIcon), isNew: true },
       { separator: true },
       { label: 'LDAP' },
       { label: 'RADIUS' },
-      { label: 'PAM', isNew: true },
+    ],
+  },
+  {
+    label: 'PAM',
+    leftIcon: markRaw(ServerStackIcon),
+    items: [
+      { label: 'Privileged Resources' },
+      { label: 'Blocking Rules' },
+      { label: 'Jump Servers' },
+      { label: 'Session History' },
     ],
   },
   {
@@ -246,6 +254,7 @@ const AdminPortalStory = defineComponent({
   setup() {
     const pamEnabled = ref(false);
     const passwordVaultEnabled = ref(false);
+    const pendingPage = ref({ key: 'pam-privileged-resources', label: 'Privileged Resources' });
     const currentPage = ref('home');
     const activeItem = ref('home');
     const passwordVaultTab = ref('overview');
@@ -350,7 +359,14 @@ const AdminPortalStory = defineComponent({
     function onNavClick(processedItem: { item?: { label?: string } }) {
       const label = processedItem.item?.label?.trim() ?? '';
       if (!label) return;
-      goToPage(pageKeyFromLabel(label), label);
+      const pageKey = pageKeyFromLabel(label);
+      if (pageKey.startsWith('pam-') && !pamEnabled.value) {
+        pendingPage.value = { key: pageKey, label };
+        currentPage.value = pageKey;
+        setActiveItemFromLabel(label);
+        return;
+      }
+      goToPage(pageKey, label);
     }
 
     const pageTitle = computed(() => pageTitleFromKey(currentPage.value));
@@ -371,7 +387,7 @@ const AdminPortalStory = defineComponent({
 
     function enablePam() {
       pamEnabled.value = true;
-      goToPage('pam-privileged-resources', 'PAM');
+      goToPage(pendingPage.value.key, pendingPage.value.label);
     }
 
     const overlayConfig = computed(() => {
@@ -1761,75 +1777,87 @@ const AdminPortalStory = defineComponent({
       </div>
     </template>
 
-        <ListPageLayout v-else-if="currentPage === 'pam'" class="w-full! h-full!">
-          <div v-if="pamTab === 'blocking-rules'" class="flex flex-col h-full relative">
-            <CircuitDataTable
-              :columns="blockingRulesColumns"
-              :data="blockingRulesData"
-              :card="true"
-              :scrollable="true"
-              scrollHeight="flex"
-              :paginator="true"
-              :rows="10"
-            >
-              <template #toolbar>
-                <DataTableToolbar
-                  addButtonLabel="Add Blocking Rule"
-                  :showAddButton="true"
-                  :showFilterButton="false"
-                  :showRefreshButton="false"
-                  :showColumnsButton="false"
-                  :showDownloadButton="false"
-                  :showSaveViewButton="false"
-                />
-              </template>
-            </CircuitDataTable>
+        <ListPageLayout v-else-if="currentPage === 'pam-blocking-rules'" class="w-full! h-full!">
+          <div class="flex flex-col h-full gap-lg">
+            <div class="flex flex-col h-full relative">
+              <CircuitDataTable
+                :columns="blockingRulesColumns"
+                :data="blockingRulesData"
+                :card="true"
+                :scrollable="true"
+                scrollHeight="flex"
+                :paginator="true"
+                :rows="10"
+              >
+                <template #toolbar>
+                  <DataTableToolbar
+                    addButtonLabel="Add Blocking Rule"
+                    :showAddButton="true"
+                    :showFilterButton="false"
+                    :showRefreshButton="false"
+                    :showColumnsButton="false"
+                    :showDownloadButton="false"
+                    :showSaveViewButton="false"
+                  />
+                </template>
+              </CircuitDataTable>
+            </div>
           </div>
-          <div v-else-if="pamTab === 'session-history'" class="flex flex-col h-full relative">
-            <CircuitDataTable
-              :columns="sessionHistoryColumns"
-              :data="sessionHistoryData"
-              :card="true"
-              :scrollable="true"
-              scrollHeight="flex"
-              :paginator="true"
-              :rows="10"
-            >
-              <template #toolbar>
-                <DataTableToolbar
-                  :showAddButton="false"
-                  :showFilterButton="false"
-                  :showRefreshButton="false"
-                  :showColumnsButton="false"
-                  :showDownloadButton="true"
-                  :showSaveViewButton="false"
-                  :exportOptions="sessionHistoryExportOptions"
-                />
-              </template>
-            </CircuitDataTable>
+        </ListPageLayout>
+
+        <ListPageLayout v-else-if="currentPage === 'pam-session-history'" class="w-full! h-full!">
+          <div class="flex flex-col h-full gap-lg">
+            <div class="flex flex-col h-full relative">
+              <CircuitDataTable
+                :columns="sessionHistoryColumns"
+                :data="sessionHistoryData"
+                :card="true"
+                :scrollable="true"
+                scrollHeight="flex"
+                :paginator="true"
+                :rows="10"
+              >
+                <template #toolbar>
+                  <DataTableToolbar
+                    :showAddButton="false"
+                    :showFilterButton="false"
+                    :showRefreshButton="false"
+                    :showColumnsButton="false"
+                    :showDownloadButton="true"
+                    :showSaveViewButton="false"
+                    :exportOptions="sessionHistoryExportOptions"
+                  />
+                </template>
+              </CircuitDataTable>
+            </div>
           </div>
-          <div v-else class="flex flex-col h-full relative">
-            <CircuitDataTable
-              :columns="jumpServersColumns"
-              :data="jumpServersData"
-              :card="true"
-              :scrollable="true"
-              scrollHeight="flex"
-              :paginator="true"
-              :rows="10"
-            >
-              <template #toolbar>
-                <DataTableToolbar
-                  addButtonLabel="Add"
-                  :showAddButton="true"
-                  :showFilterButton="false"
-                  :showRefreshButton="false"
-                  :showColumnsButton="false"
-                  :showDownloadButton="false"
-                  :showSaveViewButton="false"
-                />
-              </template>
-            </CircuitDataTable>
+        </ListPageLayout>
+
+        <ListPageLayout v-else-if="currentPage === 'pam-jump-servers'" class="w-full! h-full!">
+          <div class="flex flex-col h-full gap-lg">
+            <div class="flex flex-col h-full relative">
+              <CircuitDataTable
+                :columns="jumpServersColumns"
+                :data="jumpServersData"
+                :card="true"
+                :scrollable="true"
+                scrollHeight="flex"
+                :paginator="true"
+                :rows="10"
+              >
+                <template #toolbar>
+                  <DataTableToolbar
+                    addButtonLabel="Add"
+                    :showAddButton="true"
+                    :showFilterButton="false"
+                    :showRefreshButton="false"
+                    :showColumnsButton="false"
+                    :showDownloadButton="false"
+                    :showSaveViewButton="false"
+                  />
+                </template>
+              </CircuitDataTable>
+            </div>
           </div>
         </ListPageLayout>
 
@@ -2354,7 +2382,7 @@ const AdminPortalStory = defineComponent({
 });
 
 const meta: Meta<typeof AdminPortalStory> = {
-  title: "Projects/Gabriel's Playground/Admin Portal/Access (PWM and PAM)",
+  title: "Projects/Gabriel's Playground/Admin Portal/PAM and Access (PWM)",
   component: AdminPortalStory,
   parameters: {
     layout: 'fullscreen',

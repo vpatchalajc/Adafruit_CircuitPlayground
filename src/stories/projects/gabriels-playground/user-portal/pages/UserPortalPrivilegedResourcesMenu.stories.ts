@@ -5,7 +5,6 @@ import {
   AppNavigation,
   CollapsiblePanel,
   DataTable as CircuitDataTable,
-  DataTableCellText,
   FormField,
   Paginator,
   PageHeader,
@@ -36,29 +35,18 @@ import {
   GlobeAltIcon,
   ListBulletIcon,
   MagnifyingGlassIcon,
+  ServerStackIcon,
+  ShieldCheckIcon,
   Squares2X2Icon,
   ServerIcon,
   StarIcon as StarOutline,
   XMarkIcon,
 } from '@heroicons/vue/24/outline';
-import { BookmarkIcon, StarIcon as StarSolid } from '@heroicons/vue/24/solid';
+import { StarIcon as StarSolid } from '@heroicons/vue/24/solid';
 
-import {
-  SsoIcon,
-  AccessIcon,
-  CheckListIcon,
-  PasswordManagerIcon,
-} from '@jumpcloud/icons';
+import { SsoIcon } from '@jumpcloud/icons';
 
 // ─── User Portal Navigation (flat, no nested items) ───
-
-/** Sidebar for the classic User Portal "All Applications" area — no separate Privileged Resources nav item. */
-const menuItemsAllApplications = [
-  { label: 'All Applications', leftIcon: markRaw(SsoIcon) },
-  { label: 'Requests', leftIcon: markRaw(AccessIcon) },
-  { label: 'Tasks', leftIcon: markRaw(CheckListIcon) },
-  { label: 'Security', leftIcon: markRaw(PasswordManagerIcon) },
-];
 
 const profileMenuItems = [
   {
@@ -135,119 +123,6 @@ const initialApps: PortalApp[] = [
   { id: 38, name: 'Snowflake', logoColor: '#29B5E8', logoInitial: 'S', type: 'sso', favorite: true },
   { id: 39, name: 'Zscaler', logoColor: '#0066CC', logoInitial: 'Z', type: 'sso', favorite: true },
   { id: 40, name: 'Linear', logoColor: '#5E6AD2', logoInitial: 'L', type: 'sso', favorite: false },
-  {
-    id: 41,
-    name: 'AWS Documentation',
-    logoColor: '#FF9900',
-    logoInitial: 'AWS',
-    type: 'bookmark',
-    favorite: false,
-  },
-  { id: 42, name: 'AWS Status', logoColor: '#FF9900', logoInitial: 'AWS', type: 'bookmark', favorite: false },
-  {
-    id: 43,
-    name: 'GitHub Status',
-    logoColor: '#24292E',
-    logoInitial: 'GH',
-    type: 'bookmark',
-    favorite: false,
-  },
-  {
-    id: 44,
-    name: 'Atlassian Status',
-    logoColor: '#0052CC',
-    logoInitial: 'AT',
-    type: 'bookmark',
-    favorite: false,
-  },
-  {
-    id: 45,
-    name: 'Company Wiki',
-    logoColor: '#6366F1',
-    logoInitial: 'WK',
-    type: 'bookmark',
-    favorite: false,
-  },
-  {
-    id: 46,
-    name: 'Security Policies',
-    logoColor: '#EF4444',
-    logoInitial: 'SP',
-    type: 'bookmark',
-    favorite: false,
-  },
-  {
-    id: 47,
-    name: 'Employee Handbook',
-    logoColor: '#10B981',
-    logoInitial: 'EH',
-    type: 'bookmark',
-    favorite: false,
-  },
-  {
-    id: 48,
-    name: 'Team Directory',
-    logoColor: '#8B5CF6',
-    logoInitial: 'TD',
-    type: 'bookmark',
-    favorite: false,
-  },
-  {
-    id: 49,
-    name: 'Holiday Calendar',
-    logoColor: '#F59E0B',
-    logoInitial: 'HC',
-    type: 'bookmark',
-    favorite: false,
-  },
-  {
-    id: 50,
-    name: 'Kubernetes Docs',
-    logoColor: '#326CE5',
-    logoInitial: 'K8S',
-    type: 'bookmark',
-    favorite: false,
-  },
-  {
-    id: 51,
-    name: 'Excalidraw',
-    logoColor: '#6B7280',
-    logoInitial: 'EX',
-    type: 'bookmark',
-    favorite: false,
-  },
-  {
-    id: 52,
-    name: 'draw.io',
-    logoColor: '#F08705',
-    logoInitial: 'DIO',
-    type: 'bookmark',
-    favorite: false,
-  },
-  {
-    id: 53,
-    name: 'JSON Formatter',
-    logoColor: '#3B82F6',
-    logoInitial: 'JSON',
-    type: 'bookmark',
-    favorite: false,
-  },
-  {
-    id: 54,
-    name: 'Incident Runbooks',
-    logoColor: '#DC2626',
-    logoInitial: 'IR',
-    type: 'bookmark',
-    favorite: false,
-  },
-  {
-    id: 55,
-    name: 'Org Chart',
-    logoColor: '#059669',
-    logoInitial: 'ORG',
-    type: 'bookmark',
-    favorite: false,
-  },
 ];
 
 // ─── Privileged Resource Data ───
@@ -264,10 +139,6 @@ interface PrivilegedResource {
   description?: string;
   logo?: string;
 }
-
-type UnifiedFavoriteItem =
-  | { kind: 'app'; favoriteKey: string; app: PortalApp }
-  | { kind: 'resource'; favoriteKey: string; resource: PrivilegedResource };
 
 interface ListRow {
   id: string;
@@ -941,8 +812,8 @@ const PrivilegedResourceLogo = markRaw(defineComponent({
 
 // ─── Component Definition ───
 
-const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
-  name: 'UserPortalAllAppsWithPrivilegedResourcesPage',
+const UserPortalPrivilegedResourcesMenu = defineComponent({
+  name: 'UserPortalPrivilegedResourcesMenu',
   components: {
     AppNavigation,
     CollapsiblePanel,
@@ -967,7 +838,6 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
     ArrowTopRightOnSquareIcon,
     CheckCircleIcon,
     ChevronRightIcon,
-    BookmarkIcon,
     AppLogo,
     PrivilegedResourceLogo,
   },
@@ -977,10 +847,11 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
       JSON.parse(JSON.stringify(initialPrivilegedResources)) as PrivilegedResource[],
     );
     const searchQuery = ref('');
-    const currentView = ref<'portal' | 'requests'>('portal');
-    const activeTab = ref<
-      'all' | 'sso' | 'bookmarks' | 'websites' | 'web-shield' | 'servers' | 'databases' | 'favorites'
-    >('all');
+    const currentView = ref<'all-applications' | 'privileged-resources' | 'requests' | 'security'>(
+      'all-applications',
+    );
+    const appTab = ref<'all' | 'sso' | 'bookmarks' | 'websites' | 'favorites'>('all');
+    const privilegedTab = ref<'all' | 'web-shield' | 'servers' | 'databases' | 'favorites'>('all');
     const first = ref(0);
     const rowsPerPage = ref(50);
     const viewMode = ref<'grid' | 'list'>('grid');
@@ -988,10 +859,6 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
       { value: 'grid', icon: markRaw(Squares2X2Icon) },
       { value: 'list', icon: markRaw(ListBulletIcon) },
     ];
-
-    watch(rowsPerPage, () => {
-      first.value = 0;
-    });
 
     const requests = ref<RequestableResource[]>(
       JSON.parse(JSON.stringify(requestableResources)) as RequestableResource[],
@@ -1002,38 +869,47 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
     const showRequestDialog = ref(false);
     const requestReason = ref('');
 
-    const navMenuItems = computed(() =>
-      menuItemsAllApplications.map(item => {
-        if (item.label === 'Requests') {
-          return {
-            label: 'Requests',
-            leftIcon: markRaw(ClipboardDocumentCheckIcon),
-            command: () => {
-              currentView.value = 'requests';
-            },
-          };
-        }
-        if (item.label === 'All Applications') {
-          return {
-            ...item,
-            command: () => {
-              currentView.value = 'portal';
-            },
-          };
-        }
-        return item;
-      }),
-    );
+    const navMenuItems = computed(() => [
+      {
+        label: 'All Applications',
+        leftIcon: markRaw(SsoIcon),
+        command: () => {
+          currentView.value = 'all-applications';
+        },
+      },
+      {
+        label: 'Privileged Resources',
+        leftIcon: markRaw(ServerStackIcon),
+        command: () => {
+          currentView.value = 'privileged-resources';
+        },
+      },
+      {
+        label: 'Requests',
+        leftIcon: markRaw(ClipboardDocumentCheckIcon),
+        command: () => {
+          currentView.value = 'requests';
+        },
+      },
+      {
+        label: 'Tasks',
+        leftIcon: markRaw(ListBulletIcon),
+      },
+      {
+        label: 'Security',
+        leftIcon: markRaw(ShieldCheckIcon),
+        command: () => {
+          currentView.value = 'security';
+        },
+      },
+    ]);
     const navProfileMenuItems = profileMenuItems;
 
     const activeNavItem = computed(() => {
-      if (currentView.value === 'requests') {
-        return (
-          navMenuItems.value.find(item => item.label.startsWith('Requests'))?.label.toLowerCase() ??
-          'requests'
-        );
-      }
-      return 'all applications';
+      if (currentView.value === 'all-applications') return 'all applications';
+      if (currentView.value === 'privileged-resources') return 'privileged resources';
+      if (currentView.value === 'requests') return 'requests';
+      return 'security';
     });
 
     function isRequestCollapsed(key: string): boolean {
@@ -1073,66 +949,31 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
       return result;
     });
 
-    const allItems = computed(() => {
-      const items = [
-        ...apps.value,
-        ...privilegedResources.value,
-      ];
-      return items
-        .filter(item => {
-          if (!searchQuery.value.trim()) return true;
-          return item.name.toLowerCase().includes(searchQuery.value.toLowerCase());
-        })
-        .sort((a, b) => a.name.localeCompare(b.name));
-    });
-
     const filteredSso = computed(() => {
       const q = searchQuery.value.toLowerCase();
-      return apps.value
-        .filter(a => a.type === 'sso' && (!q || a.name.toLowerCase().includes(q)))
-        .sort((a, b) => a.name.localeCompare(b.name));
+      return apps.value.filter(a => a.type === 'sso' && (!q || a.name.toLowerCase().includes(q)));
     });
 
     const filteredBookmarks = computed(() => {
       const q = searchQuery.value.toLowerCase();
-      return apps.value
-        .filter(a => a.type === 'bookmark' && (!q || a.name.toLowerCase().includes(q)))
-        .sort((a, b) => a.name.localeCompare(b.name));
+      return apps.value.filter(
+        a => a.type === 'bookmark' && (!q || a.name.toLowerCase().includes(q)),
+      );
     });
 
     const filteredWebsites = computed(() => {
       const q = searchQuery.value.toLowerCase();
-      return apps.value
-        .filter(a => a.type === 'website' && (!q || a.name.toLowerCase().includes(q)))
-        .sort((a, b) => a.name.localeCompare(b.name));
+      return apps.value.filter(
+        a => a.type === 'website' && (!q || a.name.toLowerCase().includes(q)),
+      );
     });
 
-    /** All favorited apps and privileged resources (shared state; not search-filtered). */
-    const allUnifiedFavorites = computed((): UnifiedFavoriteItem[] => {
-      const items: UnifiedFavoriteItem[] = [];
-      for (const a of apps.value) {
-        if (a.favorite) items.push({ kind: 'app', favoriteKey: `app-${a.id}`, app: a });
-      }
-      for (const r of privilegedResources.value) {
-        if (r.favorite) {
-          items.push({ kind: 'resource', favoriteKey: `resource-${r.id}`, resource: r });
-        }
-      }
-      items.sort((x, y) => {
-        const nx = x.kind === 'app' ? x.app.name : x.resource.name;
-        const ny = y.kind === 'app' ? y.app.name : y.resource.name;
-        return nx.localeCompare(ny);
-      });
-      return items;
-    });
+    const favoriteApps = computed(() => apps.value.filter(app => app.favorite));
 
-    const filteredUnifiedFavorites = computed(() => {
+    const filteredFavoriteApps = computed(() => {
       const q = searchQuery.value.trim().toLowerCase();
-      if (!q) return allUnifiedFavorites.value;
-      return allUnifiedFavorites.value.filter(item => {
-        if (item.kind === 'app') return item.app.name.toLowerCase().includes(q);
-        return privilegedResourceSearchText(item.resource).toLowerCase().includes(q);
-      });
+      if (!q) return favoriteApps.value;
+      return favoriteApps.value.filter(app => app.name.toLowerCase().includes(q));
     });
 
     const sortedPrivilegedResources = computed(() =>
@@ -1153,9 +994,7 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
     );
 
     const filteredPrivilegedServers = computed(() =>
-      filteredPrivileged.value
-        .filter(r => r.type === 'Server')
-        .sort((a, b) => a.name.localeCompare(b.name)),
+      filteredPrivileged.value.filter(r => r.type === 'Server'),
     );
 
     const filteredPrivilegedDatabases = computed(() =>
@@ -1164,37 +1003,81 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
       ),
     );
 
+    const favoritePrivilegedResources = computed(() =>
+      [...privilegedResources.value]
+        .filter(resource => resource.favorite)
+        .sort((a, b) => a.name.localeCompare(b.name)),
+    );
+
+    const filteredFavoritePrivilegedResources = computed(() => {
+      const q = searchQuery.value.trim().toLowerCase();
+      const filtered = favoritePrivilegedResources.value.filter(resource =>
+        privilegedResourceSearchText(resource).toLowerCase().includes(q),
+      );
+      return filtered.sort((a, b) => a.name.localeCompare(b.name));
+    });
+
     const activePrivilegedSubList = computed(() => {
-      if (activeTab.value === 'web-shield') return filteredPrivilegedWebShield.value;
-      if (activeTab.value === 'servers') return filteredPrivilegedServers.value;
-      if (activeTab.value === 'databases') return filteredPrivilegedDatabases.value;
-      return [] as PrivilegedResource[];
+      if (privilegedTab.value === 'web-shield') return filteredPrivilegedWebShield.value;
+      if (privilegedTab.value === 'servers') return filteredPrivilegedServers.value;
+      if (privilegedTab.value === 'databases') return filteredPrivilegedDatabases.value;
+      if (privilegedTab.value === 'favorites') return filteredFavoritePrivilegedResources.value;
+      return filteredPrivileged.value;
     });
 
     const displayedApps = computed(() => {
-      if (activeTab.value === 'all') {
-        return allItems.value.slice(first.value, first.value + rowsPerPage.value);
+      if (currentView.value !== 'all-applications') return [] as PortalApp[];
+      if (appTab.value === 'all') {
+        return allApps.value.slice(first.value, first.value + rowsPerPage.value);
       }
-      if (activeTab.value === 'sso') {
+      if (appTab.value === 'sso') {
         return filteredSso.value.slice(first.value, first.value + rowsPerPage.value);
       }
-      if (activeTab.value === 'bookmarks') {
+      if (appTab.value === 'bookmarks') {
         return filteredBookmarks.value.slice(first.value, first.value + rowsPerPage.value);
       }
-      if (activeTab.value === 'websites') {
+      if (appTab.value === 'websites') {
         return filteredWebsites.value.slice(first.value, first.value + rowsPerPage.value);
+      }
+      if (appTab.value === 'favorites') {
+        return filteredFavoriteApps.value.slice(first.value, first.value + rowsPerPage.value);
       }
       return [] as PortalApp[];
     });
 
-    const displayedUnifiedFavorites = computed(() => {
-      if (activeTab.value !== 'favorites') return [] as UnifiedFavoriteItem[];
-      return filteredUnifiedFavorites.value.slice(first.value, first.value + rowsPerPage.value);
+    const displayedPrivilegedSub = computed(() => {
+      if (currentView.value !== 'privileged-resources') return [] as PrivilegedResource[];
+      return activePrivilegedSubList.value.slice(first.value, first.value + rowsPerPage.value);
     });
 
-    const displayedPrivilegedSub = computed(() =>
-      activePrivilegedSubList.value.slice(first.value, first.value + rowsPerPage.value),
-    );
+    function formatTypeLabel(rawType: string): string {
+      if (rawType === 'sso') return 'SSO';
+      if (rawType === 'bookmark') return 'Bookmark';
+      if (rawType === 'website') return 'Website';
+      return rawType;
+    }
+
+    function buildListRowFromApp(app: PortalApp): ListRow {
+      return {
+        id: `app-${app.id}`,
+        name: app.name,
+        type: formatTypeLabel(app.type),
+        favorite: app.favorite,
+        kind: 'app',
+        sourceId: app.id,
+      };
+    }
+
+    function buildListRowFromResource(resource: PrivilegedResource): ListRow {
+      return {
+        id: `resource-${resource.id}`,
+        name: resource.name,
+        type: resource.type,
+        favorite: resource.favorite,
+        kind: 'resource',
+        sourceId: resource.id,
+      };
+    }
 
     function toggleListFavorite(row: ListRow) {
       if (row.kind === 'app') {
@@ -1240,23 +1123,6 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
       },
     }));
 
-    const ListActionCell = markRaw(defineComponent({
-      name: 'ListActionCell',
-      setup() {
-        return () =>
-          h(
-            Button,
-            {
-              severity: 'secondary',
-              variant: 'text',
-            },
-            {
-              icon: () => h(ArrowTopRightOnSquareIcon, { class: 'w-4 h-4' }),
-            },
-          );
-      },
-    }));
-
     const typeSeverityMap: Record<string, string> = {
       sso: 'success',
       SSO: 'success',
@@ -1277,16 +1143,27 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
       setup(props) {
         return () => {
           const rawType = props.data.type;
-          const displayLabel = rawType === 'sso'
-            ? 'SSO'
-            : rawType === 'bookmark'
-              ? 'Bookmark'
-              : rawType === 'website'
-                ? 'Website'
-                : rawType;
+          const displayLabel = formatTypeLabel(rawType);
           const severity = typeSeverityMap[rawType] ?? 'secondary';
           return h(Tag, { value: displayLabel, severity, class: '!normal-case' });
         };
+      },
+    }));
+
+    const ListActionCell = markRaw(defineComponent({
+      name: 'ListActionCell',
+      setup() {
+        return () =>
+          h(
+            Button,
+            {
+              severity: 'secondary',
+              variant: 'text',
+            },
+            {
+              icon: () => h(ArrowTopRightOnSquareIcon, { class: 'w-4 h-4' }),
+            },
+          );
       },
     }));
 
@@ -1317,71 +1194,41 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
       },
     ];
 
-    function isPortalApp(item: PortalApp | PrivilegedResource): item is PortalApp {
-      return item.type === 'sso' || item.type === 'bookmark' || item.type === 'website';
-    }
-
-    function buildListRowFromItem(item: PortalApp | PrivilegedResource): ListRow {
-      const prefix = isPortalApp(item) ? 'app' : 'resource';
-      const typeLabel = item.type === 'sso' ? 'SSO' : item.type === 'bookmark' ? 'Bookmark' : item.type;
-      return {
-        id: `${prefix}-${item.id}`,
-        name: item.name,
-        type: typeLabel,
-        favorite: item.favorite,
-        kind: prefix,
-        sourceId: item.id,
-      };
-    }
-
-    function buildListRowFromFavorite(item: UnifiedFavoriteItem): ListRow {
-      if (item.kind === 'app') {
-        return {
-          id: item.favoriteKey,
-          name: item.app.name,
-          type: item.app.type === 'sso' ? 'SSO' : item.app.type === 'bookmark' ? 'Bookmark' : item.app.type,
-          favorite: item.app.favorite,
-          kind: 'app',
-          sourceId: item.app.id,
-        };
-      }
-      return {
-        id: item.favoriteKey,
-        name: item.resource.name,
-        type: item.resource.type,
-        favorite: item.resource.favorite,
-        kind: 'resource',
-        sourceId: item.resource.id,
-      };
-    }
-
     const listRows = computed<ListRow[]>(() => {
-      if (activeTab.value === 'favorites') {
-        return displayedUnifiedFavorites.value.map(buildListRowFromFavorite);
+      if (currentView.value === 'all-applications') {
+        return displayedApps.value.map(buildListRowFromApp);
       }
-      if (activeTab.value === 'web-shield' || activeTab.value === 'servers' || activeTab.value === 'databases') {
-        return displayedPrivilegedSub.value.map(buildListRowFromItem);
+      if (currentView.value === 'privileged-resources') {
+        return displayedPrivilegedSub.value.map(buildListRowFromResource);
       }
-      return (displayedApps.value as Array<PortalApp | PrivilegedResource>).map(buildListRowFromItem);
+      return [];
     });
 
     const totalRecords = computed(() => {
-      if (activeTab.value === 'all') return allItems.value.length;
-      if (activeTab.value === 'sso') return filteredSso.value.length;
-      if (activeTab.value === 'bookmarks') return filteredBookmarks.value.length;
-      if (activeTab.value === 'websites') return filteredWebsites.value.length;
-      if (activeTab.value === 'web-shield') return filteredPrivilegedWebShield.value.length;
-      if (activeTab.value === 'servers') return filteredPrivilegedServers.value.length;
-      if (activeTab.value === 'databases') return filteredPrivilegedDatabases.value.length;
-      if (activeTab.value === 'favorites') return filteredUnifiedFavorites.value.length;
-      return allApps.value.length;
+      if (currentView.value === 'all-applications') {
+        if (appTab.value === 'sso') return filteredSso.value.length;
+        if (appTab.value === 'bookmarks') return filteredBookmarks.value.length;
+        if (appTab.value === 'websites') return filteredWebsites.value.length;
+        if (appTab.value === 'favorites') return filteredFavoriteApps.value.length;
+        return allApps.value.length;
+      }
+      if (currentView.value === 'privileged-resources') {
+        if (privilegedTab.value === 'web-shield') return filteredPrivilegedWebShield.value.length;
+        if (privilegedTab.value === 'servers') return filteredPrivilegedServers.value.length;
+        if (privilegedTab.value === 'databases') return filteredPrivilegedDatabases.value.length;
+        if (privilegedTab.value === 'favorites') return filteredFavoritePrivilegedResources.value.length;
+        return filteredPrivileged.value.length;
+      }
+      return 0;
     });
 
-    const allCount = computed(() => apps.value.length + privilegedResources.value.length);
+    const allCount = computed(() => allApps.value.length);
     const ssoCount = computed(() => apps.value.filter(a => a.type === 'sso').length);
     const bookmarkCount = computed(() => apps.value.filter(a => a.type === 'bookmark').length);
     const websiteCount = computed(() => apps.value.filter(a => a.type === 'website').length);
-    const favCount = computed(() => allUnifiedFavorites.value.length);
+    const favCount = computed(() => favoriteApps.value.length);
+    const privilegedCount = computed(() => filteredPrivileged.value.length);
+    const privilegedFavCount = computed(() => favoritePrivilegedResources.value.length);
     const webShieldResourceCount = computed(() => filteredPrivilegedWebShield.value.length);
     const serverResourceCount = computed(() => filteredPrivilegedServers.value.length);
     const databaseResourceCount = computed(() => filteredPrivilegedDatabases.value.length);
@@ -1413,7 +1260,8 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
     return {
       apps,
       searchQuery,
-      activeTab,
+      appTab,
+      privilegedTab,
       first,
       rowsPerPage,
       viewMode,
@@ -1434,18 +1282,19 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
       requestTypeIconMap,
       isRequestCollapsed,
       setRequestExpanded,
-      allApps,
-      displayedApps,
-      displayedUnifiedFavorites,
-      displayedPrivilegedSub,
       listColumns,
       listRows,
+      allApps,
+      displayedApps,
+      displayedPrivilegedSub,
       totalRecords,
       allCount,
       ssoCount,
       bookmarkCount,
       websiteCount,
       favCount,
+      privilegedCount,
+      privilegedFavCount,
       webShieldResourceCount,
       serverResourceCount,
       databaseResourceCount,
@@ -1640,500 +1489,336 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
               </div>
             </div>
 
-            <PvTabs v-model:value="activeTab" @update:value="first = 0">
-              <PvTabList>
-                <PvTab value="all">All <span class="text-body-md text-tab-sub-text-base">({{ allCount }})</span></PvTab>
-                <PvTab value="sso">SSO <span class="text-body-md text-tab-sub-text-base">({{ ssoCount }})</span></PvTab>
-                <PvTab value="bookmarks">Bookmarks <span class="text-body-md text-tab-sub-text-base">({{ bookmarkCount }})</span></PvTab>
-                <PvTab value="websites">Websites <span class="text-body-md text-tab-sub-text-base">({{ websiteCount }})</span></PvTab>
-                <PvTab value="web-shield">Web Shield <span class="text-body-md text-tab-sub-text-base">({{ webShieldResourceCount }})</span></PvTab>
-                <PvTab value="servers">Servers <span class="text-body-md text-tab-sub-text-base">({{ serverResourceCount }})</span></PvTab>
-                <PvTab value="databases">Databases <span class="text-body-md text-tab-sub-text-base">({{ databaseResourceCount }})</span></PvTab>
-                <PvTab value="favorites">Favorites <span class="text-body-md text-tab-sub-text-base">({{ favCount }})</span></PvTab>
-              </PvTabList>
+            <template v-if="currentView === 'all-applications'">
+              <PvTabs v-model:value="appTab" @update:value="first = 0">
+                <PvTabList>
+                  <PvTab value="all">All <span class="text-body-md text-tab-sub-text-base">({{ allCount }})</span></PvTab>
+                  <PvTab value="sso">SSO <span class="text-body-md text-tab-sub-text-base">({{ ssoCount }})</span></PvTab>
+                  <PvTab value="bookmarks">Bookmarks <span class="text-body-md text-tab-sub-text-base">({{ bookmarkCount }})</span></PvTab>
+                  <PvTab value="websites">Websites <span class="text-body-md text-tab-sub-text-base">({{ websiteCount }})</span></PvTab>
+                  <PvTab value="favorites">Favorites <span class="text-body-md text-tab-sub-text-base">({{ favCount }})</span></PvTab>
+                </PvTabList>
 
-              <PvTabPanels>
-
-                <PvTabPanel value="all">
-                  <Transition
-                    v-if="viewMode === 'grid'"
-                    enter-active-class="transition-opacity duration-200 ease-out"
-                    enter-from-class="opacity-0"
-                    enter-to-class="opacity-100"
-                    leave-active-class="transition-opacity duration-150 ease-in"
-                    leave-from-class="opacity-100"
-                    leave-to-class="opacity-0"
-                    mode="out-in"
-                  >
-                    <div v-if="displayedApps.length > 0" :key="'all-apps'" class="grid w-full grid-cols-5 max-md:grid-cols-2 gap-4 pt-4 pb-6">
-                      <template v-for="item in displayedApps" :key="item.id">
+                <PvTabPanels>
+                  <PvTabPanel value="all">
+                    <Transition
+                      v-if="viewMode === 'grid'"
+                      enter-active-class="transition-opacity duration-200 ease-out"
+                      enter-from-class="opacity-0"
+                      enter-to-class="opacity-100"
+                      leave-active-class="transition-opacity duration-150 ease-in"
+                      leave-from-class="opacity-100"
+                      leave-to-class="opacity-0"
+                      mode="out-in"
+                    >
+                      <div v-if="displayedApps.length > 0" :key="'all-apps'" class="grid w-full grid-cols-5 max-md:grid-cols-2 gap-4 pt-4 pb-6">
                         <div
-                          v-if="item.type === 'Web Shield' || item.type === 'Server' || item.type === 'Database'"
-                          class="group flex min-w-0 flex-col rounded-md border border-neutral-default_solid bg-neutral-base cursor-pointer hover:shadow-e200 transition-shadow overflow-hidden"
-                        >
-                          <div class="flex items-center justify-between pt-2 pb-0 px-2">
-                            <ArrowTopRightOnSquareIcon class="size-4 shrink-0 text-neutral-subtle opacity-0 group-hover:opacity-100 transition-opacity" />
-                            <button
-                              type="button"
-                              class="border-0 bg-transparent cursor-pointer p-0 size-6 shrink-0 flex items-center justify-center leading-none"
-                              @click.stop="togglePrivilegedFavorite(item)"
-                              :aria-label="item.favorite ? 'Remove from favorites' : 'Add to favorites'"
-                            >
-                              <component :is="item.favorite ? StarSolid : StarOutline" class="size-4" :class="item.favorite ? 'text-branding-base' : 'text-neutral-subtle'" />
-                            </button>
-                          </div>
-                          <div class="p-2 border-t border-transparent">
-                            <PrivilegedResourceLogo
-                              :resource-name="item.name"
-                              :resource-type="item.type"
-                              :logo-path="item.logo"
-                            />
-                          </div>
-                          <div class="flex min-w-0 flex-col items-center justify-center gap-1 border-t border-neutral-default_solid p-2">
-                            <div class="text-heading-5 text-neutral-base max-w-full text-center overflow-hidden text-ellipsis whitespace-nowrap">{{ item.name }}</div>
-                            <div class="text-body-sm text-neutral-subtle max-w-full text-center overflow-hidden text-ellipsis whitespace-nowrap">{{ privilegedResourceSubtitle(item) }}</div>
-                          </div>
-                        </div>
-                        <div
-                          v-else
+                          v-for="app in displayedApps"
+                          :key="app.id"
                           class="group flex min-w-0 flex-col rounded-md border border-neutral-default_solid bg-neutral-base cursor-pointer hover:shadow-e200 transition-shadow overflow-hidden"
                         >
                           <div class="flex items-center justify-between pt-2 pb-0 px-2">
                             <ArrowTopRightOnSquareIcon class="size-4 shrink-0 text-neutral-subtle opacity-0 group-hover:opacity-100 transition-opacity" />
                             <div class="flex items-center gap-1">
-                              <BookmarkIcon v-if="item.type === 'bookmark'" class="size-4 text-branding-base" />
+                              <BookmarkIcon v-if="app.type === 'bookmark'" class="size-4 text-branding-base" />
                               <button
                                 type="button"
                                 class="border-0 bg-transparent cursor-pointer p-0 size-6 shrink-0 flex items-center justify-center leading-none"
-                                @click.stop="toggleFavorite(item)"
-                                :aria-label="item.favorite ? 'Remove from favorites' : 'Add to favorites'"
+                                @click.stop="toggleFavorite(app)"
+                                :aria-label="app.favorite ? 'Remove from favorites' : 'Add to favorites'"
                               >
-                                <component :is="item.favorite ? StarSolid : StarOutline" class="size-4" :class="item.favorite ? 'text-branding-base' : 'text-neutral-subtle'" />
+                                <component :is="app.favorite ? StarSolid : StarOutline" class="size-4" :class="app.favorite ? 'text-branding-base' : 'text-neutral-subtle'" />
                               </button>
                             </div>
                           </div>
                           <div class="p-2 border-t border-transparent">
-                            <AppLogo :app-name="item.name" :color="item.logoColor" :initial="item.logoInitial" />
+                            <AppLogo :app-name="app.name" :color="app.logoColor" :initial="app.logoInitial" />
                           </div>
                           <div class="flex min-w-0 items-center justify-center border-t border-neutral-default_solid p-2">
-                            <div class="text-heading-5 text-neutral-base max-w-full text-center overflow-hidden text-ellipsis whitespace-nowrap">{{ item.name }}</div>
+                            <div class="text-heading-5 text-neutral-base max-w-full text-center overflow-hidden text-ellipsis whitespace-nowrap">{{ app.name }}</div>
                           </div>
                         </div>
-                      </template>
-                    </div>
-                    <div v-else :key="'all-empty'" class="flex flex-col items-center justify-center py-16 text-neutral-subtle">
-                      <span class="text-body-md">{{ searchQuery.trim() ? 'No applications match your search' : 'No applications available' }}</span>
-                      <span class="text-body-sm mt-1">{{ searchQuery.trim() ? 'Try a different search or clear the search field.' : 'Contact your IT administrator if you need access.' }}</span>
-                    </div>
-                  </Transition>
-                  <div v-else class="pt-4 pb-6">
-                    <div v-if="listRows.length > 0">
-                      <CircuitDataTable
-                        :data="listRows"
-                        :columns="listColumns"
-                      />
-                    </div>
-                    <div v-else class="flex flex-col items-center justify-center py-16 text-neutral-subtle">
-                      <span class="text-body-md">{{ searchQuery.trim() ? 'No applications match your search' : 'No applications available' }}</span>
-                      <span class="text-body-sm mt-1">{{ searchQuery.trim() ? 'Try a different search or clear the search field.' : 'Contact your IT administrator if you need access.' }}</span>
-                    </div>
-                  </div>
-                </PvTabPanel>
-
-                <PvTabPanel value="sso">
-                  <Transition
-                    v-if="viewMode === 'grid'"
-                    enter-active-class="transition-opacity duration-200 ease-out"
-                    enter-from-class="opacity-0"
-                    enter-to-class="opacity-100"
-                    leave-active-class="transition-opacity duration-150 ease-in"
-                    leave-from-class="opacity-100"
-                    leave-to-class="opacity-0"
-                    mode="out-in"
-                  >
-                    <div v-if="displayedApps.length > 0" :key="'sso-apps'" class="grid w-full grid-cols-5 max-md:grid-cols-2 gap-4 pt-4 pb-6">
-                      <div
-                        v-for="app in displayedApps"
-                        :key="app.id"
-                        class="group flex min-w-0 flex-col rounded-md border border-neutral-default_solid bg-neutral-base cursor-pointer hover:shadow-e200 transition-shadow overflow-hidden"
-                      >
-                        <div class="flex items-center justify-between pt-2 pb-0 px-2">
-                          <ArrowTopRightOnSquareIcon class="size-4 shrink-0 text-neutral-subtle opacity-0 group-hover:opacity-100 transition-opacity" />
-                          <div class="flex items-center gap-1">
-                            <BookmarkIcon v-if="app.type === 'bookmark'" class="size-4 text-branding-base" />
-                            <button
-                              type="button"
-                              class="border-0 bg-transparent cursor-pointer p-0 size-6 shrink-0 flex items-center justify-center leading-none"
-                              @click.stop="toggleFavorite(app)"
-                              :aria-label="app.favorite ? 'Remove from favorites' : 'Add to favorites'"
-                            >
-                              <component :is="app.favorite ? StarSolid : StarOutline" class="size-4" :class="app.favorite ? 'text-branding-base' : 'text-neutral-subtle'" />
-                            </button>
-                          </div>
-                        </div>
-                        <div class="p-2 border-t border-transparent">
-                          <AppLogo :app-name="app.name" :color="app.logoColor" :initial="app.logoInitial" />
-                        </div>
-                        <div class="flex min-w-0 items-center justify-center border-t border-neutral-default_solid p-2">
-                          <div class="text-heading-5 text-neutral-base max-w-full text-center overflow-hidden text-ellipsis whitespace-nowrap">{{ app.name }}</div>
-                        </div>
+                      </div>
+                      <div v-else :key="'all-empty'" class="flex flex-col items-center justify-center py-16 text-neutral-subtle">
+                        <span class="text-body-md">{{ searchQuery.trim() ? 'No applications match your search' : 'No applications available' }}</span>
+                        <span class="text-body-sm mt-1">{{ searchQuery.trim() ? 'Try a different search or clear the search field.' : 'Contact your IT administrator if you need access.' }}</span>
+                      </div>
+                    </Transition>
+                    <div v-else class="pt-4 pb-6">
+                      <div v-if="listRows.length > 0">
+                        <CircuitDataTable
+                          :data="listRows"
+                          :columns="listColumns"
+                        />
+                      </div>
+                      <div v-else class="flex flex-col items-center justify-center py-16 text-neutral-subtle">
+                        <span class="text-body-md">{{ searchQuery.trim() ? 'No applications match your search' : 'No applications available' }}</span>
+                        <span class="text-body-sm mt-1">{{ searchQuery.trim() ? 'Try a different search or clear the search field.' : 'Contact your IT administrator if you need access.' }}</span>
                       </div>
                     </div>
-                    <div v-else :key="'sso-empty'" class="flex flex-col items-center justify-center py-16 text-neutral-subtle">
-                      <span class="text-body-md">{{ searchQuery.trim() ? 'No applications match your search' : 'No applications available' }}</span>
-                      <span class="text-body-sm mt-1">{{ searchQuery.trim() ? 'Try a different search or clear the search field.' : 'Contact your IT administrator if you need access.' }}</span>
-                    </div>
-                  </Transition>
-                  <div v-else class="pt-4 pb-6">
-                    <div v-if="listRows.length > 0">
-                      <CircuitDataTable
-                        :data="listRows"
-                        :columns="listColumns"
-                      />
-                    </div>
-                    <div v-else class="flex flex-col items-center justify-center py-16 text-neutral-subtle">
-                      <span class="text-body-md">{{ searchQuery.trim() ? 'No applications match your search' : 'No applications available' }}</span>
-                      <span class="text-body-sm mt-1">{{ searchQuery.trim() ? 'Try a different search or clear the search field.' : 'Contact your IT administrator if you need access.' }}</span>
-                    </div>
-                  </div>
-                </PvTabPanel>
+                  </PvTabPanel>
 
-                <PvTabPanel value="bookmarks">
-                  <Transition
-                    v-if="viewMode === 'grid'"
-                    enter-active-class="transition-opacity duration-200 ease-out"
-                    enter-from-class="opacity-0"
-                    enter-to-class="opacity-100"
-                    leave-active-class="transition-opacity duration-150 ease-in"
-                    leave-from-class="opacity-100"
-                    leave-to-class="opacity-0"
-                    mode="out-in"
-                  >
-                    <div v-if="displayedApps.length > 0" :key="'bookmarks-apps'" class="grid w-full grid-cols-5 max-md:grid-cols-2 gap-4 pt-4 pb-6">
-                      <div
-                        v-for="app in displayedApps"
-                        :key="app.id"
-                        class="group flex min-w-0 flex-col rounded-md border border-neutral-default_solid bg-neutral-base cursor-pointer hover:shadow-e200 transition-shadow overflow-hidden"
-                      >
-                        <div class="flex items-center justify-between pt-2 pb-0 px-2">
-                          <ArrowTopRightOnSquareIcon class="size-4 shrink-0 text-neutral-subtle opacity-0 group-hover:opacity-100 transition-opacity" />
-                          <div class="flex items-center gap-1">
-                            <BookmarkIcon v-if="app.type === 'bookmark'" class="size-4 text-branding-base" />
-                            <button
-                              type="button"
-                              class="border-0 bg-transparent cursor-pointer p-0 size-6 shrink-0 flex items-center justify-center leading-none"
-                              @click.stop="toggleFavorite(app)"
-                              :aria-label="app.favorite ? 'Remove from favorites' : 'Add to favorites'"
-                            >
-                              <component :is="app.favorite ? StarSolid : StarOutline" class="size-4" :class="app.favorite ? 'text-branding-base' : 'text-neutral-subtle'" />
-                            </button>
-                          </div>
-                        </div>
-                        <div class="p-2 border-t border-transparent">
-                          <AppLogo :app-name="app.name" :color="app.logoColor" :initial="app.logoInitial" />
-                        </div>
-                        <div class="flex min-w-0 items-center justify-center border-t border-neutral-default_solid p-2">
-                          <div class="text-heading-5 text-neutral-base max-w-full text-center overflow-hidden text-ellipsis whitespace-nowrap">{{ app.name }}</div>
-                        </div>
-                      </div>
-                    </div>
-                    <div v-else :key="'bookmarks-empty'" class="flex flex-col items-center justify-center py-16 text-neutral-subtle">
-                      <span class="text-body-md">{{ searchQuery.trim() ? 'No applications match your search' : 'No applications available' }}</span>
-                      <span class="text-body-sm mt-1">{{ searchQuery.trim() ? 'Try a different search or clear the search field.' : 'Contact your IT administrator if you need access.' }}</span>
-                    </div>
-                  </Transition>
-                  <div v-else class="pt-4 pb-6">
-                    <div v-if="listRows.length > 0">
-                      <CircuitDataTable
-                        :data="listRows"
-                        :columns="listColumns"
-                      />
-                    </div>
-                    <div v-else class="flex flex-col items-center justify-center py-16 text-neutral-subtle">
-                      <span class="text-body-md">{{ searchQuery.trim() ? 'No applications match your search' : 'No applications available' }}</span>
-                      <span class="text-body-sm mt-1">{{ searchQuery.trim() ? 'Try a different search or clear the search field.' : 'Contact your IT administrator if you need access.' }}</span>
-                    </div>
-                  </div>
-                </PvTabPanel>
-
-                <PvTabPanel value="websites">
-                  <Transition
-                    v-if="viewMode === 'grid'"
-                    enter-active-class="transition-opacity duration-200 ease-out"
-                    enter-from-class="opacity-0"
-                    enter-to-class="opacity-100"
-                    leave-active-class="transition-opacity duration-150 ease-in"
-                    leave-from-class="opacity-100"
-                    leave-to-class="opacity-0"
-                    mode="out-in"
-                  >
-                    <div v-if="displayedApps.length > 0" :key="'websites-apps'" class="grid w-full grid-cols-5 max-md:grid-cols-2 gap-4 pt-4 pb-6">
-                      <div
-                        v-for="app in displayedApps"
-                        :key="app.id"
-                        class="group flex min-w-0 flex-col rounded-md border border-neutral-default_solid bg-neutral-base cursor-pointer hover:shadow-e200 transition-shadow overflow-hidden"
-                      >
-                        <div class="flex items-center justify-between pt-2 pb-0 px-2">
-                          <ArrowTopRightOnSquareIcon class="size-4 shrink-0 text-neutral-subtle opacity-0 group-hover:opacity-100 transition-opacity" />
-                          <div class="flex items-center gap-1">
-                            <BookmarkIcon v-if="app.type === 'bookmark'" class="size-4 text-branding-base" />
-                            <button
-                              type="button"
-                              class="border-0 bg-transparent cursor-pointer p-0 size-6 shrink-0 flex items-center justify-center leading-none"
-                              @click.stop="toggleFavorite(app)"
-                              :aria-label="app.favorite ? 'Remove from favorites' : 'Add to favorites'"
-                            >
-                              <component :is="app.favorite ? StarSolid : StarOutline" class="size-4" :class="app.favorite ? 'text-branding-base' : 'text-neutral-subtle'" />
-                            </button>
-                          </div>
-                        </div>
-                        <div class="p-2 border-t border-transparent">
-                          <AppLogo :app-name="app.name" :color="app.logoColor" :initial="app.logoInitial" />
-                        </div>
-                        <div class="flex min-w-0 items-center justify-center border-t border-neutral-default_solid p-2">
-                          <div class="text-heading-5 text-neutral-base max-w-full text-center overflow-hidden text-ellipsis whitespace-nowrap">{{ app.name }}</div>
-                        </div>
-                      </div>
-                    </div>
-                    <div v-else :key="'websites-empty'" class="flex flex-col items-center justify-center py-16 text-neutral-subtle">
-                      <span class="text-body-md">{{ searchQuery.trim() ? 'No applications match your search' : 'No applications available' }}</span>
-                      <span class="text-body-sm mt-1">{{ searchQuery.trim() ? 'Try a different search or clear the search field.' : 'Contact your IT administrator if you need access.' }}</span>
-                    </div>
-                  </Transition>
-                  <div v-else class="pt-4 pb-6">
-                    <div v-if="listRows.length > 0">
-                      <CircuitDataTable
-                        :data="listRows"
-                        :columns="listColumns"
-                      />
-                    </div>
-                    <div v-else class="flex flex-col items-center justify-center py-16 text-neutral-subtle">
-                      <span class="text-body-md">{{ searchQuery.trim() ? 'No applications match your search' : 'No applications available' }}</span>
-                      <span class="text-body-sm mt-1">{{ searchQuery.trim() ? 'Try a different search or clear the search field.' : 'Contact your IT administrator if you need access.' }}</span>
-                    </div>
-                  </div>
-                </PvTabPanel>
-
-                <PvTabPanel value="web-shield">
-                  <Transition
-                    v-if="viewMode === 'grid'"
-                    enter-active-class="transition-opacity duration-200 ease-out"
-                    enter-from-class="opacity-0"
-                    enter-to-class="opacity-100"
-                    leave-active-class="transition-opacity duration-150 ease-in"
-                    leave-from-class="opacity-100"
-                    leave-to-class="opacity-0"
-                    mode="out-in"
-                  >
-                    <div v-if="displayedPrivilegedSub.length > 0" :key="'web-shield-list'" class="grid w-full grid-cols-5 max-md:grid-cols-2 gap-4 pt-4 pb-6">
-                      <div
-                        v-for="res in displayedPrivilegedSub"
-                        :key="res.id"
-                        class="group flex min-w-0 flex-col rounded-md border border-neutral-default_solid bg-neutral-base cursor-pointer hover:shadow-e200 transition-shadow overflow-hidden"
-                      >
-                        <div class="flex items-center justify-between pt-2 pb-0 px-2">
-                          <ArrowTopRightOnSquareIcon class="size-4 shrink-0 text-neutral-subtle opacity-0 group-hover:opacity-100 transition-opacity" />
-                          <button
-                            type="button"
-                            class="border-0 bg-transparent cursor-pointer p-0 size-6 shrink-0 flex items-center justify-center leading-none"
-                            @click.stop="togglePrivilegedFavorite(res)"
-                            :aria-label="res.favorite ? 'Remove from favorites' : 'Add to favorites'"
-                          >
-                            <component :is="res.favorite ? StarSolid : StarOutline" class="size-4" :class="res.favorite ? 'text-branding-base' : 'text-neutral-subtle'" />
-                          </button>
-                        </div>
-                        <div class="p-2 border-t border-transparent">
-                          <PrivilegedResourceLogo
-                            :resource-name="res.name"
-                            resource-type="Web Shield"
-                            :logo-path="res.logo"
-                          />
-                        </div>
-                        <div class="flex min-w-0 flex-col items-center justify-center gap-1 border-t border-neutral-default_solid p-2">
-                          <div class="text-heading-5 text-neutral-base max-w-full text-center overflow-hidden text-ellipsis whitespace-nowrap">{{ res.name }}</div>
-                          <div class="text-body-sm text-neutral-subtle max-w-full text-center overflow-hidden text-ellipsis whitespace-nowrap">{{ privilegedResourceSubtitle(res) }}</div>
-                        </div>
-                      </div>
-                    </div>
-                    <div v-else :key="'web-shield-empty'" class="flex flex-col items-center justify-center py-16 text-neutral-subtle">
-                      <span class="text-body-md">{{ searchQuery.trim() ? 'No Web Shield resources match your search' : 'No Web Shield resources assigned' }}</span>
-                      <span class="text-body-sm mt-1">{{ searchQuery.trim() ? 'Try a different search or clear the search field.' : 'Contact your IT administrator to request access.' }}</span>
-                    </div>
-                  </Transition>
-                  <div v-else class="pt-4 pb-6">
-                    <div v-if="listRows.length > 0">
-                      <CircuitDataTable
-                        :data="listRows"
-                        :columns="listColumns"
-                      />
-                    </div>
-                    <div v-else class="flex flex-col items-center justify-center py-16 text-neutral-subtle">
-                      <span class="text-body-md">{{ searchQuery.trim() ? 'No Web Shield resources match your search' : 'No Web Shield resources assigned' }}</span>
-                      <span class="text-body-sm mt-1">{{ searchQuery.trim() ? 'Try a different search or clear the search field.' : 'Contact your IT administrator to request access.' }}</span>
-                    </div>
-                  </div>
-                </PvTabPanel>
-
-                <PvTabPanel value="servers">
-                  <Transition
-                    v-if="viewMode === 'grid'"
-                    enter-active-class="transition-opacity duration-200 ease-out"
-                    enter-from-class="opacity-0"
-                    enter-to-class="opacity-100"
-                    leave-active-class="transition-opacity duration-150 ease-in"
-                    leave-from-class="opacity-100"
-                    leave-to-class="opacity-0"
-                    mode="out-in"
-                  >
-                    <div v-if="displayedPrivilegedSub.length > 0" :key="'servers-list'" class="grid w-full grid-cols-5 max-md:grid-cols-2 gap-4 pt-4 pb-6">
-                      <div
-                        v-for="res in displayedPrivilegedSub"
-                        :key="res.id"
-                        class="group flex min-w-0 flex-col rounded-md border border-neutral-default_solid bg-neutral-base cursor-pointer hover:shadow-e200 transition-shadow overflow-hidden"
-                      >
-                        <div class="flex items-center justify-between pt-2 pb-0 px-2">
-                          <ArrowTopRightOnSquareIcon class="size-4 shrink-0 text-neutral-subtle opacity-0 group-hover:opacity-100 transition-opacity" />
-                          <button
-                            type="button"
-                            class="border-0 bg-transparent cursor-pointer p-0 size-6 shrink-0 flex items-center justify-center leading-none"
-                            @click.stop="togglePrivilegedFavorite(res)"
-                            :aria-label="res.favorite ? 'Remove from favorites' : 'Add to favorites'"
-                          >
-                            <component :is="res.favorite ? StarSolid : StarOutline" class="size-4" :class="res.favorite ? 'text-branding-base' : 'text-neutral-subtle'" />
-                          </button>
-                        </div>
-                        <div class="p-2 border-t border-transparent">
-                          <PrivilegedResourceLogo
-                            :resource-name="res.name"
-                            :resource-type="res.type"
-                            :logo-path="res.logo"
-                          />
-                        </div>
-                        <div class="flex min-w-0 flex-col items-center justify-center gap-1 border-t border-neutral-default_solid p-2">
-                          <div class="text-heading-5 text-neutral-base max-w-full text-center overflow-hidden text-ellipsis whitespace-nowrap">{{ res.name }}</div>
-                          <div class="text-body-sm text-neutral-subtle max-w-full text-center overflow-hidden text-ellipsis whitespace-nowrap">{{ privilegedResourceSubtitle(res) }}</div>
-                        </div>
-                      </div>
-                    </div>
-                    <div v-else :key="'servers-empty'" class="flex flex-col items-center justify-center py-16 text-neutral-subtle">
-                      <span class="text-body-md">{{ searchQuery.trim() ? 'No servers match your search' : 'No server resources assigned' }}</span>
-                      <span class="text-body-sm mt-1">{{ searchQuery.trim() ? 'Try a different search or clear the search field.' : 'Contact your IT administrator to request access.' }}</span>
-                    </div>
-                  </Transition>
-                  <div v-else class="pt-4 pb-6">
-                    <div v-if="listRows.length > 0">
-                      <CircuitDataTable
-                        :data="listRows"
-                        :columns="listColumns"
-                      />
-                    </div>
-                    <div v-else class="flex flex-col items-center justify-center py-16 text-neutral-subtle">
-                      <span class="text-body-md">{{ searchQuery.trim() ? 'No servers match your search' : 'No server resources assigned' }}</span>
-                      <span class="text-body-sm mt-1">{{ searchQuery.trim() ? 'Try a different search or clear the search field.' : 'Contact your IT administrator to request access.' }}</span>
-                    </div>
-                  </div>
-                </PvTabPanel>
-
-                <PvTabPanel value="databases">
-                  <Transition
-                    v-if="viewMode === 'grid'"
-                    enter-active-class="transition-opacity duration-200 ease-out"
-                    enter-from-class="opacity-0"
-                    enter-to-class="opacity-100"
-                    leave-active-class="transition-opacity duration-150 ease-in"
-                    leave-from-class="opacity-100"
-                    leave-to-class="opacity-0"
-                    mode="out-in"
-                  >
-                    <div v-if="displayedPrivilegedSub.length > 0" :key="'databases-list'" class="grid w-full grid-cols-5 max-md:grid-cols-2 gap-4 pt-4 pb-6">
-                      <div
-                        v-for="res in displayedPrivilegedSub"
-                        :key="res.id"
-                        class="group flex min-w-0 flex-col rounded-md border border-neutral-default_solid bg-neutral-base cursor-pointer hover:shadow-e200 transition-shadow overflow-hidden"
-                      >
-                        <div class="flex items-center justify-between pt-2 pb-0 px-2">
-                          <ArrowTopRightOnSquareIcon class="size-4 shrink-0 text-neutral-subtle opacity-0 group-hover:opacity-100 transition-opacity" />
-                          <button
-                            type="button"
-                            class="border-0 bg-transparent cursor-pointer p-0 size-6 shrink-0 flex items-center justify-center leading-none"
-                            @click.stop="togglePrivilegedFavorite(res)"
-                            :aria-label="res.favorite ? 'Remove from favorites' : 'Add to favorites'"
-                          >
-                            <component :is="res.favorite ? StarSolid : StarOutline" class="size-4" :class="res.favorite ? 'text-branding-base' : 'text-neutral-subtle'" />
-                          </button>
-                        </div>
-                        <div class="p-2 border-t border-transparent">
-                          <PrivilegedResourceLogo
-                            :resource-name="res.name"
-                            :resource-type="res.type"
-                            :logo-path="res.logo"
-                          />
-                        </div>
-                        <div class="flex min-w-0 flex-col items-center justify-center gap-1 border-t border-neutral-default_solid p-2">
-                          <div class="text-heading-5 text-neutral-base max-w-full text-center overflow-hidden text-ellipsis whitespace-nowrap">{{ res.name }}</div>
-                          <div class="text-body-sm text-neutral-subtle max-w-full text-center overflow-hidden text-ellipsis whitespace-nowrap">{{ privilegedResourceSubtitle(res) }}</div>
-                        </div>
-                      </div>
-                    </div>
-                    <div v-else :key="'databases-empty'" class="flex flex-col items-center justify-center py-16 text-neutral-subtle">
-                      <span class="text-body-md">{{ searchQuery.trim() ? 'No databases match your search' : 'No database resources assigned' }}</span>
-                      <span class="text-body-sm mt-1">{{ searchQuery.trim() ? 'Try a different search or clear the search field.' : 'Contact your IT administrator to request access.' }}</span>
-                    </div>
-                  </Transition>
-                  <div v-else class="pt-4 pb-6">
-                    <div v-if="listRows.length > 0">
-                      <CircuitDataTable
-                        :data="listRows"
-                        :columns="listColumns"
-                      />
-                    </div>
-                    <div v-else class="flex flex-col items-center justify-center py-16 text-neutral-subtle">
-                      <span class="text-body-md">{{ searchQuery.trim() ? 'No databases match your search' : 'No database resources assigned' }}</span>
-                      <span class="text-body-sm mt-1">{{ searchQuery.trim() ? 'Try a different search or clear the search field.' : 'Contact your IT administrator to request access.' }}</span>
-                    </div>
-                  </div>
-                </PvTabPanel>
-
-                <PvTabPanel value="favorites">
-                  <Transition
-                    v-if="viewMode === 'grid'"
-                    enter-active-class="transition-opacity duration-200 ease-out"
-                    enter-from-class="opacity-0"
-                    enter-to-class="opacity-100"
-                    leave-active-class="transition-opacity duration-150 ease-in"
-                    leave-from-class="opacity-100"
-                    leave-to-class="opacity-0"
-                    mode="out-in"
-                  >
-                    <div v-if="displayedUnifiedFavorites.length > 0" :key="'fav-unified'" class="grid w-full grid-cols-5 max-md:grid-cols-2 gap-4 pt-4 pb-6">
-                      <template v-for="item in displayedUnifiedFavorites" :key="item.favoriteKey">
+                  <PvTabPanel value="sso">
+                    <Transition
+                      v-if="viewMode === 'grid'"
+                      enter-active-class="transition-opacity duration-200 ease-out"
+                      enter-from-class="opacity-0"
+                      enter-to-class="opacity-100"
+                      leave-active-class="transition-opacity duration-150 ease-in"
+                      leave-from-class="opacity-100"
+                      leave-to-class="opacity-0"
+                      mode="out-in"
+                    >
+                      <div v-if="displayedApps.length > 0" :key="'sso-apps'" class="grid w-full grid-cols-5 max-md:grid-cols-2 gap-4 pt-4 pb-6">
                         <div
-                          v-if="item.kind === 'app'"
+                          v-for="app in displayedApps"
+                          :key="app.id"
                           class="group flex min-w-0 flex-col rounded-md border border-neutral-default_solid bg-neutral-base cursor-pointer hover:shadow-e200 transition-shadow overflow-hidden"
                         >
-                        <div class="flex items-center justify-between pt-2 pb-0 px-2">
-                          <ArrowTopRightOnSquareIcon class="size-4 shrink-0 text-neutral-subtle opacity-0 group-hover:opacity-100 transition-opacity" />
-                          <div class="flex items-center gap-1">
-                            <BookmarkIcon v-if="item.app.type === 'bookmark'" class="size-4 text-branding-base" />
-                            <button
-                              type="button"
-                              class="border-0 bg-transparent cursor-pointer p-0 size-6 shrink-0 flex items-center justify-center leading-none"
-                              @click.stop="toggleFavorite(item.app)"
-                              :aria-label="item.app.favorite ? 'Remove from favorites' : 'Add to favorites'"
-                            >
-                              <component :is="item.app.favorite ? StarSolid : StarOutline" class="size-4" :class="item.app.favorite ? 'text-branding-base' : 'text-neutral-subtle'" />
-                            </button>
+                          <div class="flex items-center justify-between pt-2 pb-0 px-2">
+                            <ArrowTopRightOnSquareIcon class="size-4 shrink-0 text-neutral-subtle opacity-0 group-hover:opacity-100 transition-opacity" />
+                            <div class="flex items-center gap-1">
+                              <BookmarkIcon v-if="app.type === 'bookmark'" class="size-4 text-branding-base" />
+                              <button
+                                type="button"
+                                class="border-0 bg-transparent cursor-pointer p-0 size-6 shrink-0 flex items-center justify-center leading-none"
+                                @click.stop="toggleFavorite(app)"
+                                :aria-label="app.favorite ? 'Remove from favorites' : 'Add to favorites'"
+                              >
+                                <component :is="app.favorite ? StarSolid : StarOutline" class="size-4" :class="app.favorite ? 'text-branding-base' : 'text-neutral-subtle'" />
+                              </button>
+                            </div>
                           </div>
-                        </div>
                           <div class="p-2 border-t border-transparent">
-                            <AppLogo :app-name="item.app.name" :color="item.app.logoColor" :initial="item.app.logoInitial" />
+                            <AppLogo :app-name="app.name" :color="app.logoColor" :initial="app.logoInitial" />
                           </div>
                           <div class="flex min-w-0 items-center justify-center border-t border-neutral-default_solid p-2">
-                            <div class="text-heading-5 text-neutral-base max-w-full text-center overflow-hidden text-ellipsis whitespace-nowrap">{{ item.app.name }}</div>
+                            <div class="text-heading-5 text-neutral-base max-w-full text-center overflow-hidden text-ellipsis whitespace-nowrap">{{ app.name }}</div>
                           </div>
                         </div>
+                      </div>
+                      <div v-else :key="'sso-empty'" class="flex flex-col items-center justify-center py-16 text-neutral-subtle">
+                        <span class="text-body-md">{{ searchQuery.trim() ? 'No applications match your search' : 'No applications available' }}</span>
+                        <span class="text-body-sm mt-1">{{ searchQuery.trim() ? 'Try a different search or clear the search field.' : 'Contact your IT administrator if you need access.' }}</span>
+                      </div>
+                    </Transition>
+                    <div v-else class="pt-4 pb-6">
+                      <div v-if="listRows.length > 0">
+                        <CircuitDataTable
+                          :data="listRows"
+                          :columns="listColumns"
+                        />
+                      </div>
+                      <div v-else class="flex flex-col items-center justify-center py-16 text-neutral-subtle">
+                        <span class="text-body-md">{{ searchQuery.trim() ? 'No applications match your search' : 'No applications available' }}</span>
+                        <span class="text-body-sm mt-1">{{ searchQuery.trim() ? 'Try a different search or clear the search field.' : 'Contact your IT administrator if you need access.' }}</span>
+                      </div>
+                    </div>
+                  </PvTabPanel>
+
+                  <PvTabPanel value="bookmarks">
+                    <Transition
+                      v-if="viewMode === 'grid'"
+                      enter-active-class="transition-opacity duration-200 ease-out"
+                      enter-from-class="opacity-0"
+                      enter-to-class="opacity-100"
+                      leave-active-class="transition-opacity duration-150 ease-in"
+                      leave-from-class="opacity-100"
+                      leave-to-class="opacity-0"
+                      mode="out-in"
+                    >
+                      <div v-if="displayedApps.length > 0" :key="'bookmarks-apps'" class="grid w-full grid-cols-5 max-md:grid-cols-2 gap-4 pt-4 pb-6">
                         <div
-                          v-else
+                          v-for="app in displayedApps"
+                          :key="app.id"
+                          class="group flex min-w-0 flex-col rounded-md border border-neutral-default_solid bg-neutral-base cursor-pointer hover:shadow-e200 transition-shadow overflow-hidden"
+                        >
+                          <div class="flex items-center justify-between pt-2 pb-0 px-2">
+                            <ArrowTopRightOnSquareIcon class="size-4 shrink-0 text-neutral-subtle opacity-0 group-hover:opacity-100 transition-opacity" />
+                            <div class="flex items-center gap-1">
+                              <BookmarkIcon v-if="app.type === 'bookmark'" class="size-4 text-branding-base" />
+                              <button
+                                type="button"
+                                class="border-0 bg-transparent cursor-pointer p-0 size-6 shrink-0 flex items-center justify-center leading-none"
+                                @click.stop="toggleFavorite(app)"
+                                :aria-label="app.favorite ? 'Remove from favorites' : 'Add to favorites'"
+                              >
+                                <component :is="app.favorite ? StarSolid : StarOutline" class="size-4" :class="app.favorite ? 'text-branding-base' : 'text-neutral-subtle'" />
+                              </button>
+                            </div>
+                          </div>
+                          <div class="p-2 border-t border-transparent">
+                            <AppLogo :app-name="app.name" :color="app.logoColor" :initial="app.logoInitial" />
+                          </div>
+                          <div class="flex min-w-0 items-center justify-center border-t border-neutral-default_solid p-2">
+                            <div class="text-heading-5 text-neutral-base max-w-full text-center overflow-hidden text-ellipsis whitespace-nowrap">{{ app.name }}</div>
+                          </div>
+                        </div>
+                      </div>
+                      <div v-else :key="'bookmarks-empty'" class="flex flex-col items-center justify-center py-16 text-neutral-subtle">
+                        <span class="text-body-md">{{ searchQuery.trim() ? 'No applications match your search' : 'No applications available' }}</span>
+                        <span class="text-body-sm mt-1">{{ searchQuery.trim() ? 'Try a different search or clear the search field.' : 'Contact your IT administrator if you need access.' }}</span>
+                      </div>
+                    </Transition>
+                    <div v-else class="pt-4 pb-6">
+                      <div v-if="listRows.length > 0">
+                        <CircuitDataTable
+                          :data="listRows"
+                          :columns="listColumns"
+                        />
+                      </div>
+                      <div v-else class="flex flex-col items-center justify-center py-16 text-neutral-subtle">
+                        <span class="text-body-md">{{ searchQuery.trim() ? 'No applications match your search' : 'No applications available' }}</span>
+                        <span class="text-body-sm mt-1">{{ searchQuery.trim() ? 'Try a different search or clear the search field.' : 'Contact your IT administrator if you need access.' }}</span>
+                      </div>
+                    </div>
+                  </PvTabPanel>
+
+                  <PvTabPanel value="websites">
+                    <Transition
+                      v-if="viewMode === 'grid'"
+                      enter-active-class="transition-opacity duration-200 ease-out"
+                      enter-from-class="opacity-0"
+                      enter-to-class="opacity-100"
+                      leave-active-class="transition-opacity duration-150 ease-in"
+                      leave-from-class="opacity-100"
+                      leave-to-class="opacity-0"
+                      mode="out-in"
+                    >
+                      <div v-if="displayedApps.length > 0" :key="'websites-apps'" class="grid w-full grid-cols-5 max-md:grid-cols-2 gap-4 pt-4 pb-6">
+                        <div
+                          v-for="app in displayedApps"
+                          :key="app.id"
+                          class="group flex min-w-0 flex-col rounded-md border border-neutral-default_solid bg-neutral-base cursor-pointer hover:shadow-e200 transition-shadow overflow-hidden"
+                        >
+                          <div class="flex items-center justify-between pt-2 pb-0 px-2">
+                            <ArrowTopRightOnSquareIcon class="size-4 shrink-0 text-neutral-subtle opacity-0 group-hover:opacity-100 transition-opacity" />
+                            <div class="flex items-center gap-1">
+                              <BookmarkIcon v-if="app.type === 'bookmark'" class="size-4 text-branding-base" />
+                              <button
+                                type="button"
+                                class="border-0 bg-transparent cursor-pointer p-0 size-6 shrink-0 flex items-center justify-center leading-none"
+                                @click.stop="toggleFavorite(app)"
+                                :aria-label="app.favorite ? 'Remove from favorites' : 'Add to favorites'"
+                              >
+                                <component :is="app.favorite ? StarSolid : StarOutline" class="size-4" :class="app.favorite ? 'text-branding-base' : 'text-neutral-subtle'" />
+                              </button>
+                            </div>
+                          </div>
+                          <div class="p-2 border-t border-transparent">
+                            <AppLogo :app-name="app.name" :color="app.logoColor" :initial="app.logoInitial" />
+                          </div>
+                          <div class="flex min-w-0 items-center justify-center border-t border-neutral-default_solid p-2">
+                            <div class="text-heading-5 text-neutral-base max-w-full text-center overflow-hidden text-ellipsis whitespace-nowrap">{{ app.name }}</div>
+                          </div>
+                        </div>
+                      </div>
+                      <div v-else :key="'websites-empty'" class="flex flex-col items-center justify-center py-16 text-neutral-subtle">
+                        <span class="text-body-md">{{ searchQuery.trim() ? 'No applications match your search' : 'No applications available' }}</span>
+                        <span class="text-body-sm mt-1">{{ searchQuery.trim() ? 'Try a different search or clear the search field.' : 'Contact your IT administrator if you need access.' }}</span>
+                      </div>
+                    </Transition>
+                    <div v-else class="pt-4 pb-6">
+                      <div v-if="listRows.length > 0">
+                        <CircuitDataTable
+                          :data="listRows"
+                          :columns="listColumns"
+                        />
+                      </div>
+                      <div v-else class="flex flex-col items-center justify-center py-16 text-neutral-subtle">
+                        <span class="text-body-md">{{ searchQuery.trim() ? 'No applications match your search' : 'No applications available' }}</span>
+                        <span class="text-body-sm mt-1">{{ searchQuery.trim() ? 'Try a different search or clear the search field.' : 'Contact your IT administrator if you need access.' }}</span>
+                      </div>
+                    </div>
+                  </PvTabPanel>
+
+                  <PvTabPanel value="favorites">
+                    <Transition
+                      v-if="viewMode === 'grid'"
+                      enter-active-class="transition-opacity duration-200 ease-out"
+                      enter-from-class="opacity-0"
+                      enter-to-class="opacity-100"
+                      leave-active-class="transition-opacity duration-150 ease-in"
+                      leave-from-class="opacity-100"
+                      leave-to-class="opacity-0"
+                      mode="out-in"
+                    >
+                      <div v-if="displayedApps.length > 0" :key="'fav-apps'" class="grid w-full grid-cols-5 max-md:grid-cols-2 gap-4 pt-4 pb-6">
+                        <div
+                          v-for="app in displayedApps"
+                          :key="app.id"
+                          class="group flex min-w-0 flex-col rounded-md border border-neutral-default_solid bg-neutral-base cursor-pointer hover:shadow-e200 transition-shadow overflow-hidden"
+                        >
+                          <div class="flex items-center justify-between pt-2 pb-0 px-2">
+                            <ArrowTopRightOnSquareIcon class="size-4 shrink-0 text-neutral-subtle opacity-0 group-hover:opacity-100 transition-opacity" />
+                            <div class="flex items-center gap-1">
+                              <BookmarkIcon v-if="app.type === 'bookmark'" class="size-4 text-branding-base" />
+                              <button
+                                type="button"
+                                class="border-0 bg-transparent cursor-pointer p-0 size-6 shrink-0 flex items-center justify-center leading-none"
+                                @click.stop="toggleFavorite(app)"
+                                :aria-label="app.favorite ? 'Remove from favorites' : 'Add to favorites'"
+                              >
+                                <component :is="app.favorite ? StarSolid : StarOutline" class="size-4" :class="app.favorite ? 'text-branding-base' : 'text-neutral-subtle'" />
+                              </button>
+                            </div>
+                          </div>
+                          <div class="p-2 border-t border-transparent">
+                            <AppLogo :app-name="app.name" :color="app.logoColor" :initial="app.logoInitial" />
+                          </div>
+                          <div class="flex min-w-0 items-center justify-center border-t border-neutral-default_solid p-2">
+                            <div class="text-heading-5 text-neutral-base max-w-full text-center overflow-hidden text-ellipsis whitespace-nowrap">{{ app.name }}</div>
+                          </div>
+                        </div>
+                      </div>
+                      <div v-else :key="'fav-empty'" class="flex flex-col items-center justify-center py-16 text-neutral-subtle">
+                        <span class="text-body-md">{{ searchQuery.trim() ? 'No favorites match your search' : 'No favorites yet' }}</span>
+                        <span class="text-body-sm mt-1">{{ searchQuery.trim() ? 'Try a different search or clear the search field.' : 'Star an application from any tab to add it here.' }}</span>
+                      </div>
+                    </Transition>
+                    <div v-else class="pt-4 pb-6">
+                      <div v-if="listRows.length > 0">
+                        <CircuitDataTable
+                          :data="listRows"
+                          :columns="listColumns"
+                        />
+                      </div>
+                      <div v-else class="flex flex-col items-center justify-center py-16 text-neutral-subtle">
+                        <span class="text-body-md">{{ searchQuery.trim() ? 'No favorites match your search' : 'No favorites yet' }}</span>
+                        <span class="text-body-sm mt-1">{{ searchQuery.trim() ? 'Try a different search or clear the search field.' : 'Star an application from any tab to add it here.' }}</span>
+                      </div>
+                    </div>
+                  </PvTabPanel>
+                </PvTabPanels>
+              </PvTabs>
+            </template>
+
+            <template v-else-if="currentView === 'privileged-resources'">
+              <PvTabs v-model:value="privilegedTab" @update:value="first = 0">
+                <PvTabList>
+                  <PvTab value="all">All <span class="text-body-md text-tab-sub-text-base">({{ privilegedCount }})</span></PvTab>
+                  <PvTab value="web-shield">Web Shield <span class="text-body-md text-tab-sub-text-base">({{ webShieldResourceCount }})</span></PvTab>
+                  <PvTab value="servers">Servers <span class="text-body-md text-tab-sub-text-base">({{ serverResourceCount }})</span></PvTab>
+                  <PvTab value="databases">Databases <span class="text-body-md text-tab-sub-text-base">({{ databaseResourceCount }})</span></PvTab>
+                  <PvTab value="favorites">Favorites <span class="text-body-md text-tab-sub-text-base">({{ privilegedFavCount }})</span></PvTab>
+                </PvTabList>
+
+                <PvTabPanels>
+                  <PvTabPanel value="all">
+                    <Transition
+                      v-if="viewMode === 'grid'"
+                      enter-active-class="transition-opacity duration-200 ease-out"
+                      enter-from-class="opacity-0"
+                      enter-to-class="opacity-100"
+                      leave-active-class="transition-opacity duration-150 ease-in"
+                      leave-from-class="opacity-100"
+                      leave-to-class="opacity-0"
+                      mode="out-in"
+                    >
+                      <div v-if="displayedPrivilegedSub.length > 0" :key="'privileged-all'" class="grid w-full grid-cols-5 max-md:grid-cols-2 gap-4 pt-4 pb-6">
+                        <div
+                          v-for="res in displayedPrivilegedSub"
+                          :key="res.id"
                           class="group flex min-w-0 flex-col rounded-md border border-neutral-default_solid bg-neutral-base cursor-pointer hover:shadow-e200 transition-shadow overflow-hidden"
                         >
                           <div class="flex items-center justify-between pt-2 pb-0 px-2">
@@ -2141,47 +1826,292 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
                             <button
                               type="button"
                               class="border-0 bg-transparent cursor-pointer p-0 size-6 shrink-0 flex items-center justify-center leading-none"
-                              @click.stop="togglePrivilegedFavorite(item.resource)"
-                              :aria-label="item.resource.favorite ? 'Remove from favorites' : 'Add to favorites'"
+                              @click.stop="togglePrivilegedFavorite(res)"
+                              :aria-label="res.favorite ? 'Remove from favorites' : 'Add to favorites'"
                             >
-                              <component :is="item.resource.favorite ? StarSolid : StarOutline" class="size-4" :class="item.resource.favorite ? 'text-branding-base' : 'text-neutral-subtle'" />
+                              <component :is="res.favorite ? StarSolid : StarOutline" class="size-4" :class="res.favorite ? 'text-branding-base' : 'text-neutral-subtle'" />
                             </button>
                           </div>
                           <div class="p-2 border-t border-transparent">
                             <PrivilegedResourceLogo
-                              :resource-name="item.resource.name"
-                              :resource-type="item.resource.type"
-                              :logo-path="item.resource.logo"
+                              :resource-name="res.name"
+                              :resource-type="res.type"
+                              :logo-path="res.logo"
                             />
                           </div>
                           <div class="flex min-w-0 flex-col items-center justify-center gap-1 border-t border-neutral-default_solid p-2">
-                            <div class="text-heading-5 text-neutral-base max-w-full text-center overflow-hidden text-ellipsis whitespace-nowrap">{{ item.resource.name }}</div>
-                            <div class="text-body-sm text-neutral-subtle max-w-full text-center overflow-hidden text-ellipsis whitespace-nowrap">{{ privilegedResourceSubtitle(item.resource) }}</div>
+                            <div class="text-heading-5 text-neutral-base max-w-full text-center overflow-hidden text-ellipsis whitespace-nowrap">{{ res.name }}</div>
+                            <div class="text-body-sm text-neutral-subtle max-w-full text-center overflow-hidden text-ellipsis whitespace-nowrap">{{ privilegedResourceSubtitle(res) }}</div>
                           </div>
                         </div>
-                      </template>
+                      </div>
+                      <div v-else :key="'privileged-empty'" class="flex flex-col items-center justify-center py-16 text-neutral-subtle">
+                        <span class="text-body-md">{{ searchQuery.trim() ? 'No privileged resources match your search' : 'No privileged resources assigned' }}</span>
+                        <span class="text-body-sm mt-1">{{ searchQuery.trim() ? 'Try a different search or clear the search field.' : 'Contact your IT administrator to request access.' }}</span>
+                      </div>
+                    </Transition>
+                    <div v-else class="pt-4 pb-6">
+                      <div v-if="listRows.length > 0">
+                        <CircuitDataTable
+                          :data="listRows"
+                          :columns="listColumns"
+                        />
+                      </div>
+                      <div v-else class="flex flex-col items-center justify-center py-16 text-neutral-subtle">
+                        <span class="text-body-md">{{ searchQuery.trim() ? 'No privileged resources match your search' : 'No privileged resources assigned' }}</span>
+                        <span class="text-body-sm mt-1">{{ searchQuery.trim() ? 'Try a different search or clear the search field.' : 'Contact your IT administrator to request access.' }}</span>
+                      </div>
                     </div>
-                    <div v-else :key="'fav-empty'" class="flex flex-col items-center justify-center py-16 text-neutral-subtle">
-                      <span class="text-body-md">{{ searchQuery.trim() ? 'No favorites match your search' : 'No favorites yet' }}</span>
-                      <span class="text-body-sm mt-1">{{ searchQuery.trim() ? 'Try a different search or clear the search field.' : 'Star an application or privileged resource from any tab to add it here.' }}</span>
-                    </div>
-                  </Transition>
-                  <div v-else class="pt-4 pb-6">
-                    <div v-if="listRows.length > 0">
-                      <CircuitDataTable
-                        :data="listRows"
-                        :columns="listColumns"
-                      />
-                    </div>
-                    <div v-else class="flex flex-col items-center justify-center py-16 text-neutral-subtle">
-                      <span class="text-body-md">{{ searchQuery.trim() ? 'No favorites match your search' : 'No favorites yet' }}</span>
-                      <span class="text-body-sm mt-1">{{ searchQuery.trim() ? 'Try a different search or clear the search field.' : 'Star an application or privileged resource from any tab to add it here.' }}</span>
-                    </div>
-                  </div>
-                </PvTabPanel>
+                  </PvTabPanel>
 
-              </PvTabPanels>
-            </PvTabs>
+                  <PvTabPanel value="web-shield">
+                    <Transition
+                      v-if="viewMode === 'grid'"
+                      enter-active-class="transition-opacity duration-200 ease-out"
+                      enter-from-class="opacity-0"
+                      enter-to-class="opacity-100"
+                      leave-active-class="transition-opacity duration-150 ease-in"
+                      leave-from-class="opacity-100"
+                      leave-to-class="opacity-0"
+                      mode="out-in"
+                    >
+                      <div v-if="displayedPrivilegedSub.length > 0" :key="'web-shield-list'" class="grid w-full grid-cols-5 max-md:grid-cols-2 gap-4 pt-4 pb-6">
+                        <div
+                          v-for="res in displayedPrivilegedSub"
+                          :key="res.id"
+                          class="group flex min-w-0 flex-col rounded-md border border-neutral-default_solid bg-neutral-base cursor-pointer hover:shadow-e200 transition-shadow overflow-hidden"
+                        >
+                          <div class="flex items-center justify-between pt-2 pb-0 px-2">
+                            <ArrowTopRightOnSquareIcon class="size-4 shrink-0 text-neutral-subtle opacity-0 group-hover:opacity-100 transition-opacity" />
+                            <button
+                              type="button"
+                              class="border-0 bg-transparent cursor-pointer p-0 size-6 shrink-0 flex items-center justify-center leading-none"
+                              @click.stop="togglePrivilegedFavorite(res)"
+                              :aria-label="res.favorite ? 'Remove from favorites' : 'Add to favorites'"
+                            >
+                              <component :is="res.favorite ? StarSolid : StarOutline" class="size-4" :class="res.favorite ? 'text-branding-base' : 'text-neutral-subtle'" />
+                            </button>
+                          </div>
+                          <div class="p-2 border-t border-transparent">
+                            <PrivilegedResourceLogo
+                              :resource-name="res.name"
+                              resource-type="Web Shield"
+                              :logo-path="res.logo"
+                            />
+                          </div>
+                          <div class="flex min-w-0 flex-col items-center justify-center gap-1 border-t border-neutral-default_solid p-2">
+                            <div class="text-heading-5 text-neutral-base max-w-full text-center overflow-hidden text-ellipsis whitespace-nowrap">{{ res.name }}</div>
+                            <div class="text-body-sm text-neutral-subtle max-w-full text-center overflow-hidden text-ellipsis whitespace-nowrap">{{ privilegedResourceSubtitle(res) }}</div>
+                          </div>
+                        </div>
+                      </div>
+                      <div v-else :key="'web-shield-empty'" class="flex flex-col items-center justify-center py-16 text-neutral-subtle">
+                        <span class="text-body-md">{{ searchQuery.trim() ? 'No Web Shield resources match your search' : 'No Web Shield resources assigned' }}</span>
+                        <span class="text-body-sm mt-1">{{ searchQuery.trim() ? 'Try a different search or clear the search field.' : 'Contact your IT administrator to request access.' }}</span>
+                      </div>
+                    </Transition>
+                    <div v-else class="pt-4 pb-6">
+                      <div v-if="listRows.length > 0">
+                        <CircuitDataTable
+                          :data="listRows"
+                          :columns="listColumns"
+                        />
+                      </div>
+                      <div v-else class="flex flex-col items-center justify-center py-16 text-neutral-subtle">
+                        <span class="text-body-md">{{ searchQuery.trim() ? 'No Web Shield resources match your search' : 'No Web Shield resources assigned' }}</span>
+                        <span class="text-body-sm mt-1">{{ searchQuery.trim() ? 'Try a different search or clear the search field.' : 'Contact your IT administrator to request access.' }}</span>
+                      </div>
+                    </div>
+                  </PvTabPanel>
+
+                  <PvTabPanel value="servers">
+                    <Transition
+                      v-if="viewMode === 'grid'"
+                      enter-active-class="transition-opacity duration-200 ease-out"
+                      enter-from-class="opacity-0"
+                      enter-to-class="opacity-100"
+                      leave-active-class="transition-opacity duration-150 ease-in"
+                      leave-from-class="opacity-100"
+                      leave-to-class="opacity-0"
+                      mode="out-in"
+                    >
+                      <div v-if="displayedPrivilegedSub.length > 0" :key="'servers-list'" class="grid w-full grid-cols-5 max-md:grid-cols-2 gap-4 pt-4 pb-6">
+                        <div
+                          v-for="res in displayedPrivilegedSub"
+                          :key="res.id"
+                          class="group flex min-w-0 flex-col rounded-md border border-neutral-default_solid bg-neutral-base cursor-pointer hover:shadow-e200 transition-shadow overflow-hidden"
+                        >
+                          <div class="flex items-center justify-between pt-2 pb-0 px-2">
+                            <ArrowTopRightOnSquareIcon class="size-4 shrink-0 text-neutral-subtle opacity-0 group-hover:opacity-100 transition-opacity" />
+                            <button
+                              type="button"
+                              class="border-0 bg-transparent cursor-pointer p-0 size-6 shrink-0 flex items-center justify-center leading-none"
+                              @click.stop="togglePrivilegedFavorite(res)"
+                              :aria-label="res.favorite ? 'Remove from favorites' : 'Add to favorites'"
+                            >
+                              <component :is="res.favorite ? StarSolid : StarOutline" class="size-4" :class="res.favorite ? 'text-branding-base' : 'text-neutral-subtle'" />
+                            </button>
+                          </div>
+                          <div class="p-2 border-t border-transparent">
+                            <PrivilegedResourceLogo
+                              :resource-name="res.name"
+                              :resource-type="res.type"
+                              :logo-path="res.logo"
+                            />
+                          </div>
+                          <div class="flex min-w-0 flex-col items-center justify-center gap-1 border-t border-neutral-default_solid p-2">
+                            <div class="text-heading-5 text-neutral-base max-w-full text-center overflow-hidden text-ellipsis whitespace-nowrap">{{ res.name }}</div>
+                            <div class="text-body-sm text-neutral-subtle max-w-full text-center overflow-hidden text-ellipsis whitespace-nowrap">{{ privilegedResourceSubtitle(res) }}</div>
+                          </div>
+                        </div>
+                      </div>
+                      <div v-else :key="'servers-empty'" class="flex flex-col items-center justify-center py-16 text-neutral-subtle">
+                        <span class="text-body-md">{{ searchQuery.trim() ? 'No servers match your search' : 'No server resources assigned' }}</span>
+                        <span class="text-body-sm mt-1">{{ searchQuery.trim() ? 'Try a different search or clear the search field.' : 'Contact your IT administrator to request access.' }}</span>
+                      </div>
+                    </Transition>
+                    <div v-else class="pt-4 pb-6">
+                      <div v-if="listRows.length > 0">
+                        <CircuitDataTable
+                          :data="listRows"
+                          :columns="listColumns"
+                        />
+                      </div>
+                      <div v-else class="flex flex-col items-center justify-center py-16 text-neutral-subtle">
+                        <span class="text-body-md">{{ searchQuery.trim() ? 'No servers match your search' : 'No server resources assigned' }}</span>
+                        <span class="text-body-sm mt-1">{{ searchQuery.trim() ? 'Try a different search or clear the search field.' : 'Contact your IT administrator to request access.' }}</span>
+                      </div>
+                    </div>
+                  </PvTabPanel>
+
+                  <PvTabPanel value="databases">
+                    <Transition
+                      v-if="viewMode === 'grid'"
+                      enter-active-class="transition-opacity duration-200 ease-out"
+                      enter-from-class="opacity-0"
+                      enter-to-class="opacity-100"
+                      leave-active-class="transition-opacity duration-150 ease-in"
+                      leave-from-class="opacity-100"
+                      leave-to-class="opacity-0"
+                      mode="out-in"
+                    >
+                      <div v-if="displayedPrivilegedSub.length > 0" :key="'databases-list'" class="grid w-full grid-cols-5 max-md:grid-cols-2 gap-4 pt-4 pb-6">
+                        <div
+                          v-for="res in displayedPrivilegedSub"
+                          :key="res.id"
+                          class="group flex min-w-0 flex-col rounded-md border border-neutral-default_solid bg-neutral-base cursor-pointer hover:shadow-e200 transition-shadow overflow-hidden"
+                        >
+                          <div class="flex items-center justify-between pt-2 pb-0 px-2">
+                            <ArrowTopRightOnSquareIcon class="size-4 shrink-0 text-neutral-subtle opacity-0 group-hover:opacity-100 transition-opacity" />
+                            <button
+                              type="button"
+                              class="border-0 bg-transparent cursor-pointer p-0 size-6 shrink-0 flex items-center justify-center leading-none"
+                              @click.stop="togglePrivilegedFavorite(res)"
+                              :aria-label="res.favorite ? 'Remove from favorites' : 'Add to favorites'"
+                            >
+                              <component :is="res.favorite ? StarSolid : StarOutline" class="size-4" :class="res.favorite ? 'text-branding-base' : 'text-neutral-subtle'" />
+                            </button>
+                          </div>
+                          <div class="p-2 border-t border-transparent">
+                            <PrivilegedResourceLogo
+                              :resource-name="res.name"
+                              :resource-type="res.type"
+                              :logo-path="res.logo"
+                            />
+                          </div>
+                          <div class="flex min-w-0 flex-col items-center justify-center gap-1 border-t border-neutral-default_solid p-2">
+                            <div class="text-heading-5 text-neutral-base max-w-full text-center overflow-hidden text-ellipsis whitespace-nowrap">{{ res.name }}</div>
+                            <div class="text-body-sm text-neutral-subtle max-w-full text-center overflow-hidden text-ellipsis whitespace-nowrap">{{ privilegedResourceSubtitle(res) }}</div>
+                          </div>
+                        </div>
+                      </div>
+                      <div v-else :key="'databases-empty'" class="flex flex-col items-center justify-center py-16 text-neutral-subtle">
+                        <span class="text-body-md">{{ searchQuery.trim() ? 'No databases match your search' : 'No database resources assigned' }}</span>
+                        <span class="text-body-sm mt-1">{{ searchQuery.trim() ? 'Try a different search or clear the search field.' : 'Contact your IT administrator to request access.' }}</span>
+                      </div>
+                    </Transition>
+                    <div v-else class="pt-4 pb-6">
+                      <div v-if="listRows.length > 0">
+                        <CircuitDataTable
+                          :data="listRows"
+                          :columns="listColumns"
+                        />
+                      </div>
+                      <div v-else class="flex flex-col items-center justify-center py-16 text-neutral-subtle">
+                        <span class="text-body-md">{{ searchQuery.trim() ? 'No databases match your search' : 'No database resources assigned' }}</span>
+                        <span class="text-body-sm mt-1">{{ searchQuery.trim() ? 'Try a different search or clear the search field.' : 'Contact your IT administrator to request access.' }}</span>
+                      </div>
+                    </div>
+                  </PvTabPanel>
+
+                  <PvTabPanel value="favorites">
+                    <Transition
+                      v-if="viewMode === 'grid'"
+                      enter-active-class="transition-opacity duration-200 ease-out"
+                      enter-from-class="opacity-0"
+                      enter-to-class="opacity-100"
+                      leave-active-class="transition-opacity duration-150 ease-in"
+                      leave-from-class="opacity-100"
+                      leave-to-class="opacity-0"
+                      mode="out-in"
+                    >
+                      <div v-if="displayedPrivilegedSub.length > 0" :key="'privileged-favorites'" class="grid w-full grid-cols-5 max-md:grid-cols-2 gap-4 pt-4 pb-6">
+                        <div
+                          v-for="res in displayedPrivilegedSub"
+                          :key="res.id"
+                          class="group flex min-w-0 flex-col rounded-md border border-neutral-default_solid bg-neutral-base cursor-pointer hover:shadow-e200 transition-shadow overflow-hidden"
+                        >
+                          <div class="flex items-center justify-between pt-2 pb-0 px-2">
+                            <ArrowTopRightOnSquareIcon class="size-4 shrink-0 text-neutral-subtle opacity-0 group-hover:opacity-100 transition-opacity" />
+                            <button
+                              type="button"
+                              class="border-0 bg-transparent cursor-pointer p-0 size-6 shrink-0 flex items-center justify-center leading-none"
+                              @click.stop="togglePrivilegedFavorite(res)"
+                              :aria-label="res.favorite ? 'Remove from favorites' : 'Add to favorites'"
+                            >
+                              <component :is="res.favorite ? StarSolid : StarOutline" class="size-4" :class="res.favorite ? 'text-branding-base' : 'text-neutral-subtle'" />
+                            </button>
+                          </div>
+                          <div class="p-2 border-t border-transparent">
+                            <PrivilegedResourceLogo
+                              :resource-name="res.name"
+                              :resource-type="res.type"
+                              :logo-path="res.logo"
+                            />
+                          </div>
+                          <div class="flex min-w-0 flex-col items-center justify-center gap-1 border-t border-neutral-default_solid p-2">
+                            <div class="text-heading-5 text-neutral-base max-w-full text-center overflow-hidden text-ellipsis whitespace-nowrap">{{ res.name }}</div>
+                            <div class="text-body-sm text-neutral-subtle max-w-full text-center overflow-hidden text-ellipsis whitespace-nowrap">{{ privilegedResourceSubtitle(res) }}</div>
+                          </div>
+                        </div>
+                      </div>
+                      <div v-else :key="'favorites-empty'" class="flex flex-col items-center justify-center py-16 text-neutral-subtle">
+                        <span class="text-body-md">{{ searchQuery.trim() ? 'No favorites match your search' : 'No favorites yet' }}</span>
+                        <span class="text-body-sm mt-1">{{ searchQuery.trim() ? 'Try a different search or clear the search field.' : 'Star a privileged resource from any tab to add it here.' }}</span>
+                      </div>
+                    </Transition>
+                    <div v-else class="pt-4 pb-6">
+                      <div v-if="listRows.length > 0">
+                        <CircuitDataTable
+                          :data="listRows"
+                          :columns="listColumns"
+                        />
+                      </div>
+                      <div v-else class="flex flex-col items-center justify-center py-16 text-neutral-subtle">
+                        <span class="text-body-md">{{ searchQuery.trim() ? 'No favorites match your search' : 'No favorites yet' }}</span>
+                        <span class="text-body-sm mt-1">{{ searchQuery.trim() ? 'Try a different search or clear the search field.' : 'Star a privileged resource from any tab to add it here.' }}</span>
+                      </div>
+                    </div>
+                  </PvTabPanel>
+                </PvTabPanels>
+              </PvTabs>
+            </template>
+
+            <template v-else-if="currentView === 'security'">
+              <div class="flex flex-col items-center justify-center py-16 text-neutral-subtle">
+                <span class="text-body-md">Security content is coming soon.</span>
+              </div>
+            </template>
 
           </div>
         </div>
@@ -2206,9 +2136,9 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
   `,
 });
 
-const meta: Meta<typeof UserPortalAllAppsWithPrivilegedResourcesPage> = {
-  title: "Projects/Gabriel's Playground/User Portal/All Applications Menu",
-  component: UserPortalAllAppsWithPrivilegedResourcesPage,
+const meta: Meta<typeof UserPortalPrivilegedResourcesMenu> = {
+  title: "Projects/Gabriel's Playground/User Portal/Privileged Resources Menu",
+  component: UserPortalPrivilegedResourcesMenu,
   parameters: {
     layout: 'fullscreen',
   },
@@ -2216,6 +2146,6 @@ const meta: Meta<typeof UserPortalAllAppsWithPrivilegedResourcesPage> = {
 
 export default meta;
 
-type Story = StoryObj<typeof UserPortalAllAppsWithPrivilegedResourcesPage>;
+type Story = StoryObj<typeof UserPortalPrivilegedResourcesMenu>;
 
 export const Default: Story = {};
