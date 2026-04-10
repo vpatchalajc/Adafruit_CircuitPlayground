@@ -5,8 +5,10 @@ import {
   AppNavigation,
   CollapsiblePanel,
   DataTable as CircuitDataTable,
+  DataTableToolbar,
   DataTableCellText,
   FormField,
+  Password,
   Paginator,
   PageHeader,
   ToastNotification,
@@ -16,6 +18,8 @@ import Dialog from 'primevue/dialog';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
 import InputText from 'primevue/inputtext';
+import MultiSelect from 'primevue/multiselect';
+import Select from 'primevue/select';
 import SelectButton from 'primevue/selectbutton';
 import Tag from 'primevue/tag';
 import Textarea from 'primevue/textarea';
@@ -24,6 +28,8 @@ import TabList from 'primevue/tablist';
 import Tab from 'primevue/tab';
 import TabPanels from 'primevue/tabpanels';
 import TabPanel from 'primevue/tabpanel';
+
+import ListPageLayout from '@/components/layout/page-layouts/ListPageLayout.vue';
 
 import {
   ArrowRightStartOnRectangleIcon,
@@ -34,11 +40,13 @@ import {
   CircleStackIcon,
   CommandLineIcon,
   GlobeAltIcon,
+  LockClosedIcon,
   ListBulletIcon,
   MagnifyingGlassIcon,
   Squares2X2Icon,
   ServerIcon,
   StarIcon as StarOutline,
+  TrashIcon,
   XMarkIcon,
 } from '@heroicons/vue/24/outline';
 import { BookmarkIcon, StarIcon as StarSolid } from '@heroicons/vue/24/solid';
@@ -57,7 +65,7 @@ const menuItemsAllApplications = [
   { label: 'All Applications', leftIcon: markRaw(SsoIcon) },
   { label: 'Requests', leftIcon: markRaw(AccessIcon) },
   { label: 'Tasks', leftIcon: markRaw(CheckListIcon) },
-  { label: 'Security', leftIcon: markRaw(PasswordManagerIcon) },
+  { label: 'Security', leftIcon: markRaw(LockClosedIcon) },
 ];
 
 const profileMenuItems = [
@@ -120,7 +128,7 @@ const initialApps: PortalApp[] = [
   { id: 23, name: 'Internal API Docs', logoColor: '#00ACC1', logoInitial: 'JC', type: 'bookmark', favorite: true },
   { id: 24, name: 'JC Brand Logos', logoColor: '#455A64', logoInitial: 'JC', type: 'bookmark', favorite: true },
   { id: 25, name: 'JC Learning Hub', logoColor: '#1565C0', logoInitial: 'JC', type: 'website', favorite: false },
-  { id: 26, name: 'JC Password Manager', logoColor: '#00897B', logoInitial: 'JC', type: 'sso', favorite: false },
+  { id: 26, name: 'Password Vault', logoColor: '#00897B', logoInitial: 'JC', type: 'sso', favorite: false },
   { id: 27, name: 'JumpCloud Employee Website', logoColor: '#00BFA5', logoInitial: 'JC', type: 'bookmark', favorite: false },
   { id: 28, name: 'JumpCloud Support Portal', logoColor: '#00838F', logoInitial: 'M', type: 'website', favorite: false },
   { id: 29, name: 'JumpDesk EU', logoColor: '#1E88E5', logoInitial: 'EU', type: 'website', favorite: false },
@@ -248,6 +256,7 @@ const initialApps: PortalApp[] = [
     type: 'bookmark',
     favorite: false,
   },
+  { id: 56, name: 'Password Manager', logoColor: '#00897B', logoInitial: 'JC', type: 'sso', favorite: false },
 ];
 
 // ─── Privileged Resource Data ───
@@ -574,12 +583,14 @@ const initialPrivilegedResources: PrivilegedResource[] = [
 
 // ─── Requests Data ───
 
-type RequestType = 'Web Shield' | 'Database' | 'Server';
+type RequestType = 'Web Shield' | 'Database' | 'Server' | 'SSO' | 'Access';
+type RequestCategory = 'privileged' | 'sso' | 'access';
 
 interface RequestableResource {
   id: number;
   name: string;
   type: RequestType;
+  category: RequestCategory;
   description: string;
 }
 
@@ -588,68 +599,217 @@ const requestableResources: RequestableResource[] = [
     id: 1,
     name: 'AWS Root Console',
     type: 'Web Shield',
+    category: 'privileged',
     description: 'Access to AWS management console via browser isolation',
   },
   {
     id: 2,
     name: 'Prod PostgreSQL',
     type: 'Database',
+    category: 'privileged',
     description: 'Production PostgreSQL database access',
   },
   {
     id: 3,
     name: 'Linux Bastion Server',
     type: 'Server',
+    category: 'privileged',
     description: 'SSH access to production bastion host',
   },
   {
     id: 4,
     name: 'JC Admin Portal',
     type: 'Web Shield',
+    category: 'privileged',
     description: 'Administrative access to JumpCloud admin portal',
   },
   {
     id: 5,
     name: 'Finance MySQL',
     type: 'Database',
+    category: 'privileged',
     description: 'Access to finance reporting database',
   },
   {
     id: 6,
     name: 'Kubernetes Dashboard',
     type: 'Web Shield',
+    category: 'privileged',
     description: 'Access to K8s cluster management dashboard',
   },
   {
     id: 7,
     name: 'EU Auth Server',
     type: 'Server',
+    category: 'privileged',
     description: 'Access to EU region authentication server',
   },
   {
     id: 8,
     name: 'Snowflake Data Warehouse',
     type: 'Database',
+    category: 'privileged',
     description: 'Access to analytics data warehouse',
   },
   {
     id: 9,
     name: 'Grafana Admin',
     type: 'Web Shield',
+    category: 'privileged',
     description: 'Access to infrastructure monitoring dashboards',
   },
   {
     id: 10,
     name: 'PCI Compliance Server',
     type: 'Server',
+    category: 'privileged',
     description: 'Access to PCI-scoped production server',
   },
+  {
+    id: 11,
+    name: 'Google Workspace',
+    type: 'SSO',
+    category: 'sso',
+    description: 'Request access to Google Workspace SSO application',
+  },
+  {
+    id: 12,
+    name: 'Slack',
+    type: 'SSO',
+    category: 'sso',
+    description: 'Request access to Slack workspace',
+  },
+  {
+    id: 13,
+    name: 'Salesforce',
+    type: 'SSO',
+    category: 'sso',
+    description: 'Request access to Salesforce SSO application',
+  },
+  {
+    id: 14,
+    name: 'GitHub',
+    type: 'SSO',
+    category: 'sso',
+    description: 'Request access to GitHub organization',
+  },
+  {
+    id: 15,
+    name: 'Okta',
+    type: 'SSO',
+    category: 'sso',
+    description: 'Request access to Okta admin portal',
+  },
+  {
+    id: 16,
+    name: 'Microsoft 365',
+    type: 'SSO',
+    category: 'sso',
+    description: 'Request access to Microsoft 365 apps',
+  },
+  {
+    id: 17,
+    name: 'Figma',
+    type: 'SSO',
+    category: 'sso',
+    description: 'Request access to Figma workspace',
+  },
+  {
+    id: 18,
+    name: 'Zoom',
+    type: 'SSO',
+    category: 'sso',
+    description: 'Request access to Zoom account',
+  },
+  {
+    id: 19,
+    name: 'Jira',
+    type: 'SSO',
+    category: 'sso',
+    description: 'Request access to Jira projects',
+  },
+  {
+    id: 20,
+    name: 'Notion',
+    type: 'SSO',
+    category: 'sso',
+    description: 'Request access to Notion workspace',
+  },
+  {
+    id: 21,
+    name: 'Admin elevation request',
+    type: 'Access',
+    category: 'access',
+    description: 'Request temporary admin access on your laptop',
+  },
 ];
+
+// ─── Password Vault Data ───
+
+interface CredentialRecord {
+  id: number;
+  name: string;
+  type: string;
+  expirationDate: string;
+  tags: string[];
+  lastTimeUsed: string;
+}
+
+interface WebsiteRecord {
+  id: number;
+  name: string;
+  uri: string;
+  tags: string[];
+  lastTimeUsed: string;
+}
+
+const credentialsSeed: CredentialRecord[] = [
+  { id: 1, name: 'AWS Root Account', type: 'Password', expirationDate: 'Jun 1, 2026', tags: ['cloud', 'prod'], lastTimeUsed: 'Apr 6, 2026' },
+  { id: 2, name: 'GitHub Personal Token', type: 'Key', expirationDate: '--', tags: ['infra'], lastTimeUsed: 'Apr 4, 2026' },
+  { id: 3, name: 'Ubuntu MFA', type: 'Key', expirationDate: '--', tags: ['linux'], lastTimeUsed: 'Apr 1, 2026' },
+  { id: 4, name: 'Windows Admin', type: 'Password', expirationDate: 'Jun 2, 2026', tags: ['windows', 'prod'], lastTimeUsed: 'Apr 5, 2026' },
+  { id: 5, name: 'MySQL Root', type: 'Password', expirationDate: '--', tags: ['prod'], lastTimeUsed: '--' },
+  { id: 6, name: 'Okta Admin', type: 'Password', expirationDate: 'May 30, 2026', tags: ['cloud'], lastTimeUsed: 'Apr 6, 2026' },
+  { id: 7, name: 'Prod SSH Key', type: 'Key', expirationDate: '--', tags: ['infra', 'prod'], lastTimeUsed: 'Mar 28, 2026' },
+  { id: 8, name: 'Azure Service Principal', type: 'Key', expirationDate: 'Jul 9, 2026', tags: ['cloud'], lastTimeUsed: 'Apr 2, 2026' },
+  { id: 9, name: 'Corp Visa Card', type: 'Payment Card', expirationDate: 'Dec 1, 2027', tags: ['finance'], lastTimeUsed: 'Mar 15, 2026' },
+  { id: 10, name: 'Datadog API Key', type: 'Key', expirationDate: '--', tags: ['infra'], lastTimeUsed: 'Mar 22, 2026' },
+  { id: 11, name: 'Linux Root', type: 'Password', expirationDate: '--', tags: ['linux'], lastTimeUsed: '--' },
+  { id: 12, name: 'GCP Service Account', type: 'Key', expirationDate: 'Aug 15, 2026', tags: ['cloud', 'prod'], lastTimeUsed: 'Apr 3, 2026' },
+  { id: 13, name: 'Secure DB Notes', type: 'Secure Note', expirationDate: '--', tags: ['prod'], lastTimeUsed: 'Mar 10, 2026' },
+  { id: 14, name: 'Docker Hub', type: 'Password', expirationDate: '--', tags: ['infra'], lastTimeUsed: 'Mar 18, 2026' },
+  { id: 15, name: 'Staging SSH Key', type: 'Key', expirationDate: '--', tags: ['infra'], lastTimeUsed: 'Mar 5, 2026' },
+];
+
+const websitesSeed: WebsiteRecord[] = [
+  { id: 1, name: 'GitHub', uri: 'github.com', tags: ['dev'], lastTimeUsed: 'Apr 7, 2026' },
+  { id: 2, name: 'AWS Console', uri: 'console.aws.amazon.com', tags: ['cloud'], lastTimeUsed: 'Apr 6, 2026' },
+  { id: 3, name: 'Okta', uri: 'okta.com', tags: ['identity'], lastTimeUsed: 'Apr 5, 2026' },
+  { id: 4, name: 'Datadog', uri: 'app.datadoghq.com', tags: ['monitoring'], lastTimeUsed: 'Apr 4, 2026' },
+  { id: 5, name: 'Jira', uri: 'atlassian.net', tags: ['productivity'], lastTimeUsed: 'Apr 3, 2026' },
+  { id: 6, name: 'Figma', uri: 'figma.com', tags: ['design'], lastTimeUsed: 'Apr 2, 2026' },
+  { id: 7, name: 'Slack', uri: 'slack.com', tags: ['communication'], lastTimeUsed: 'Apr 1, 2026' },
+  { id: 8, name: 'Notion', uri: 'notion.so', tags: ['productivity'], lastTimeUsed: 'Mar 30, 2026' },
+  { id: 9, name: 'LinkedIn', uri: 'linkedin.com', tags: [], lastTimeUsed: 'Mar 28, 2026' },
+  { id: 10, name: 'Gmail', uri: 'mail.google.com', tags: ['communication'], lastTimeUsed: 'Mar 25, 2026' },
+];
+
+const credentialTypeOptions = [
+  { label: 'Password', value: 'Password' },
+  { label: 'Key', value: 'Key' },
+  { label: 'Secure Note', value: 'Secure Note' },
+  { label: 'Payment Card', value: 'Payment Card' },
+];
+
+const credentialTagOptions = ['cloud', 'prod', 'infra', 'linux', 'windows', 'finance'];
+const websiteTagOptions = ['dev', 'cloud', 'identity', 'monitoring', 'productivity', 'design', 'communication'];
 
 const requestTypeIconMap: Record<RequestType, Component> = {
   'Web Shield': markRaw(GlobeAltIcon),
   Database: markRaw(CircleStackIcon),
   Server: markRaw(ServerIcon),
+  SSO: markRaw(SsoIcon),
+  Access: markRaw(LockClosedIcon),
 };
 
 // ─── Privileged resource logos (/public/logos/) ───
@@ -768,7 +928,8 @@ const APP_LOGOS: Record<string, string> = {
   Cursor: '/logos/cursor.png',
   Egencia: '/logos/egencia.png',
   Firstbase: '/logos/firstbase.png',
-  'JC Password Manager': '/logos/jc-password-manager.png',
+  'Password Vault': '/logos/jumpcloud-vault.png',
+  'Password Manager': '/logos/jc-password-manager.png',
   'JumpDesk EU': '/logos/jumpdesk-eu.png',
   'JumpDesk PRD': '/logos/jumpdesk-prod.png',
   Knowbe4: '/logos/knowbe4.png',
@@ -947,7 +1108,10 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
     AppNavigation,
     CollapsiblePanel,
     CircuitDataTable,
+    DataTableToolbar,
     FormField,
+    ListPageLayout,
+    Password,
     Paginator,
     PageHeader,
     ToastNotification,
@@ -956,6 +1120,8 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
     PvIconField: IconField,
     PvInputIcon: InputIcon,
     PvInputText: InputText,
+    PvMultiSelect: MultiSelect,
+    PvSelect: Select,
     PvTextarea: Textarea,
     SelectButton,
     PvTabs: Tabs,
@@ -977,9 +1143,9 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
       JSON.parse(JSON.stringify(initialPrivilegedResources)) as PrivilegedResource[],
     );
     const searchQuery = ref('');
-    const currentView = ref<'portal' | 'requests'>('portal');
+    const currentView = ref<'portal' | 'requests' | 'password-vault'>('portal');
     const activeTab = ref<
-      'all' | 'sso' | 'bookmarks' | 'websites' | 'web-shield' | 'servers' | 'databases' | 'favorites'
+      'all' | 'sso' | 'bookmarks' | 'web-shield' | 'servers' | 'databases' | 'favorites'
     >('all');
     const first = ref(0);
     const rowsPerPage = ref(50);
@@ -992,15 +1158,59 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
     watch(rowsPerPage, () => {
       first.value = 0;
     });
+    watch(searchQuery, () => {
+      first.value = 0;
+    });
 
     const requests = ref<RequestableResource[]>(
       JSON.parse(JSON.stringify(requestableResources)) as RequestableResource[],
     );
+    const requestsTab = ref<'resources' | 'privileged' | 'access'>('resources');
     const requestExpandedMap = ref<Record<string, boolean>>({});
     const requestSearchQuery = ref('');
     const selectedRequest = ref<RequestableResource | null>(null);
     const showRequestDialog = ref(false);
     const requestReason = ref('');
+    const passwordVaultTab = ref<'credentials' | 'websites'>('credentials');
+    const passwordVaultTabs = [
+      { label: 'Credentials', value: 'credentials' },
+      { label: 'Websites', value: 'websites' },
+    ];
+    const credentials = ref<CredentialRecord[]>(
+      JSON.parse(JSON.stringify(credentialsSeed)) as CredentialRecord[],
+    );
+    const websites = ref<WebsiteRecord[]>(
+      JSON.parse(JSON.stringify(websitesSeed)) as WebsiteRecord[],
+    );
+    const credentialSearch = ref('');
+    const websiteSearch = ref('');
+    const showCredentialDialog = ref(false);
+    const showWebsiteDialog = ref(false);
+    const editingCredential = ref<CredentialRecord | null>(null);
+    const editingWebsite = ref<WebsiteRecord | null>(null);
+    const credentialForm = ref({
+      type: 'Password',
+      name: '',
+      username: '',
+      password: '',
+      expirationDate: '',
+      tags: '',
+      notes: '',
+    });
+    const websiteForm = ref({
+      name: '',
+      uri: '',
+      tags: '',
+      notes: '',
+    });
+    const showCredentialFilterDialog = ref(false);
+    const appliedCredentialTypes = ref<string[]>([]);
+    const appliedCredentialTags = ref<string[]>([]);
+    const draftCredentialTypes = ref<string[]>([]);
+    const draftCredentialTags = ref<string[]>([]);
+    const showWebsiteFilterDialog = ref(false);
+    const appliedWebsiteTags = ref<string[]>([]);
+    const draftWebsiteTags = ref<string[]>([]);
 
     const navMenuItems = computed(() =>
       menuItemsAllApplications.map(item => {
@@ -1010,6 +1220,14 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
             leftIcon: markRaw(ClipboardDocumentCheckIcon),
             command: () => {
               currentView.value = 'requests';
+            },
+          };
+        }
+        if (item.label === 'Password Vault') {
+          return {
+            ...item,
+            command: () => {
+              currentView.value = 'password-vault';
             },
           };
         }
@@ -1027,6 +1245,7 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
     const navProfileMenuItems = profileMenuItems;
 
     const activeNavItem = computed(() => {
+      if (currentView.value === 'password-vault') return 'password vault';
       if (currentView.value === 'requests') {
         return (
           navMenuItems.value.find(item => item.label.startsWith('Requests'))?.label.toLowerCase() ??
@@ -1046,9 +1265,26 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
 
     const filteredRequestableResources = computed(() => {
       const q = requestSearchQuery.value.trim().toLowerCase();
-      if (!q) return requests.value;
-      return requests.value.filter(resource => resource.name.toLowerCase().includes(q));
+      const category =
+        requestsTab.value === 'privileged'
+          ? 'privileged'
+          : requestsTab.value === 'access'
+            ? 'access'
+            : 'sso';
+      const filteredByCategory = requests.value.filter(resource => resource.category === category);
+      if (!q) return filteredByCategory;
+      return filteredByCategory.filter(resource => resource.name.toLowerCase().includes(q));
     });
+
+    const requestResourcesCount = computed(
+      () => requests.value.filter(resource => resource.category === 'sso').length,
+    );
+    const requestPrivilegedCount = computed(
+      () => requests.value.filter(resource => resource.category === 'privileged').length,
+    );
+    const requestAccessCount = computed(
+      () => requests.value.filter(resource => resource.category === 'access').length,
+    );
 
     function openRequestDialog(resource: RequestableResource) {
       selectedRequest.value = resource;
@@ -1064,13 +1300,255 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
       showRequestDialog.value = false;
     }
 
+    function formatGroupedValues(values: string[], maxVisible = 2): string {
+      if (values.length <= maxVisible) return values.join(', ');
+      return `${values.slice(0, maxVisible).join(', ')}, +${values.length - maxVisible}`;
+    }
+
+    function formatTags(values: string[]): string {
+      return values.length > 0 ? values.join(', ') : '--';
+    }
+
+    const credentialDraftFilterCount = computed(() => {
+      let count = 0;
+      if (draftCredentialTypes.value.length > 0) count += 1;
+      if (draftCredentialTags.value.length > 0) count += 1;
+      return count;
+    });
+
+    const websiteDraftFilterCount = computed(() => {
+      let count = 0;
+      if (draftWebsiteTags.value.length > 0) count += 1;
+      return count;
+    });
+
+    const credentialFilterChips = computed(() => {
+      const chips = [];
+      if (appliedCredentialTypes.value.length > 0) {
+        chips.push({
+          id: 'type',
+          key: 'Type',
+          operator: 'is',
+          value: formatGroupedValues(appliedCredentialTypes.value),
+        });
+      }
+      if (appliedCredentialTags.value.length > 0) {
+        chips.push({
+          id: 'tags',
+          key: 'Tags',
+          operator: 'is',
+          value: formatGroupedValues(appliedCredentialTags.value),
+        });
+      }
+      return chips;
+    });
+
+    const websiteFilterChips = computed(() => {
+      const chips = [];
+      if (appliedWebsiteTags.value.length > 0) {
+        chips.push({
+          id: 'tags',
+          key: 'Tags',
+          operator: 'is',
+          value: formatGroupedValues(appliedWebsiteTags.value),
+        });
+      }
+      return chips;
+    });
+
+    const filteredCredentialsData = computed(() => {
+      const q = credentialSearch.value.trim().toLowerCase();
+      let result = credentials.value;
+      if (q) {
+        result = result.filter(credential => {
+          const searchText = [
+            credential.name,
+            credential.type,
+            credential.expirationDate,
+            credential.lastTimeUsed,
+            credential.tags.join(' '),
+          ]
+            .join(' ')
+            .toLowerCase();
+          return searchText.includes(q);
+        });
+      }
+      if (appliedCredentialTypes.value.length > 0) {
+        result = result.filter(credential => appliedCredentialTypes.value.includes(credential.type));
+      }
+      if (appliedCredentialTags.value.length > 0) {
+        result = result.filter(credential =>
+          credential.tags.some(tag => appliedCredentialTags.value.includes(tag)),
+        );
+      }
+      return result;
+    });
+
+    const filteredWebsitesData = computed(() => {
+      const q = websiteSearch.value.trim().toLowerCase();
+      let result = websites.value;
+      if (q) {
+        result = result.filter(website => {
+          const searchText = [website.name, website.uri, website.lastTimeUsed, website.tags.join(' ')]
+            .join(' ')
+            .toLowerCase();
+          return searchText.includes(q);
+        });
+      }
+      if (appliedWebsiteTags.value.length > 0) {
+        result = result.filter(website =>
+          website.tags.some(tag => appliedWebsiteTags.value.includes(tag)),
+        );
+      }
+      return result;
+    });
+
+    function openCredentialFilterDialog() {
+      draftCredentialTypes.value = [...appliedCredentialTypes.value];
+      draftCredentialTags.value = [...appliedCredentialTags.value];
+      showCredentialFilterDialog.value = true;
+    }
+
+    function applyCredentialFilters() {
+      appliedCredentialTypes.value = [...draftCredentialTypes.value];
+      appliedCredentialTags.value = [...draftCredentialTags.value];
+      showCredentialFilterDialog.value = false;
+    }
+
+    function cancelCredentialFilters() {
+      showCredentialFilterDialog.value = false;
+    }
+
+    function clearDraftCredentialFilters() {
+      draftCredentialTypes.value = [];
+      draftCredentialTags.value = [];
+    }
+
+    function clearAllCredentialFilters() {
+      appliedCredentialTypes.value = [];
+      appliedCredentialTags.value = [];
+    }
+
+    function removeCredentialFilterChip(chip: { id?: string }) {
+      const chipId = chip.id ?? '';
+      if (chipId === 'type') appliedCredentialTypes.value = [];
+      if (chipId === 'tags') appliedCredentialTags.value = [];
+    }
+
+    function handleCredentialSearch(value: string) {
+      credentialSearch.value = value;
+    }
+
+    function openWebsiteFilterDialog() {
+      draftWebsiteTags.value = [...appliedWebsiteTags.value];
+      showWebsiteFilterDialog.value = true;
+    }
+
+    function applyWebsiteFilters() {
+      appliedWebsiteTags.value = [...draftWebsiteTags.value];
+      showWebsiteFilterDialog.value = false;
+    }
+
+    function cancelWebsiteFilters() {
+      showWebsiteFilterDialog.value = false;
+    }
+
+    function clearDraftWebsiteFilters() {
+      draftWebsiteTags.value = [];
+    }
+
+    function clearAllWebsiteFilters() {
+      appliedWebsiteTags.value = [];
+    }
+
+    function removeWebsiteFilterChip(chip: { id?: string }) {
+      const chipId = chip.id ?? '';
+      if (chipId === 'tags') appliedWebsiteTags.value = [];
+    }
+
+    function handleWebsiteSearch(value: string) {
+      websiteSearch.value = value;
+    }
+
+    const credentialDialogTitle = computed(() =>
+      editingCredential.value ? 'Edit Credential' : 'Add Credential',
+    );
+
+    const websiteDialogTitle = computed(() =>
+      editingWebsite.value ? 'Edit Website' : 'Add Website',
+    );
+
+    function openAddCredentialDialog() {
+      editingCredential.value = null;
+      credentialForm.value = {
+        type: 'Password',
+        name: '',
+        username: '',
+        password: '',
+        expirationDate: '',
+        tags: '',
+        notes: '',
+      };
+      showCredentialDialog.value = true;
+    }
+
+    function openEditCredentialDialog(credential: CredentialRecord) {
+      editingCredential.value = credential;
+      credentialForm.value = {
+        type: credential.type,
+        name: credential.name,
+        username: '',
+        password: '',
+        expirationDate: credential.expirationDate,
+        tags: credential.tags.join(', '),
+        notes: '',
+      };
+      showCredentialDialog.value = true;
+    }
+
+    function closeCredentialDialog() {
+      showCredentialDialog.value = false;
+    }
+
+    function openAddWebsiteDialog() {
+      editingWebsite.value = null;
+      websiteForm.value = {
+        name: '',
+        uri: '',
+        tags: '',
+        notes: '',
+      };
+      showWebsiteDialog.value = true;
+    }
+
+    function openEditWebsiteDialog(website: WebsiteRecord) {
+      editingWebsite.value = website;
+      websiteForm.value = {
+        name: website.name,
+        uri: website.uri,
+        tags: website.tags.join(', '),
+        notes: '',
+      };
+      showWebsiteDialog.value = true;
+    }
+
+    function closeWebsiteDialog() {
+      showWebsiteDialog.value = false;
+    }
+
+    function openPasswordVault() {
+      if (typeof window !== 'undefined') {
+        window.open('https://sedemo.vault.jumpcloud.com', '_blank');
+      }
+    }
+
     const allApps = computed(() => {
       let result = apps.value;
       if (searchQuery.value.trim()) {
         const q = searchQuery.value.toLowerCase();
         result = result.filter(a => a.name.toLowerCase().includes(q));
       }
-      return result;
+      return result.sort((a, b) => a.name.localeCompare(b.name));
     });
 
     const allItems = computed(() => {
@@ -1078,12 +1556,12 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
         ...apps.value,
         ...privilegedResources.value,
       ];
-      return items
-        .filter(item => {
-          if (!searchQuery.value.trim()) return true;
-          return item.name.toLowerCase().includes(searchQuery.value.toLowerCase());
-        })
-        .sort((a, b) => a.name.localeCompare(b.name));
+      const q = searchQuery.value.trim().toLowerCase();
+      const filteredItems = items.filter(item => {
+        if (!q) return true;
+        return item.name.toLowerCase().includes(q);
+      });
+      return filteredItems.sort((a, b) => a.name.localeCompare(b.name));
     });
 
     const filteredSso = computed(() => {
@@ -1097,13 +1575,6 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
       const q = searchQuery.value.toLowerCase();
       return apps.value
         .filter(a => a.type === 'bookmark' && (!q || a.name.toLowerCase().includes(q)))
-        .sort((a, b) => a.name.localeCompare(b.name));
-    });
-
-    const filteredWebsites = computed(() => {
-      const q = searchQuery.value.toLowerCase();
-      return apps.value
-        .filter(a => a.type === 'website' && (!q || a.name.toLowerCase().includes(q)))
         .sort((a, b) => a.name.localeCompare(b.name));
     });
 
@@ -1172,17 +1643,18 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
     });
 
     const displayedApps = computed(() => {
+      const q = searchQuery.value.trim().toLowerCase();
       if (activeTab.value === 'all') {
-        return allItems.value.slice(first.value, first.value + rowsPerPage.value);
+        const source = q
+          ? allItems.value.filter(item => item.name.toLowerCase().includes(q))
+          : allItems.value;
+        return source.slice(first.value, first.value + rowsPerPage.value);
       }
       if (activeTab.value === 'sso') {
         return filteredSso.value.slice(first.value, first.value + rowsPerPage.value);
       }
       if (activeTab.value === 'bookmarks') {
         return filteredBookmarks.value.slice(first.value, first.value + rowsPerPage.value);
-      }
-      if (activeTab.value === 'websites') {
-        return filteredWebsites.value.slice(first.value, first.value + rowsPerPage.value);
       }
       return [] as PortalApp[];
     });
@@ -1317,6 +1789,145 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
       },
     ];
 
+    const VaultNameCell = markRaw(defineComponent({
+      name: 'VaultNameCell',
+      props: {
+        data: { type: Object as PropType<CredentialRecord | WebsiteRecord>, required: true },
+        onClick: {
+          type: Function as PropType<(row: CredentialRecord | WebsiteRecord) => void>,
+          required: true,
+        },
+      },
+      setup(props) {
+        return () =>
+          h('div', { class: 'flex items-center pl-2' }, [
+            h(
+              'button',
+              {
+                type: 'button',
+                class:
+                  'text-body-md font-semibold text-neutral-base cursor-pointer hover:text-primary-base hover:underline transition-colors',
+                onClick: () => props.onClick(props.data),
+              },
+              props.data.name,
+            ),
+          ]);
+      },
+    }));
+
+    const VaultActionCell = markRaw(defineComponent({
+      name: 'VaultActionCell',
+      setup() {
+        return () =>
+          h(
+            Button,
+            {
+              severity: 'secondary',
+              variant: 'text',
+              'aria-label': 'Delete',
+            },
+            {
+              icon: () => h(TrashIcon, { class: 'w-4 h-4' }),
+            },
+          );
+      },
+    }));
+
+    const credentialColumns = [
+      {
+        field: 'name',
+        header: 'Name',
+        sortable: true,
+        component: VaultNameCell,
+        componentProps: (slotProps: { data: CredentialRecord }) => ({
+          data: slotProps.data,
+          onClick: openEditCredentialDialog,
+        }),
+      },
+      {
+        field: 'type',
+        header: 'Type',
+        sortable: true,
+        component: markRaw(DataTableCellText),
+        componentProps: (slotProps: { data: CredentialRecord }) => ({ label: slotProps.data.type }),
+      },
+      {
+        field: 'expirationDate',
+        header: 'Expiration Date',
+        sortable: true,
+        component: markRaw(DataTableCellText),
+        componentProps: (slotProps: { data: CredentialRecord }) => ({
+          label: slotProps.data.expirationDate,
+        }),
+      },
+      {
+        field: 'tags',
+        header: 'Tags',
+        component: markRaw(DataTableCellText),
+        componentProps: (slotProps: { data: CredentialRecord }) => ({
+          label: formatTags(slotProps.data.tags),
+        }),
+      },
+      {
+        field: 'lastTimeUsed',
+        header: 'Last Time Used',
+        sortable: true,
+        component: markRaw(DataTableCellText),
+        componentProps: (slotProps: { data: CredentialRecord }) => ({
+          label: slotProps.data.lastTimeUsed,
+        }),
+      },
+      {
+        field: 'actions',
+        header: 'Actions',
+        width: '80px',
+        component: VaultActionCell,
+      },
+    ];
+
+    const websiteColumns = [
+      {
+        field: 'name',
+        header: 'Name',
+        sortable: true,
+        component: VaultNameCell,
+        componentProps: (slotProps: { data: WebsiteRecord }) => ({
+          data: slotProps.data,
+          onClick: openEditWebsiteDialog,
+        }),
+      },
+      {
+        field: 'uri',
+        header: 'URI',
+        sortable: true,
+        component: markRaw(DataTableCellText),
+        componentProps: (slotProps: { data: WebsiteRecord }) => ({ label: slotProps.data.uri }),
+      },
+      {
+        field: 'tags',
+        header: 'Tags',
+        component: markRaw(DataTableCellText),
+        componentProps: (slotProps: { data: WebsiteRecord }) => ({
+          label: formatTags(slotProps.data.tags),
+        }),
+      },
+      {
+        field: 'lastTimeUsed',
+        header: 'Last Time Used',
+        sortable: true,
+        component: markRaw(DataTableCellText),
+        componentProps: (slotProps: { data: WebsiteRecord }) => ({
+          label: slotProps.data.lastTimeUsed,
+        }),
+      },
+      {
+        field: 'actions',
+        header: 'Actions',
+        width: '80px',
+        component: VaultActionCell,
+      },
+    ];
+
     function isPortalApp(item: PortalApp | PrivilegedResource): item is PortalApp {
       return item.type === 'sso' || item.type === 'bookmark' || item.type === 'website';
     }
@@ -1366,10 +1977,10 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
     });
 
     const totalRecords = computed(() => {
+      if (currentView.value !== 'portal') return 0;
       if (activeTab.value === 'all') return allItems.value.length;
       if (activeTab.value === 'sso') return filteredSso.value.length;
       if (activeTab.value === 'bookmarks') return filteredBookmarks.value.length;
-      if (activeTab.value === 'websites') return filteredWebsites.value.length;
       if (activeTab.value === 'web-shield') return filteredPrivilegedWebShield.value.length;
       if (activeTab.value === 'servers') return filteredPrivilegedServers.value.length;
       if (activeTab.value === 'databases') return filteredPrivilegedDatabases.value.length;
@@ -1377,11 +1988,23 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
       return allApps.value.length;
     });
 
-    const allCount = computed(() => apps.value.length + privilegedResources.value.length);
-    const ssoCount = computed(() => apps.value.filter(a => a.type === 'sso').length);
-    const bookmarkCount = computed(() => apps.value.filter(a => a.type === 'bookmark').length);
-    const websiteCount = computed(() => apps.value.filter(a => a.type === 'website').length);
-    const favCount = computed(() => allUnifiedFavorites.value.length);
+    const allCount = computed(() => allItems.value.length);
+    const ssoCount = computed(() => {
+      const q = searchQuery.value.trim().toLowerCase();
+      return apps.value.filter(a => a.type === 'sso' && (!q || a.name.toLowerCase().includes(q))).length;
+    });
+    const bookmarkCount = computed(() => {
+      const q = searchQuery.value.trim().toLowerCase();
+      return apps.value.filter(a => a.type === 'bookmark' && (!q || a.name.toLowerCase().includes(q))).length;
+    });
+    const favCount = computed(() => {
+      const q = searchQuery.value.trim().toLowerCase();
+      if (!q) return allUnifiedFavorites.value.length;
+      return allUnifiedFavorites.value.filter(item => {
+        const name = item.kind === 'app' ? item.app.name : item.resource.name;
+        return name.toLowerCase().includes(q);
+      }).length;
+    });
     const webShieldResourceCount = computed(() => filteredPrivilegedWebShield.value.length);
     const serverResourceCount = computed(() => filteredPrivilegedServers.value.length);
     const databaseResourceCount = computed(() => filteredPrivilegedDatabases.value.length);
@@ -1422,7 +2045,12 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
       activeNavItem,
       navMenuItems,
       navProfileMenuItems,
+      passwordVaultTabs,
       requests,
+      requestsTab,
+      requestResourcesCount,
+      requestPrivilegedCount,
+      requestAccessCount,
       requestSearchQuery,
       filteredRequestableResources,
       openRequestDialog,
@@ -1434,6 +2062,48 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
       requestTypeIconMap,
       isRequestCollapsed,
       setRequestExpanded,
+      passwordVaultTab,
+      credentialColumns,
+      websiteColumns,
+      filteredCredentialsData,
+      filteredWebsitesData,
+      credentialFilterChips,
+      websiteFilterChips,
+      credentialDialogTitle,
+      websiteDialogTitle,
+      credentialForm,
+      websiteForm,
+      credentialTypeOptions,
+      credentialTagOptions,
+      websiteTagOptions,
+      credentialDraftFilterCount,
+      websiteDraftFilterCount,
+      showCredentialDialog,
+      showWebsiteDialog,
+      showCredentialFilterDialog,
+      showWebsiteFilterDialog,
+      draftCredentialTypes,
+      draftCredentialTags,
+      draftWebsiteTags,
+      openAddCredentialDialog,
+      openAddWebsiteDialog,
+      openPasswordVault,
+      closeCredentialDialog,
+      closeWebsiteDialog,
+      handleCredentialSearch,
+      handleWebsiteSearch,
+      openCredentialFilterDialog,
+      openWebsiteFilterDialog,
+      cancelCredentialFilters,
+      cancelWebsiteFilters,
+      clearDraftCredentialFilters,
+      clearDraftWebsiteFilters,
+      clearAllCredentialFilters,
+      clearAllWebsiteFilters,
+      removeCredentialFilterChip,
+      removeWebsiteFilterChip,
+      applyCredentialFilters,
+      applyWebsiteFilters,
       allApps,
       displayedApps,
       displayedUnifiedFavorites,
@@ -1444,7 +2114,6 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
       allCount,
       ssoCount,
       bookmarkCount,
-      websiteCount,
       favCount,
       webShieldResourceCount,
       serverResourceCount,
@@ -1476,6 +2145,13 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
       </AppNavigation>
 
       <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+        <PageHeader
+          v-if="currentView === 'password-vault'"
+          title="Password Vault"
+          :tabs="passwordVaultTabs"
+          :activeTab="passwordVaultTab"
+          @update:activeTab="passwordVaultTab = $event"
+        />
         <template v-if="currentView === 'requests'">
           <PageHeader
             title="Requests"
@@ -1488,6 +2164,13 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
           <div class="flex-1 min-h-0 overflow-auto bg-neutral-surface">
             <div class="w-full max-w-3xl mx-auto px-6 py-6">
               <div class="flex flex-col gap-4">
+                <PvTabs v-model:value="requestsTab">
+                  <PvTabList>
+                    <PvTab value="resources">Resources <span class="text-body-md text-tab-sub-text-base">({{ requestResourcesCount }})</span></PvTab>
+                    <PvTab value="privileged">Privileged Resources <span class="text-body-md text-tab-sub-text-base">({{ requestPrivilegedCount }})</span></PvTab>
+                    <PvTab value="access">Access <span class="text-body-md text-tab-sub-text-base">({{ requestAccessCount }})</span></PvTab>
+                  </PvTabList>
+                </PvTabs>
                 <div class="flex items-center justify-between">
                   <div class="w-72">
                     <PvIconField>
@@ -1516,7 +2199,12 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
                       <component :is="requestTypeIconMap[resource.type]" :class="iconProps.class" />
                     </template>
                     <template #actions>
-                      <PvButton label="Select" variant="outlined" size="small" @click="openRequestDialog(resource)" />
+                      <PvButton
+                        label="Select"
+                        variant="outlined"
+                        size="small"
+                        @click="resource.category === 'access' ? console.log('Admin elevation request selected') : openRequestDialog(resource)"
+                      />
                     </template>
                     <template #toggleicon="iconProps">
                       <ChevronRightIcon :class="iconProps.class" />
@@ -1593,6 +2281,306 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
           </div>
         </template>
 
+        <ListPageLayout v-else-if="currentView === 'password-vault'" class="w-full! h-full!">
+          <div class="flex flex-col h-full relative">
+            <template v-if="passwordVaultTab === 'credentials'">
+              <div class="flex flex-col h-full min-h-0">
+                <CircuitDataTable
+                  :columns="credentialColumns"
+                  :data="filteredCredentialsData"
+                  :paginator="true"
+                  :rows="10"
+                  :scrollable="true"
+                  scrollHeight="flex"
+                  :pt="{
+                    root: { class: 'flex flex-col h-full min-h-0' },
+                    tableContainer: { class: 'flex-1 min-h-0 overflow-auto' },
+                    footer: { class: 'shrink-0' },
+                  }"
+                  :ptOptions="{ mergeSections: true, mergeProps: true }"
+                >
+                  <template #toolbar>
+                    <DataTableToolbar
+                      addButtonLabel="Add Credential"
+                      searchPlaceholder="Search credentials..."
+                      :showAddButton="true"
+                      :showFilterButton="true"
+                      :showRefreshButton="true"
+                      :showColumnsButton="false"
+                      :showDownloadButton="false"
+                      :showSaveViewButton="false"
+                      :activeFilters="credentialFilterChips"
+                      :maxVisibleFilters="5"
+                      @add="openAddCredentialDialog"
+                      @search="handleCredentialSearch"
+                      @filter="openCredentialFilterDialog"
+                      @clear-all="clearAllCredentialFilters"
+                      @filter-remove="removeCredentialFilterChip"
+                    />
+                  </template>
+                </CircuitDataTable>
+              </div>
+            </template>
+            <template v-else-if="passwordVaultTab === 'websites'">
+              <div class="flex flex-col h-full min-h-0">
+                <CircuitDataTable
+                  :columns="websiteColumns"
+                  :data="filteredWebsitesData"
+                  :paginator="true"
+                  :rows="10"
+                  :scrollable="true"
+                  scrollHeight="flex"
+                  :pt="{
+                    root: { class: 'flex flex-col h-full min-h-0' },
+                    tableContainer: { class: 'flex-1 min-h-0 overflow-auto' },
+                    footer: { class: 'shrink-0' },
+                  }"
+                  :ptOptions="{ mergeSections: true, mergeProps: true }"
+                >
+                  <template #toolbar>
+                    <DataTableToolbar
+                      addButtonLabel="Add Website"
+                      searchPlaceholder="Search websites..."
+                      :showAddButton="true"
+                      :showFilterButton="true"
+                      :showRefreshButton="true"
+                      :showColumnsButton="false"
+                      :showDownloadButton="false"
+                      :showSaveViewButton="false"
+                      :activeFilters="websiteFilterChips"
+                      :maxVisibleFilters="5"
+                      @add="openAddWebsiteDialog"
+                      @search="handleWebsiteSearch"
+                      @filter="openWebsiteFilterDialog"
+                      @clear-all="clearAllWebsiteFilters"
+                      @filter-remove="removeWebsiteFilterChip"
+                    />
+                  </template>
+                </CircuitDataTable>
+              </div>
+            </template>
+          </div>
+
+          <PvDialog
+            v-model:visible="showCredentialDialog"
+            :draggable="false"
+            modal
+            :header="credentialDialogTitle"
+            :style="{ width: '560px' }"
+            @update:visible="!$event && closeCredentialDialog()"
+          >
+                <template #closeicon><XMarkIcon /></template>
+
+                <div class="flex flex-col gap-md">
+                  <FormField label="Credential Type">
+                    <template #default="{ inputId }">
+                      <PvSelect
+                        :id="inputId"
+                        v-model="credentialForm.type"
+                        :options="credentialTypeOptions"
+                        optionLabel="label"
+                        optionValue="value"
+                        class="w-full!"
+                      />
+                    </template>
+                  </FormField>
+
+                  <FormField label="Name">
+                    <template #default="{ inputId }">
+                      <PvInputText :id="inputId" v-model="credentialForm.name" class="w-full" />
+                    </template>
+                  </FormField>
+
+                  <FormField label="Username">
+                    <template #default="{ inputId }">
+                      <PvInputText :id="inputId" v-model="credentialForm.username" class="w-full" />
+                    </template>
+                  </FormField>
+
+                  <FormField label="Password">
+                    <template #default="{ inputId }">
+                      <Password :inputId="inputId" v-model="credentialForm.password" toggleMask />
+                    </template>
+                  </FormField>
+
+                  <FormField label="Expiration Date">
+                    <template #default="{ inputId }">
+                      <PvInputText
+                        :id="inputId"
+                        v-model="credentialForm.expirationDate"
+                        placeholder="MM/DD/YYYY"
+                        class="w-full"
+                      />
+                    </template>
+                  </FormField>
+
+                  <FormField label="Tags">
+                    <template #default="{ inputId }">
+                      <PvInputText
+                        :id="inputId"
+                        v-model="credentialForm.tags"
+                        placeholder="Add tags"
+                        class="w-full"
+                      />
+                    </template>
+                  </FormField>
+
+                  <FormField label="Notes">
+                    <template #default="{ inputId }">
+                      <PvTextarea :id="inputId" v-model="credentialForm.notes" class="w-full" :rows="3" />
+                    </template>
+                  </FormField>
+                </div>
+
+                <template #footer>
+                  <div class="flex items-center flex-1 min-w-0"></div>
+                  <div class="flex gap-sm shrink-0">
+                    <PvButton label="Cancel" severity="secondary" variant="text" @click="closeCredentialDialog" />
+                    <PvButton label="Save" @click="closeCredentialDialog" />
+                  </div>
+                </template>
+          </PvDialog>
+
+          <PvDialog
+            v-model:visible="showWebsiteDialog"
+            :draggable="false"
+            modal
+            :header="websiteDialogTitle"
+            :style="{ width: '560px' }"
+            @update:visible="!$event && closeWebsiteDialog()"
+          >
+                <template #closeicon><XMarkIcon /></template>
+
+                <div class="flex flex-col gap-md">
+                  <FormField label="Name">
+                    <template #default="{ inputId }">
+                      <PvInputText :id="inputId" v-model="websiteForm.name" class="w-full" />
+                    </template>
+                  </FormField>
+
+                  <FormField label="URI">
+                    <template #default="{ inputId }">
+                      <PvInputText
+                        :id="inputId"
+                        v-model="websiteForm.uri"
+                        placeholder="https://"
+                        class="w-full"
+                      />
+                    </template>
+                  </FormField>
+
+                  <FormField label="Tags">
+                    <template #default="{ inputId }">
+                      <PvInputText
+                        :id="inputId"
+                        v-model="websiteForm.tags"
+                        placeholder="Add tags"
+                        class="w-full"
+                      />
+                    </template>
+                  </FormField>
+
+                  <FormField label="Notes">
+                    <template #default="{ inputId }">
+                      <PvTextarea :id="inputId" v-model="websiteForm.notes" class="w-full" :rows="3" />
+                    </template>
+                  </FormField>
+                </div>
+
+                <template #footer>
+                  <div class="flex items-center flex-1 min-w-0"></div>
+                  <div class="flex gap-sm shrink-0">
+                    <PvButton label="Cancel" severity="secondary" variant="text" @click="closeWebsiteDialog" />
+                    <PvButton label="Save" @click="closeWebsiteDialog" />
+                  </div>
+                </template>
+          </PvDialog>
+
+          <PvDialog
+            v-model:visible="showCredentialFilterDialog"
+            :draggable="false"
+            modal
+            header="Apply filters"
+            :style="{ width: '560px' }"
+            @update:visible="!$event && cancelCredentialFilters()"
+          >
+                <template #closeicon><XMarkIcon /></template>
+                <div class="flex flex-col gap-md">
+                  <FormField label="Type">
+                    <template #default="{ inputId }">
+                      <PvMultiSelect
+                        :id="inputId"
+                        v-model="draftCredentialTypes"
+                        :options="credentialTypeOptions"
+                        optionLabel="label"
+                        optionValue="value"
+                        placeholder="All types"
+                        :maxSelectedLabels="2"
+                        class="w-full"
+                      />
+                    </template>
+                  </FormField>
+                  <FormField label="Tags">
+                    <template #default="{ inputId }">
+                      <PvMultiSelect
+                        :id="inputId"
+                        v-model="draftCredentialTags"
+                        :options="credentialTagOptions"
+                        placeholder="All tags"
+                        :maxSelectedLabels="2"
+                        class="w-full"
+                      />
+                    </template>
+                  </FormField>
+                </div>
+                <template #footer>
+                  <div class="flex items-center flex-1 min-w-0">
+                    <span class="text-body-sm text-neutral-subtle">{{ credentialDraftFilterCount }} Filters applied</span>
+                  </div>
+                  <div class="flex gap-sm shrink-0">
+                    <PvButton label="Cancel" severity="secondary" variant="text" @click="cancelCredentialFilters" />
+                    <PvButton label="Clear All" severity="secondary" variant="outlined" @click="clearDraftCredentialFilters" />
+                    <PvButton label="Apply" @click="applyCredentialFilters" />
+                  </div>
+                </template>
+          </PvDialog>
+
+          <PvDialog
+            v-model:visible="showWebsiteFilterDialog"
+            :draggable="false"
+            modal
+            header="Apply filters"
+            :style="{ width: '560px' }"
+            @update:visible="!$event && cancelWebsiteFilters()"
+          >
+                <template #closeicon><XMarkIcon /></template>
+                <div class="flex flex-col gap-md">
+                  <FormField label="Tags">
+                    <template #default="{ inputId }">
+                      <PvMultiSelect
+                        :id="inputId"
+                        v-model="draftWebsiteTags"
+                        :options="websiteTagOptions"
+                        placeholder="All tags"
+                        :maxSelectedLabels="2"
+                        class="w-full"
+                      />
+                    </template>
+                  </FormField>
+                </div>
+                <template #footer>
+                  <div class="flex items-center flex-1 min-w-0">
+                    <span class="text-body-sm text-neutral-subtle">{{ websiteDraftFilterCount }} Filters applied</span>
+                  </div>
+                  <div class="flex gap-sm shrink-0">
+                    <PvButton label="Cancel" severity="secondary" variant="text" @click="cancelWebsiteFilters" />
+                    <PvButton label="Clear All" severity="secondary" variant="outlined" @click="clearDraftWebsiteFilters" />
+                    <PvButton label="Apply" @click="applyWebsiteFilters" />
+                  </div>
+                </template>
+          </PvDialog>
+        </ListPageLayout>
+
         <template v-else>
           <div class="shrink-0 flex items-center justify-end gap-3 h-10 px-4 border-b border-neutral-default_solid bg-neutral-base">
             <PvButton label="Launch Admin Portal" severity="secondary" size="small" iconPos="right">
@@ -1645,7 +2633,6 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
                 <PvTab value="all">All <span class="text-body-md text-tab-sub-text-base">({{ allCount }})</span></PvTab>
                 <PvTab value="sso">SSO <span class="text-body-md text-tab-sub-text-base">({{ ssoCount }})</span></PvTab>
                 <PvTab value="bookmarks">Bookmarks <span class="text-body-md text-tab-sub-text-base">({{ bookmarkCount }})</span></PvTab>
-                <PvTab value="websites">Websites <span class="text-body-md text-tab-sub-text-base">({{ websiteCount }})</span></PvTab>
                 <PvTab value="web-shield">Web Shield <span class="text-body-md text-tab-sub-text-base">({{ webShieldResourceCount }})</span></PvTab>
                 <PvTab value="servers">Servers <span class="text-body-md text-tab-sub-text-base">({{ serverResourceCount }})</span></PvTab>
                 <PvTab value="databases">Databases <span class="text-body-md text-tab-sub-text-base">({{ databaseResourceCount }})</span></PvTab>
@@ -1666,7 +2653,10 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
                     mode="out-in"
                   >
                     <div v-if="displayedApps.length > 0" :key="'all-apps'" class="grid w-full grid-cols-5 max-md:grid-cols-2 gap-4 pt-4 pb-6">
-                      <template v-for="item in displayedApps" :key="item.id">
+                      <template
+                        v-for="item in displayedApps"
+                        :key="item.type === 'Web Shield' || item.type === 'Server' || item.type === 'Database' ? 'resource-' + item.id : 'app-' + item.id"
+                      >
                         <div
                           v-if="item.type === 'Web Shield' || item.type === 'Server' || item.type === 'Database'"
                           class="group flex min-w-0 flex-col rounded-md border border-neutral-default_solid bg-neutral-base cursor-pointer hover:shadow-e200 transition-shadow overflow-hidden"
@@ -1697,6 +2687,7 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
                         <div
                           v-else
                           class="group flex min-w-0 flex-col rounded-md border border-neutral-default_solid bg-neutral-base cursor-pointer hover:shadow-e200 transition-shadow overflow-hidden"
+                          @click="item.name === 'Password Vault' && openPasswordVault()"
                         >
                           <div class="flex items-center justify-between pt-2 pb-0 px-2">
                             <ArrowTopRightOnSquareIcon class="size-4 shrink-0 text-neutral-subtle opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -1756,6 +2747,7 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
                         v-for="app in displayedApps"
                         :key="app.id"
                         class="group flex min-w-0 flex-col rounded-md border border-neutral-default_solid bg-neutral-base cursor-pointer hover:shadow-e200 transition-shadow overflow-hidden"
+                        @click="app.name === 'Password Vault' && openPasswordVault()"
                       >
                         <div class="flex items-center justify-between pt-2 pb-0 px-2">
                           <ArrowTopRightOnSquareIcon class="size-4 shrink-0 text-neutral-subtle opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -1838,64 +2830,6 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
                       </div>
                     </div>
                     <div v-else :key="'bookmarks-empty'" class="flex flex-col items-center justify-center py-16 text-neutral-subtle">
-                      <span class="text-body-md">{{ searchQuery.trim() ? 'No applications match your search' : 'No applications available' }}</span>
-                      <span class="text-body-sm mt-1">{{ searchQuery.trim() ? 'Try a different search or clear the search field.' : 'Contact your IT administrator if you need access.' }}</span>
-                    </div>
-                  </Transition>
-                  <div v-else class="pt-4 pb-6">
-                    <div v-if="listRows.length > 0">
-                      <CircuitDataTable
-                        :data="listRows"
-                        :columns="listColumns"
-                      />
-                    </div>
-                    <div v-else class="flex flex-col items-center justify-center py-16 text-neutral-subtle">
-                      <span class="text-body-md">{{ searchQuery.trim() ? 'No applications match your search' : 'No applications available' }}</span>
-                      <span class="text-body-sm mt-1">{{ searchQuery.trim() ? 'Try a different search or clear the search field.' : 'Contact your IT administrator if you need access.' }}</span>
-                    </div>
-                  </div>
-                </PvTabPanel>
-
-                <PvTabPanel value="websites">
-                  <Transition
-                    v-if="viewMode === 'grid'"
-                    enter-active-class="transition-opacity duration-200 ease-out"
-                    enter-from-class="opacity-0"
-                    enter-to-class="opacity-100"
-                    leave-active-class="transition-opacity duration-150 ease-in"
-                    leave-from-class="opacity-100"
-                    leave-to-class="opacity-0"
-                    mode="out-in"
-                  >
-                    <div v-if="displayedApps.length > 0" :key="'websites-apps'" class="grid w-full grid-cols-5 max-md:grid-cols-2 gap-4 pt-4 pb-6">
-                      <div
-                        v-for="app in displayedApps"
-                        :key="app.id"
-                        class="group flex min-w-0 flex-col rounded-md border border-neutral-default_solid bg-neutral-base cursor-pointer hover:shadow-e200 transition-shadow overflow-hidden"
-                      >
-                        <div class="flex items-center justify-between pt-2 pb-0 px-2">
-                          <ArrowTopRightOnSquareIcon class="size-4 shrink-0 text-neutral-subtle opacity-0 group-hover:opacity-100 transition-opacity" />
-                          <div class="flex items-center gap-1">
-                            <BookmarkIcon v-if="app.type === 'bookmark'" class="size-4 text-branding-base" />
-                            <button
-                              type="button"
-                              class="border-0 bg-transparent cursor-pointer p-0 size-6 shrink-0 flex items-center justify-center leading-none"
-                              @click.stop="toggleFavorite(app)"
-                              :aria-label="app.favorite ? 'Remove from favorites' : 'Add to favorites'"
-                            >
-                              <component :is="app.favorite ? StarSolid : StarOutline" class="size-4" :class="app.favorite ? 'text-branding-base' : 'text-neutral-subtle'" />
-                            </button>
-                          </div>
-                        </div>
-                        <div class="p-2 border-t border-transparent">
-                          <AppLogo :app-name="app.name" :color="app.logoColor" :initial="app.logoInitial" />
-                        </div>
-                        <div class="flex min-w-0 items-center justify-center border-t border-neutral-default_solid p-2">
-                          <div class="text-heading-5 text-neutral-base max-w-full text-center overflow-hidden text-ellipsis whitespace-nowrap">{{ app.name }}</div>
-                        </div>
-                      </div>
-                    </div>
-                    <div v-else :key="'websites-empty'" class="flex flex-col items-center justify-center py-16 text-neutral-subtle">
                       <span class="text-body-md">{{ searchQuery.trim() ? 'No applications match your search' : 'No applications available' }}</span>
                       <span class="text-body-sm mt-1">{{ searchQuery.trim() ? 'Try a different search or clear the search field.' : 'Contact your IT administrator if you need access.' }}</span>
                     </div>
@@ -2207,7 +3141,7 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
 });
 
 const meta: Meta<typeof UserPortalAllAppsWithPrivilegedResourcesPage> = {
-  title: "Projects/Gabriel's Playground/User Portal/All Applications Menu",
+  title: "Projects/Gabriel's Playground/User Portal/User Portal (PAM and PWM)",
   component: UserPortalAllAppsWithPrivilegedResourcesPage,
   parameters: {
     layout: 'fullscreen',

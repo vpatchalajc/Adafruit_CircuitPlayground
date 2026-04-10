@@ -14,6 +14,7 @@ import {
   RadioButtonWithLabel,
 } from '@jumpcloud/circuit/components';
 import Button from 'primevue/button';
+import Checkbox from 'primevue/checkbox';
 import Dialog from 'primevue/dialog';
 import InputText from 'primevue/inputtext';
 import MultiSelect from 'primevue/multiselect';
@@ -34,6 +35,7 @@ import {
   ShieldCheckIcon,
   ChartBarSquareIcon,
   Cog6ToothIcon,
+  ClockIcon,
   BellIcon,
   UserIcon,
   UsersIcon,
@@ -136,11 +138,13 @@ const menuItems = [
   {
     label: 'PAM',
     leftIcon: markRaw(ServerStackIcon),
+    isNew: true,
     items: [
-      { label: 'Privileged Resources' },
-      { label: 'Blocking Rules' },
-      { label: 'Jump Servers' },
-      { label: 'Session History' },
+      { label: 'Privileged Management', leftIcon: markRaw(ClipboardDocumentCheckIcon) },
+      { label: 'Privileged Resources', leftIcon: markRaw(ServerStackIcon) },
+      { label: 'Blocking Rules', leftIcon: markRaw(NoSymbolIcon) },
+      { label: 'Jump Servers', leftIcon: markRaw(ArrowsRightLeftIcon) },
+      { label: 'Session History', leftIcon: markRaw(ClockIcon) },
     ],
   },
   {
@@ -228,6 +232,7 @@ const AdminPortalStory = defineComponent({
     RadioButtonWithLabel,
     FormField,
     PvButton: Button,
+    PvCheckbox: Checkbox,
     PvDialog: Dialog,
     PvInputText: InputText,
     PvTextarea: Textarea,
@@ -242,6 +247,7 @@ const AdminPortalStory = defineComponent({
     PvRadioButtonGroup: RadioButtonGroup,
     ChartBarSquareIcon,
     CircleStackIcon,
+    ArrowTopRightOnSquareIcon,
     ChevronRightIcon,
     GlobeAltIcon,
     NoSymbolIcon,
@@ -260,14 +266,19 @@ const AdminPortalStory = defineComponent({
     const passwordVaultTab = ref('overview');
     const passwordVaultTabs = [
       { label: 'Overview', value: 'overview' },
-      { label: 'Credentials', value: 'credentials' },
+      { label: 'User Groups', value: 'credentials' },
     ];
-    const privilegedResourcesTab = ref('overview');
+    const privilegedResourcesTab = ref('web-shield');
     const privilegedResourcesTabs = [
-      { label: 'Overview', value: 'overview' },
       { label: 'Web Shield', value: 'web-shield' },
       { label: 'Servers', value: 'servers' },
       { label: 'Databases', value: 'databases' },
+      { label: 'Privileged Credentials', value: 'privileged-credentials' },
+    ];
+    const privilegedManagementTab = ref('overview');
+    const privilegedManagementTabs = [
+      { label: 'Overview', value: 'overview' },
+      { label: 'User Groups', value: 'user-groups' },
     ];
     const pamTab = ref('blocking-rules');
     const pamTabs = [
@@ -280,6 +291,7 @@ const AdminPortalStory = defineComponent({
       Home: 'home',
       'Password Vault': 'password-vault',
       PAM: 'pam',
+      'Privileged Management': 'pam-privileged-management',
       'Privileged Resources': 'pam-privileged-resources',
       'Blocking Rules': 'pam-blocking-rules',
       'Session History': 'pam-session-history',
@@ -290,6 +302,7 @@ const AdminPortalStory = defineComponent({
       home: 'Home',
       'password-vault': 'Password Vault',
       pam: 'PAM',
+      'pam-privileged-management': 'Privileged Management',
       'pam-privileged-resources': 'Privileged Resources',
       'pam-blocking-rules': 'Blocking Rules',
       'pam-session-history': 'Session History',
@@ -338,7 +351,10 @@ const AdminPortalStory = defineComponent({
         passwordVaultTab.value = 'overview';
       }
       if (pageKey === 'pam-privileged-resources') {
-        privilegedResourcesTab.value = 'overview';
+        privilegedResourcesTab.value = 'web-shield';
+      }
+      if (pageKey === 'pam-privileged-management') {
+        privilegedManagementTab.value = 'overview';
       }
       if (pageKey === 'pam') {
         pamTab.value = 'blocking-rules';
@@ -1156,6 +1172,272 @@ const AdminPortalStory = defineComponent({
 
     function openCredentialDialog() {}
 
+    const showPrivilegedCredentialFilterDialog = ref(false);
+    const appliedPrivilegedCredentialTypes = ref([] as string[]);
+    const appliedPrivilegedCredentialTags = ref([] as string[]);
+    const draftPrivilegedCredentialTypes = ref([] as string[]);
+    const draftPrivilegedCredentialTags = ref([] as string[]);
+    const privilegedCredentialSearch = ref('');
+
+    const privilegedCredentialFilterChips = computed(() => {
+      const chips: { id: string; key: string; operator: string; value: string }[] = [];
+      if (appliedPrivilegedCredentialTypes.value.length > 0) {
+        chips.push({
+          id: 'type',
+          key: 'Type',
+          operator: 'is',
+          value: formatGroupedValues(appliedPrivilegedCredentialTypes.value),
+        });
+      }
+      if (appliedPrivilegedCredentialTags.value.length > 0) {
+        chips.push({
+          id: 'tags',
+          key: 'Tags',
+          operator: 'is',
+          value: formatGroupedValues(appliedPrivilegedCredentialTags.value),
+        });
+      }
+      return chips;
+    });
+
+    const filteredPrivilegedCredentialsData = computed(() => {
+      if (!privilegedCredentialSearch.value) return credentialsData;
+      const searchTerm = privilegedCredentialSearch.value.toLowerCase();
+      return credentialsData.filter(item =>
+        [item.name, item.type, item.tags, item.lastUsed, item.expirationDate]
+          .join(' ')
+          .toLowerCase()
+          .includes(searchTerm),
+      );
+    });
+
+    function openPrivilegedCredentialFilterDialog() {
+      draftPrivilegedCredentialTypes.value = [...appliedPrivilegedCredentialTypes.value];
+      draftPrivilegedCredentialTags.value = [...appliedPrivilegedCredentialTags.value];
+      showPrivilegedCredentialFilterDialog.value = true;
+    }
+
+    function clearAllPrivilegedCredentialFilters() {
+      appliedPrivilegedCredentialTypes.value = [];
+      appliedPrivilegedCredentialTags.value = [];
+    }
+
+    function removePrivilegedCredentialFilterChip(chip: { id?: string }) {
+      const chipId = chip.id ?? '';
+      if (chipId === 'type') appliedPrivilegedCredentialTypes.value = [];
+      if (chipId === 'tags') appliedPrivilegedCredentialTags.value = [];
+    }
+
+    function handlePrivilegedCredentialSearch(value: string) {
+      privilegedCredentialSearch.value = value;
+    }
+
+    function openPrivilegedCredentialDialog() {}
+
+    const userGroupsData = ref([
+      { id: '1', name: 'IT', membershipType: 'Static' },
+      { id: '2', name: 'Security', membershipType: 'Dynamic' },
+      { id: '3', name: 'Engineering', membershipType: 'Static' },
+      { id: '4', name: 'Directors', membershipType: 'Static' },
+      { id: '5', name: 'DevOps', membershipType: 'Dynamic' },
+      { id: '6', name: 'Finance', membershipType: 'Static' },
+      { id: '7', name: 'Sales', membershipType: 'Static' },
+      { id: '8', name: 'Marketing', membershipType: 'Dynamic' },
+      { id: '9', name: 'Support', membershipType: 'Static' },
+      { id: '10', name: 'Compliance', membershipType: 'Dynamic' },
+    ]);
+    const selectedUserGroupRows = ref([] as string[]);
+
+    const availableGroupsData = [
+      { id: '11', name: 'HR', membershipType: 'Static' },
+      { id: '12', name: 'Legal', membershipType: 'Static' },
+      { id: '13', name: 'Product', membershipType: 'Dynamic' },
+      { id: '14', name: 'Design', membershipType: 'Static' },
+      { id: '15', name: 'Executive', membershipType: 'Static' },
+      { id: '16', name: 'QA', membershipType: 'Dynamic' },
+      { id: '17', name: 'Data', membershipType: 'Static' },
+      { id: '18', name: 'Infrastructure', membershipType: 'Dynamic' },
+    ];
+
+    const showEnrollGroupsDialog = ref(false);
+    const enrollGroupsSearch = ref('');
+    const selectedGroupsToEnroll = ref([] as string[]);
+
+    const filteredAvailableGroups = computed(() => {
+      if (!enrollGroupsSearch.value) return availableGroupsData;
+      const term = enrollGroupsSearch.value.toLowerCase();
+      return availableGroupsData.filter(g => g.name.toLowerCase().includes(term));
+    });
+
+    const allGroupsSelected = computed(
+      () => filteredAvailableGroups.value.every(g => selectedGroupsToEnroll.value.includes(g.id)),
+    );
+
+    function toggleSelectAllGroups() {
+      if (allGroupsSelected.value) {
+        selectedGroupsToEnroll.value = [];
+      } else {
+        selectedGroupsToEnroll.value = filteredAvailableGroups.value.map(g => g.id);
+      }
+    }
+
+    const userGroupsColumns = [
+      { field: 'name', header: 'User Group', sortable: true },
+      { field: 'membershipType', header: 'Membership Type', sortable: true },
+    ];
+
+    function enrollSelectedGroups() {
+      const toAdd = availableGroupsData.filter(g => selectedGroupsToEnroll.value.includes(g.id));
+      userGroupsData.value.push(...toAdd);
+      selectedGroupsToEnroll.value = [];
+      enrollGroupsSearch.value = '';
+      showEnrollGroupsDialog.value = false;
+    }
+
+    function removeSelectedUserGroups() {
+      userGroupsData.value = userGroupsData.value.filter(
+        g => !selectedUserGroupRows.value.includes(g.id),
+      );
+      selectedUserGroupRows.value = [];
+    }
+
+    const sharingUsersData = [
+      { id: 'u1', name: 'Gabriel Ramos', email: 'gabriel.ramos@company.com' },
+      { id: 'u2', name: 'Albert Weihermann', email: 'albert.w@company.com' },
+      { id: 'u3', name: 'Bruno Souza', email: 'bruno.souza@company.com' },
+      { id: 'u4', name: 'Heitor Silva', email: 'heitor.silva@company.com' },
+      { id: 'u5', name: 'Sarah Chen', email: 'sarah.chen@company.com' },
+      { id: 'u6', name: 'Marcus Rodriguez', email: 'marcus.r@company.com' },
+    ];
+
+    const sharingGroupsData = [
+      { id: 'g1', name: 'IT' },
+      { id: 'g2', name: 'Security' },
+      { id: 'g3', name: 'Engineering' },
+      { id: 'g4', name: 'Directors' },
+      { id: 'g5', name: 'DevOps' },
+      { id: 'g6', name: 'Finance' },
+    ];
+
+    const sharingTab = ref('users');
+    const selectedSharingUsers = ref([] as string[]);
+    const selectedSharingGroups = ref([] as string[]);
+    const sharingSearch = ref('');
+
+    const filteredSharingUsers = computed(() => {
+      if (!sharingSearch.value) return sharingUsersData;
+      const term = sharingSearch.value.toLowerCase();
+      return sharingUsersData.filter(
+        u => u.name.toLowerCase().includes(term) || u.email.toLowerCase().includes(term),
+      );
+    });
+
+    const filteredSharingGroups = computed(() => {
+      if (!sharingSearch.value) return sharingGroupsData;
+      const term = sharingSearch.value.toLowerCase();
+      return sharingGroupsData.filter(g => g.name.toLowerCase().includes(term));
+    });
+
+    const showSelectExistingCredentialDialog = ref(false);
+    const showAddNewCredentialDialog = ref(false);
+    const selectedExistingCredentialId = ref('');
+    const newCredentialForm = ref({ name: '', type: 'Password', username: '', secret: '' });
+    const existingCredentialSearch = ref('');
+    const addedCredentials = ref([] as { name: string; type: string }[]);
+    const filteredExistingCredentials = computed(() => {
+      if (!existingCredentialSearch.value) return credentialsData;
+      const term = existingCredentialSearch.value.toLowerCase();
+      return credentialsData.filter((c: any) => c.name.toLowerCase().includes(term));
+    });
+
+    function confirmSelectExistingCredential() {
+      const found = credentialsData.find((c: any) => c.name === selectedExistingCredentialId.value);
+      if (found && !addedCredentials.value.find(c => c.name === found.name)) {
+        addedCredentials.value.push({ name: found.name, type: found.type });
+      }
+      selectedExistingCredentialId.value = '';
+      existingCredentialSearch.value = '';
+      showSelectExistingCredentialDialog.value = false;
+    }
+
+    function confirmAddNewCredential() {
+      if (newCredentialForm.value.name) {
+        addedCredentials.value.push({
+          name: newCredentialForm.value.name,
+          type: newCredentialForm.value.type,
+        });
+        newCredentialForm.value = { name: '', type: 'Password', username: '', secret: '' };
+      }
+      showAddNewCredentialDialog.value = false;
+    }
+
+    const pwmUserGroupsData = ref([
+      { id: '1', name: 'IT', membershipType: 'Static' },
+      { id: '2', name: 'Security', membershipType: 'Dynamic' },
+      { id: '3', name: 'Engineering', membershipType: 'Static' },
+      { id: '4', name: 'Directors', membershipType: 'Static' },
+      { id: '5', name: 'DevOps', membershipType: 'Dynamic' },
+      { id: '6', name: 'Finance', membershipType: 'Static' },
+      { id: '7', name: 'Sales', membershipType: 'Static' },
+      { id: '8', name: 'Marketing', membershipType: 'Dynamic' },
+      { id: '9', name: 'Support', membershipType: 'Static' },
+      { id: '10', name: 'Compliance', membershipType: 'Dynamic' },
+    ]);
+    const pwmSelectedUserGroupRows = ref([] as string[]);
+
+    const pwmAvailableGroupsData = [
+      { id: '11', name: 'HR', membershipType: 'Static' },
+      { id: '12', name: 'Legal', membershipType: 'Static' },
+      { id: '13', name: 'Product', membershipType: 'Dynamic' },
+      { id: '14', name: 'Design', membershipType: 'Static' },
+      { id: '15', name: 'Executive', membershipType: 'Static' },
+      { id: '16', name: 'QA', membershipType: 'Dynamic' },
+      { id: '17', name: 'Data', membershipType: 'Static' },
+      { id: '18', name: 'Infrastructure', membershipType: 'Dynamic' },
+    ];
+
+    const pwmShowEnrollGroupsDialog = ref(false);
+    const pwmEnrollGroupsSearch = ref('');
+    const pwmSelectedGroupsToEnroll = ref([] as string[]);
+
+    const pwmFilteredAvailableGroups = computed(() => {
+      if (!pwmEnrollGroupsSearch.value) return pwmAvailableGroupsData;
+      const term = pwmEnrollGroupsSearch.value.toLowerCase();
+      return pwmAvailableGroupsData.filter(g => g.name.toLowerCase().includes(term));
+    });
+
+    const pwmAllGroupsSelected = computed(
+      () => pwmFilteredAvailableGroups.value.every(g => pwmSelectedGroupsToEnroll.value.includes(g.id)),
+    );
+
+    function pwmToggleSelectAllGroups() {
+      if (pwmAllGroupsSelected.value) {
+        pwmSelectedGroupsToEnroll.value = [];
+      } else {
+        pwmSelectedGroupsToEnroll.value = pwmFilteredAvailableGroups.value.map(g => g.id);
+      }
+    }
+
+    const pwmUserGroupsColumns = [
+      { field: 'name', header: 'User Group', sortable: true },
+      { field: 'membershipType', header: 'Membership Type', sortable: true },
+    ];
+
+    function pwmEnrollSelectedGroups() {
+      const toAdd = pwmAvailableGroupsData.filter(g => pwmSelectedGroupsToEnroll.value.includes(g.id));
+      pwmUserGroupsData.value.push(...toAdd);
+      pwmSelectedGroupsToEnroll.value = [];
+      pwmEnrollGroupsSearch.value = '';
+      pwmShowEnrollGroupsDialog.value = false;
+    }
+
+    function pwmRemoveSelectedUserGroups() {
+      pwmUserGroupsData.value = pwmUserGroupsData.value.filter(
+        g => !pwmSelectedUserGroupRows.value.includes(g.id),
+      );
+      pwmSelectedUserGroupRows.value = [];
+    }
+
     const showWebShieldDialog = ref(false);
     const showServersDialog = ref(false);
     const showDatabasesDialog = ref(false);
@@ -1217,6 +1499,12 @@ const AdminPortalStory = defineComponent({
       showDatabasesDialog.value = true;
     }
 
+    function openPasswordVaultConfig() {
+      if (typeof window !== 'undefined') {
+        window.open('https://sedemo.vault.jumpcloud.com', '_blank');
+      }
+    }
+
     const placeholderText = computed(() => {
       if (currentPage.value === 'password-vault') {
         return 'Password Vault is enabled. Configure vault settings and access policies here.';
@@ -1239,6 +1527,8 @@ const AdminPortalStory = defineComponent({
       activeItem,
       privilegedResourcesTab,
       privilegedResourcesTabs,
+      privilegedManagementTab,
+      privilegedManagementTabs,
       pamTab,
       pamTabs,
       pageTitle,
@@ -1310,6 +1600,58 @@ const AdminPortalStory = defineComponent({
       removeCredentialFilterChip,
       handleCredentialSearch,
       openCredentialDialog,
+      showPrivilegedCredentialFilterDialog,
+      appliedPrivilegedCredentialTypes,
+      appliedPrivilegedCredentialTags,
+      draftPrivilegedCredentialTypes,
+      draftPrivilegedCredentialTags,
+      privilegedCredentialSearch,
+      privilegedCredentialFilterChips,
+      filteredPrivilegedCredentialsData,
+      openPrivilegedCredentialFilterDialog,
+      clearAllPrivilegedCredentialFilters,
+      removePrivilegedCredentialFilterChip,
+      handlePrivilegedCredentialSearch,
+      openPrivilegedCredentialDialog,
+      userGroupsData,
+      selectedUserGroupRows,
+      showEnrollGroupsDialog,
+      enrollGroupsSearch,
+      selectedGroupsToEnroll,
+      filteredAvailableGroups,
+      allGroupsSelected,
+      toggleSelectAllGroups,
+      userGroupsColumns,
+      enrollSelectedGroups,
+      removeSelectedUserGroups,
+      sharingUsersData,
+      sharingGroupsData,
+      sharingTab,
+      selectedSharingUsers,
+      selectedSharingGroups,
+      sharingSearch,
+      filteredSharingUsers,
+      filteredSharingGroups,
+      showSelectExistingCredentialDialog,
+      showAddNewCredentialDialog,
+      selectedExistingCredentialId,
+      newCredentialForm,
+      existingCredentialSearch,
+      addedCredentials,
+      filteredExistingCredentials,
+      confirmSelectExistingCredential,
+      confirmAddNewCredential,
+      pwmUserGroupsData,
+      pwmSelectedUserGroupRows,
+      pwmShowEnrollGroupsDialog,
+      pwmEnrollGroupsSearch,
+      pwmSelectedGroupsToEnroll,
+      pwmFilteredAvailableGroups,
+      pwmAllGroupsSelected,
+      pwmToggleSelectAllGroups,
+      pwmUserGroupsColumns,
+      pwmEnrollSelectedGroups,
+      pwmRemoveSelectedUserGroups,
       showWebShieldDialog,
       showServersDialog,
       showDatabasesDialog,
@@ -1326,6 +1668,7 @@ const AdminPortalStory = defineComponent({
       openWebShieldDialog,
       openServersDialog,
       openDatabasesDialog,
+      openPasswordVaultConfig,
       placeholderText,
       onNavClick,
     };
@@ -1353,6 +1696,14 @@ const AdminPortalStory = defineComponent({
             @update:activeTab="privilegedResourcesTab = $event"
           />
         </template>
+        <template v-else-if="currentPage === 'pam-privileged-management' && !overlayConfig">
+          <PageHeader
+            :title="pageTitle"
+            :tabs="privilegedManagementTabs"
+            :activeTab="privilegedManagementTab"
+            @update:activeTab="privilegedManagementTab = $event"
+          />
+        </template>
         <template v-else-if="currentPage === 'pam'">
           <PageHeader
             :title="pageTitle"
@@ -1362,12 +1713,26 @@ const AdminPortalStory = defineComponent({
           />
         </template>
         <template v-else-if="currentPage === 'password-vault' && !overlayConfig">
-          <PageHeader
-            :title="pageTitle"
-            :tabs="passwordVaultTabs"
-            :activeTab="passwordVaultTab"
-            @update:activeTab="passwordVaultTab = $event"
-          />
+          <div class="relative">
+            <PageHeader
+              :title="pageTitle"
+              :tabs="passwordVaultTabs"
+              :activeTab="passwordVaultTab"
+              @update:activeTab="passwordVaultTab = $event"
+            />
+            <PvButton
+              class="absolute right-6"
+              style="bottom: 8px;"
+              severity="secondary"
+              variant="outlined"
+              @click="openPasswordVaultConfig"
+            >
+              <template #default>
+                <span>Configure Password Vault</span>
+                <ArrowTopRightOnSquareIcon class="size-4 shrink-0 ml-xs" />
+              </template>
+            </PvButton>
+          </div>
         </template>
         <PageHeader v-else :title="pageTitle" />
 
@@ -1424,7 +1789,7 @@ const AdminPortalStory = defineComponent({
         </ListPageLayout>
 
         <DashboardPageLayout
-          v-else-if="currentPage === 'pam-privileged-resources' && privilegedResourcesTab === 'overview'"
+          v-else-if="currentPage === 'pam-privileged-management' && privilegedManagementTab === 'overview'"
           class="w-full! h-full!"
         >
           <div class="flex flex-col gap-lg w-full">
@@ -1683,47 +2048,87 @@ const AdminPortalStory = defineComponent({
               v-else-if="passwordVaultTab === 'credentials'"
               class="w-full! h-full!"
             >
-              <div class="flex flex-col h-full relative">
-                <template v-if="passwordVaultTab === 'credentials'">
-                  <div class="flex flex-col h-full min-h-0">
-                    <CircuitDataTable
-                      :columns="credentialColumns"
-                      :data="filteredCredentialsData"
-                      :card="true"
-                      :scrollable="true"
-                      scrollHeight="flex"
-                      :paginator="true"
-                      :rows="100"
-                      :pt="{
-                        root: { class: 'flex flex-col h-full min-h-0' },
-                        tableContainer: { class: 'flex-1 min-h-0 overflow-auto' },
-                        footer: { class: 'shrink-0' },
-                      }"
-                      :ptOptions="{ mergeSections: true, mergeProps: true }"
-                    >
-                      <template #toolbar>
+              <div class="flex flex-col h-full gap-lg">
+                <div class="flex flex-col h-full relative">
+                  <CircuitDataTable
+                    :columns="pwmUserGroupsColumns"
+                    :data="pwmUserGroupsData"
+                    :card="true"
+                    :scrollable="true"
+                    scrollHeight="flex"
+                    :paginator="true"
+                    :rows="10"
+                    :selection="pwmSelectedUserGroupRows"
+                    selectionMode="multiple"
+                    @update:selection="pwmSelectedUserGroupRows = $event"
+                  >
+                    <template #toolbar>
+                      <div class="flex items-center gap-sm mb-2">
                         <DataTableToolbar
-                          addButtonLabel="Add Credential"
-                          searchPlaceholder="Search credentials..."
+                          addButtonLabel="Add"
                           :showAddButton="true"
-                          :showFilterButton="true"
+                          :showFilterButton="false"
                           :showRefreshButton="false"
                           :showColumnsButton="false"
                           :showDownloadButton="false"
                           :showSaveViewButton="false"
-                          :activeFilters="credentialFilterChips"
-                          :maxVisibleFilters="5"
-                          @add="openCredentialDialog"
-                          @search="handleCredentialSearch"
-                          @filter="openCredentialFilterDialog"
-                          @clear-all="clearAllCredentialFilters"
-                          @filter-remove="removeCredentialFilterChip"
+                          @add="pwmShowEnrollGroupsDialog = true"
                         />
-                      </template>
-                    </CircuitDataTable>
-                  </div>
-                </template>
+                        <PvButton
+                          v-if="pwmSelectedUserGroupRows.length > 0"
+                          label="Remove Selected"
+                          severity="danger"
+                          variant="outlined"
+                          size="small"
+                          @click="pwmRemoveSelectedUserGroups"
+                        />
+                      </div>
+                    </template>
+                  </CircuitDataTable>
+                </div>
               </div>
+
+              <PvDialog
+                v-model:visible="pwmShowEnrollGroupsDialog"
+                :draggable="false"
+                modal
+                header="Enroll User Groups"
+                :style="{ width: '560px' }"
+              >
+                <template #closeicon><XMarkIcon /></template>
+                <div class="flex flex-col gap-md">
+                  <PvInputText
+                    v-model="pwmEnrollGroupsSearch"
+                    placeholder="Search groups"
+                    class="w-full"
+                  />
+                  <div class="flex items-center gap-sm px-md py-sm border border-neutral-default_solid rounded-md">
+                    <PvCheckbox
+                      :modelValue="pwmAllGroupsSelected"
+                      :binary="true"
+                      @change="pwmToggleSelectAllGroups"
+                    />
+                    <span class="text-body-sm-semi-bold text-neutral-base">Select All</span>
+                  </div>
+                  <div class="flex flex-col divide-y divide-neutral-default_solid border border-neutral-default_solid rounded-md overflow-hidden">
+                    <div
+                      v-for="group in pwmFilteredAvailableGroups"
+                      :key="group.id"
+                      class="flex items-center gap-sm px-md py-sm"
+                    >
+                      <PvCheckbox
+                        :value="group.id"
+                        v-model="pwmSelectedGroupsToEnroll"
+                      />
+                      <span class="text-body-sm text-neutral-base">{{ group.name }}</span>
+                    </div>
+                  </div>
+                </div>
+                <template #footer>
+                  <PvButton label="Cancel" severity="secondary" variant="text" @click="pwmShowEnrollGroupsDialog = false" />
+                  <PvButton label="Enroll" :disabled="pwmSelectedGroupsToEnroll.length === 0" @click="pwmEnrollSelectedGroups" />
+                </template>
+              </PvDialog>
             </ListPageLayout>
 
             <PvDialog
@@ -1939,6 +2344,50 @@ const AdminPortalStory = defineComponent({
               </div>
             </template>
 
+            <template v-else-if="privilegedResourcesTab === 'privileged-credentials'">
+              <div class="flex flex-col h-full relative">
+                <template v-if="privilegedResourcesTab === 'privileged-credentials'">
+                  <div class="flex flex-col h-full min-h-0">
+                    <CircuitDataTable
+                      :columns="credentialColumns"
+                      :data="filteredCredentialsData"
+                      :card="true"
+                      :scrollable="true"
+                      scrollHeight="flex"
+                      :paginator="true"
+                      :rows="100"
+                      :pt="{
+                        root: { class: 'flex flex-col h-full min-h-0' },
+                        tableContainer: { class: 'flex-1 min-h-0 overflow-auto' },
+                        footer: { class: 'shrink-0' },
+                      }"
+                      :ptOptions="{ mergeSections: true, mergeProps: true }"
+                    >
+                      <template #toolbar>
+                        <DataTableToolbar
+                          addButtonLabel="Add"
+                          searchPlaceholder="Search"
+                          :showAddButton="true"
+                          :showFilterButton="true"
+                          :showRefreshButton="false"
+                          :showColumnsButton="false"
+                          :showDownloadButton="false"
+                          :showSaveViewButton="false"
+                          :activeFilters="privilegedCredentialFilterChips"
+                          :maxVisibleFilters="5"
+                          @add="openPrivilegedCredentialDialog"
+                          @search="handlePrivilegedCredentialSearch"
+                          @filter="openPrivilegedCredentialFilterDialog"
+                          @clear-all="clearAllPrivilegedCredentialFilters"
+                          @filter-remove="removePrivilegedCredentialFilterChip"
+                        />
+                      </template>
+                    </CircuitDataTable>
+                  </div>
+                </template>
+              </div>
+            </template>
+
             <template v-else>
               <div class="flex flex-col h-full min-h-0">
                 <CircuitDataTable
@@ -2052,7 +2501,7 @@ const AdminPortalStory = defineComponent({
             <PvTabs v-model:value="webShieldDialogTab">
               <PvTabList>
                 <PvTab value="general">General</PvTab>
-                <PvTab value="credentials">Credentials</PvTab>
+                <PvTab value="credentials">Privileged Credentials</PvTab>
                 <PvTab value="sharing">Sharing Preferences</PvTab>
                 <PvTab value="extension">Extension Parameters</PvTab>
                 <PvTab value="web-shield">Web Shield</PvTab>
@@ -2107,10 +2556,162 @@ const AdminPortalStory = defineComponent({
                   </div>
                 </PvTabPanel>
                 <PvTabPanel value="credentials">
-                  <div class="text-body-md text-neutral-subtle">Credentials configuration goes here.</div>
+                  <div class="flex flex-col gap-md">
+                    <div class="flex gap-sm">
+                      <PvButton
+                        label="Add Existing"
+                        severity="secondary"
+                        variant="outlined"
+                        size="small"
+                        @click="showSelectExistingCredentialDialog = true"
+                      />
+                      <PvButton
+                        label="Add New"
+                        severity="secondary"
+                        variant="outlined"
+                        size="small"
+                        @click="showAddNewCredentialDialog = true"
+                      />
+                    </div>
+                  <div v-if="addedCredentials.length > 0" class="flex flex-col divide-y divide-neutral-default_solid border border-neutral-default_solid rounded-md overflow-hidden">
+                    <div
+                      v-for="(cred, index) in addedCredentials"
+                      :key="cred.name"
+                      class="flex items-center justify-between px-md py-sm"
+                    >
+                      <div class="flex flex-col">
+                        <span class="text-body-sm-semi-bold text-neutral-base">{{ cred.name }}</span>
+                        <span class="text-body-xs text-neutral-subtle">{{ cred.type }}</span>
+                      </div>
+                      <PvButton severity="secondary" variant="text" size="small" @click="addedCredentials.splice(index, 1)">
+                        <template #icon><TrashIcon class="w-4 h-4" /></template>
+                      </PvButton>
+                    </div>
+                  </div>
+                  <div v-else class="text-body-sm text-neutral-subtle">No privileged credentials added yet.</div>
+                  </div>
+
+                  <!-- Select Existing Credential Dialog -->
+                  <PvDialog
+                    v-model:visible="showSelectExistingCredentialDialog"
+                    :draggable="false"
+                    modal
+                    header="Select Privileged Credential"
+                    :style="{ width: '560px' }"
+                  >
+                    <template #closeicon><XMarkIcon /></template>
+                    <div class="flex flex-col gap-md">
+                      <PvInputText v-model="existingCredentialSearch" placeholder="Search" class="w-full" />
+                      <div class="flex flex-col divide-y divide-neutral-default_solid border border-neutral-default_solid rounded-md overflow-hidden max-h-64 overflow-y-auto">
+                        <div
+                          v-for="cred in filteredExistingCredentials"
+                          :key="cred.name"
+                          class="flex items-center gap-sm px-md py-sm cursor-pointer hover:bg-neutral-surface"
+                          @click="selectedExistingCredentialId = cred.name"
+                        >
+                          <PvCheckbox :value="cred.name" v-model="selectedExistingCredentialId" :binary="false" />
+                          <div class="flex flex-col">
+                            <span class="text-body-sm-semi-bold text-neutral-base">{{ cred.name }}</span>
+                            <span class="text-body-xs text-neutral-subtle">{{ cred.type }}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <template #footer>
+                      <PvButton label="Cancel" severity="secondary" variant="text" @click="showSelectExistingCredentialDialog = false" />
+                      <PvButton label="Select" :disabled="!selectedExistingCredentialId" @click="confirmSelectExistingCredential" />
+                    </template>
+                  </PvDialog>
+
+                  <!-- Add New Credential Dialog -->
+                  <PvDialog
+                    v-model:visible="showAddNewCredentialDialog"
+                    :draggable="false"
+                    modal
+                    header="Add Privileged Credential"
+                    :style="{ width: '480px' }"
+                  >
+                    <template #closeicon><XMarkIcon /></template>
+                    <div class="flex flex-col gap-md">
+                      <FormField label="Name">
+                        <template #default="{ inputId }">
+                          <PvInputText :id="inputId" v-model="newCredentialForm.name" placeholder="Credential name" class="w-full" />
+                        </template>
+                      </FormField>
+                      <FormField label="Type">
+                        <template #default="{ inputId }">
+                          <PvSelect
+                            :id="inputId"
+                            v-model="newCredentialForm.type"
+                            :options="['Password', 'SSH Key']"
+                            class="w-full"
+                          />
+                        </template>
+                      </FormField>
+                      <FormField label="Username">
+                        <template #default="{ inputId }">
+                          <PvInputText :id="inputId" v-model="newCredentialForm.username" placeholder="Username" class="w-full" />
+                        </template>
+                      </FormField>
+                      <FormField :label="newCredentialForm.type === 'SSH Key' ? 'Private Key' : 'Password'">
+                        <template #default="{ inputId }">
+                          <PvInputText :id="inputId" v-model="newCredentialForm.secret" placeholder="Enter value" class="w-full" />
+                        </template>
+                      </FormField>
+                    </div>
+                    <template #footer>
+                      <PvButton label="Cancel" severity="secondary" variant="text" @click="showAddNewCredentialDialog = false" />
+                      <PvButton label="Save" :disabled="!newCredentialForm.name" @click="confirmAddNewCredential" />
+                    </template>
+                  </PvDialog>
                 </PvTabPanel>
                 <PvTabPanel value="sharing">
-                  <div class="text-body-md text-neutral-subtle">Sharing preferences go here.</div>
+                  <div class="flex flex-col gap-md">
+                    <div class="flex gap-sm">
+                      <PvButton
+                        :label="\`Users (\${selectedSharingUsers.length})\`"
+                        :severity="sharingTab === 'users' ? 'primary' : 'secondary'"
+                        :variant="sharingTab === 'users' ? undefined : 'outlined'"
+                        size="small"
+                        @click="sharingTab = 'users'; sharingSearch = ''"
+                      />
+                      <PvButton
+                        :label="\`User Groups (\${selectedSharingGroups.length})\`"
+                        :severity="sharingTab === 'groups' ? 'primary' : 'secondary'"
+                        :variant="sharingTab === 'groups' ? undefined : 'outlined'"
+                        size="small"
+                        @click="sharingTab = 'groups'; sharingSearch = ''"
+                      />
+                    </div>
+                    <PvInputText
+                      v-model="sharingSearch"
+                      placeholder="Search"
+                      class="w-full"
+                    />
+                    <div v-if="sharingTab === 'users'" class="flex flex-col divide-y divide-neutral-default_solid border border-neutral-default_solid rounded-md overflow-hidden">
+                      <div
+                        v-for="user in filteredSharingUsers"
+                        :key="user.id"
+                        class="flex items-center gap-sm px-md py-sm"
+                      >
+                        <PvCheckbox :value="user.id" v-model="selectedSharingUsers" />
+                        <div class="flex flex-col">
+                          <span class="text-body-sm-semi-bold text-neutral-base">{{ user.name }}</span>
+                          <span class="text-body-xs text-neutral-subtle">{{ user.email }}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div v-else class="flex flex-col divide-y divide-neutral-default_solid border border-neutral-default_solid rounded-md overflow-hidden">
+                      <div
+                        v-for="group in filteredSharingGroups"
+                        :key="group.id"
+                        class="flex items-center gap-sm px-md py-sm"
+                      >
+                        <PvCheckbox :value="group.id" v-model="selectedSharingGroups" />
+                        <span class="text-body-sm text-neutral-base">{{ group.name }}</span>
+                      </div>
+                    </div>
+                  </div>
                 </PvTabPanel>
                 <PvTabPanel value="extension">
                   <div class="text-body-md text-neutral-subtle">Extension parameters go here.</div>
@@ -2140,7 +2741,7 @@ const AdminPortalStory = defineComponent({
             <PvTabs v-model:value="serversDialogTab">
               <PvTabList>
                 <PvTab value="general">General</PvTab>
-                <PvTab value="credentials">Credentials</PvTab>
+                <PvTab value="credentials">Privileged Credentials</PvTab>
                 <PvTab value="sharing">Sharing Preferences</PvTab>
               </PvTabList>
               <PvTabPanels>
@@ -2258,10 +2859,162 @@ const AdminPortalStory = defineComponent({
                   </div>
                 </PvTabPanel>
                 <PvTabPanel value="credentials">
-                  <div class="text-body-md text-neutral-subtle">Credentials configuration goes here.</div>
+                  <div class="flex flex-col gap-md">
+                    <div class="flex gap-sm">
+                      <PvButton
+                        label="Add Existing"
+                        severity="secondary"
+                        variant="outlined"
+                        size="small"
+                        @click="showSelectExistingCredentialDialog = true"
+                      />
+                      <PvButton
+                        label="Add New"
+                        severity="secondary"
+                        variant="outlined"
+                        size="small"
+                        @click="showAddNewCredentialDialog = true"
+                      />
+                    </div>
+                  <div v-if="addedCredentials.length > 0" class="flex flex-col divide-y divide-neutral-default_solid border border-neutral-default_solid rounded-md overflow-hidden">
+                    <div
+                      v-for="(cred, index) in addedCredentials"
+                      :key="cred.name"
+                      class="flex items-center justify-between px-md py-sm"
+                    >
+                      <div class="flex flex-col">
+                        <span class="text-body-sm-semi-bold text-neutral-base">{{ cred.name }}</span>
+                        <span class="text-body-xs text-neutral-subtle">{{ cred.type }}</span>
+                      </div>
+                      <PvButton severity="secondary" variant="text" size="small" @click="addedCredentials.splice(index, 1)">
+                        <template #icon><TrashIcon class="w-4 h-4" /></template>
+                      </PvButton>
+                    </div>
+                  </div>
+                  <div v-else class="text-body-sm text-neutral-subtle">No privileged credentials added yet.</div>
+                  </div>
+
+                  <!-- Select Existing Credential Dialog -->
+                  <PvDialog
+                    v-model:visible="showSelectExistingCredentialDialog"
+                    :draggable="false"
+                    modal
+                    header="Select Privileged Credential"
+                    :style="{ width: '560px' }"
+                  >
+                    <template #closeicon><XMarkIcon /></template>
+                    <div class="flex flex-col gap-md">
+                      <PvInputText v-model="existingCredentialSearch" placeholder="Search" class="w-full" />
+                      <div class="flex flex-col divide-y divide-neutral-default_solid border border-neutral-default_solid rounded-md overflow-hidden max-h-64 overflow-y-auto">
+                        <div
+                          v-for="cred in filteredExistingCredentials"
+                          :key="cred.name"
+                          class="flex items-center gap-sm px-md py-sm cursor-pointer hover:bg-neutral-surface"
+                          @click="selectedExistingCredentialId = cred.name"
+                        >
+                          <PvCheckbox :value="cred.name" v-model="selectedExistingCredentialId" :binary="false" />
+                          <div class="flex flex-col">
+                            <span class="text-body-sm-semi-bold text-neutral-base">{{ cred.name }}</span>
+                            <span class="text-body-xs text-neutral-subtle">{{ cred.type }}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <template #footer>
+                      <PvButton label="Cancel" severity="secondary" variant="text" @click="showSelectExistingCredentialDialog = false" />
+                      <PvButton label="Select" :disabled="!selectedExistingCredentialId" @click="confirmSelectExistingCredential" />
+                    </template>
+                  </PvDialog>
+
+                  <!-- Add New Credential Dialog -->
+                  <PvDialog
+                    v-model:visible="showAddNewCredentialDialog"
+                    :draggable="false"
+                    modal
+                    header="Add Privileged Credential"
+                    :style="{ width: '480px' }"
+                  >
+                    <template #closeicon><XMarkIcon /></template>
+                    <div class="flex flex-col gap-md">
+                      <FormField label="Name">
+                        <template #default="{ inputId }">
+                          <PvInputText :id="inputId" v-model="newCredentialForm.name" placeholder="Credential name" class="w-full" />
+                        </template>
+                      </FormField>
+                      <FormField label="Type">
+                        <template #default="{ inputId }">
+                          <PvSelect
+                            :id="inputId"
+                            v-model="newCredentialForm.type"
+                            :options="['Password', 'SSH Key']"
+                            class="w-full"
+                          />
+                        </template>
+                      </FormField>
+                      <FormField label="Username">
+                        <template #default="{ inputId }">
+                          <PvInputText :id="inputId" v-model="newCredentialForm.username" placeholder="Username" class="w-full" />
+                        </template>
+                      </FormField>
+                      <FormField :label="newCredentialForm.type === 'SSH Key' ? 'Private Key' : 'Password'">
+                        <template #default="{ inputId }">
+                          <PvInputText :id="inputId" v-model="newCredentialForm.secret" placeholder="Enter value" class="w-full" />
+                        </template>
+                      </FormField>
+                    </div>
+                    <template #footer>
+                      <PvButton label="Cancel" severity="secondary" variant="text" @click="showAddNewCredentialDialog = false" />
+                      <PvButton label="Save" :disabled="!newCredentialForm.name" @click="confirmAddNewCredential" />
+                    </template>
+                  </PvDialog>
                 </PvTabPanel>
                 <PvTabPanel value="sharing">
-                  <div class="text-body-md text-neutral-subtle">Sharing preferences go here.</div>
+                  <div class="flex flex-col gap-md">
+                    <div class="flex gap-sm">
+                      <PvButton
+                        :label="\`Users (\${selectedSharingUsers.length})\`"
+                        :severity="sharingTab === 'users' ? 'primary' : 'secondary'"
+                        :variant="sharingTab === 'users' ? undefined : 'outlined'"
+                        size="small"
+                        @click="sharingTab = 'users'; sharingSearch = ''"
+                      />
+                      <PvButton
+                        :label="\`User Groups (\${selectedSharingGroups.length})\`"
+                        :severity="sharingTab === 'groups' ? 'primary' : 'secondary'"
+                        :variant="sharingTab === 'groups' ? undefined : 'outlined'"
+                        size="small"
+                        @click="sharingTab = 'groups'; sharingSearch = ''"
+                      />
+                    </div>
+                    <PvInputText
+                      v-model="sharingSearch"
+                      placeholder="Search"
+                      class="w-full"
+                    />
+                    <div v-if="sharingTab === 'users'" class="flex flex-col divide-y divide-neutral-default_solid border border-neutral-default_solid rounded-md overflow-hidden">
+                      <div
+                        v-for="user in filteredSharingUsers"
+                        :key="user.id"
+                        class="flex items-center gap-sm px-md py-sm"
+                      >
+                        <PvCheckbox :value="user.id" v-model="selectedSharingUsers" />
+                        <div class="flex flex-col">
+                          <span class="text-body-sm-semi-bold text-neutral-base">{{ user.name }}</span>
+                          <span class="text-body-xs text-neutral-subtle">{{ user.email }}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div v-else class="flex flex-col divide-y divide-neutral-default_solid border border-neutral-default_solid rounded-md overflow-hidden">
+                      <div
+                        v-for="group in filteredSharingGroups"
+                        :key="group.id"
+                        class="flex items-center gap-sm px-md py-sm"
+                      >
+                        <PvCheckbox :value="group.id" v-model="selectedSharingGroups" />
+                        <span class="text-body-sm text-neutral-base">{{ group.name }}</span>
+                      </div>
+                    </div>
+                  </div>
                 </PvTabPanel>
               </PvTabPanels>
             </PvTabs>
@@ -2285,7 +3038,7 @@ const AdminPortalStory = defineComponent({
             <PvTabs v-model:value="databasesDialogTab">
               <PvTabList>
                 <PvTab value="general">General</PvTab>
-                <PvTab value="credentials">Credentials</PvTab>
+                <PvTab value="credentials">Privileged Credentials</PvTab>
                 <PvTab value="sharing">Sharing Preferences</PvTab>
               </PvTabList>
               <PvTabPanels>
@@ -2351,10 +3104,162 @@ const AdminPortalStory = defineComponent({
                   </div>
                 </PvTabPanel>
                 <PvTabPanel value="credentials">
-                  <div class="text-body-md text-neutral-subtle">Credentials configuration goes here.</div>
+                  <div class="flex flex-col gap-md">
+                    <div class="flex gap-sm">
+                      <PvButton
+                        label="Add Existing"
+                        severity="secondary"
+                        variant="outlined"
+                        size="small"
+                        @click="showSelectExistingCredentialDialog = true"
+                      />
+                      <PvButton
+                        label="Add New"
+                        severity="secondary"
+                        variant="outlined"
+                        size="small"
+                        @click="showAddNewCredentialDialog = true"
+                      />
+                    </div>
+                  <div v-if="addedCredentials.length > 0" class="flex flex-col divide-y divide-neutral-default_solid border border-neutral-default_solid rounded-md overflow-hidden">
+                    <div
+                      v-for="(cred, index) in addedCredentials"
+                      :key="cred.name"
+                      class="flex items-center justify-between px-md py-sm"
+                    >
+                      <div class="flex flex-col">
+                        <span class="text-body-sm-semi-bold text-neutral-base">{{ cred.name }}</span>
+                        <span class="text-body-xs text-neutral-subtle">{{ cred.type }}</span>
+                      </div>
+                      <PvButton severity="secondary" variant="text" size="small" @click="addedCredentials.splice(index, 1)">
+                        <template #icon><TrashIcon class="w-4 h-4" /></template>
+                      </PvButton>
+                    </div>
+                  </div>
+                  <div v-else class="text-body-sm text-neutral-subtle">No privileged credentials added yet.</div>
+                  </div>
+
+                  <!-- Select Existing Credential Dialog -->
+                  <PvDialog
+                    v-model:visible="showSelectExistingCredentialDialog"
+                    :draggable="false"
+                    modal
+                    header="Select Privileged Credential"
+                    :style="{ width: '560px' }"
+                  >
+                    <template #closeicon><XMarkIcon /></template>
+                    <div class="flex flex-col gap-md">
+                      <PvInputText v-model="existingCredentialSearch" placeholder="Search" class="w-full" />
+                      <div class="flex flex-col divide-y divide-neutral-default_solid border border-neutral-default_solid rounded-md overflow-hidden max-h-64 overflow-y-auto">
+                        <div
+                          v-for="cred in filteredExistingCredentials"
+                          :key="cred.name"
+                          class="flex items-center gap-sm px-md py-sm cursor-pointer hover:bg-neutral-surface"
+                          @click="selectedExistingCredentialId = cred.name"
+                        >
+                          <PvCheckbox :value="cred.name" v-model="selectedExistingCredentialId" :binary="false" />
+                          <div class="flex flex-col">
+                            <span class="text-body-sm-semi-bold text-neutral-base">{{ cred.name }}</span>
+                            <span class="text-body-xs text-neutral-subtle">{{ cred.type }}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <template #footer>
+                      <PvButton label="Cancel" severity="secondary" variant="text" @click="showSelectExistingCredentialDialog = false" />
+                      <PvButton label="Select" :disabled="!selectedExistingCredentialId" @click="confirmSelectExistingCredential" />
+                    </template>
+                  </PvDialog>
+
+                  <!-- Add New Credential Dialog -->
+                  <PvDialog
+                    v-model:visible="showAddNewCredentialDialog"
+                    :draggable="false"
+                    modal
+                    header="Add Privileged Credential"
+                    :style="{ width: '480px' }"
+                  >
+                    <template #closeicon><XMarkIcon /></template>
+                    <div class="flex flex-col gap-md">
+                      <FormField label="Name">
+                        <template #default="{ inputId }">
+                          <PvInputText :id="inputId" v-model="newCredentialForm.name" placeholder="Credential name" class="w-full" />
+                        </template>
+                      </FormField>
+                      <FormField label="Type">
+                        <template #default="{ inputId }">
+                          <PvSelect
+                            :id="inputId"
+                            v-model="newCredentialForm.type"
+                            :options="['Password', 'SSH Key']"
+                            class="w-full"
+                          />
+                        </template>
+                      </FormField>
+                      <FormField label="Username">
+                        <template #default="{ inputId }">
+                          <PvInputText :id="inputId" v-model="newCredentialForm.username" placeholder="Username" class="w-full" />
+                        </template>
+                      </FormField>
+                      <FormField :label="newCredentialForm.type === 'SSH Key' ? 'Private Key' : 'Password'">
+                        <template #default="{ inputId }">
+                          <PvInputText :id="inputId" v-model="newCredentialForm.secret" placeholder="Enter value" class="w-full" />
+                        </template>
+                      </FormField>
+                    </div>
+                    <template #footer>
+                      <PvButton label="Cancel" severity="secondary" variant="text" @click="showAddNewCredentialDialog = false" />
+                      <PvButton label="Save" :disabled="!newCredentialForm.name" @click="confirmAddNewCredential" />
+                    </template>
+                  </PvDialog>
                 </PvTabPanel>
                 <PvTabPanel value="sharing">
-                  <div class="text-body-md text-neutral-subtle">Sharing preferences go here.</div>
+                  <div class="flex flex-col gap-md">
+                    <div class="flex gap-sm">
+                      <PvButton
+                        :label="\`Users (\${selectedSharingUsers.length})\`"
+                        :severity="sharingTab === 'users' ? 'primary' : 'secondary'"
+                        :variant="sharingTab === 'users' ? undefined : 'outlined'"
+                        size="small"
+                        @click="sharingTab = 'users'; sharingSearch = ''"
+                      />
+                      <PvButton
+                        :label="\`User Groups (\${selectedSharingGroups.length})\`"
+                        :severity="sharingTab === 'groups' ? 'primary' : 'secondary'"
+                        :variant="sharingTab === 'groups' ? undefined : 'outlined'"
+                        size="small"
+                        @click="sharingTab = 'groups'; sharingSearch = ''"
+                      />
+                    </div>
+                    <PvInputText
+                      v-model="sharingSearch"
+                      placeholder="Search"
+                      class="w-full"
+                    />
+                    <div v-if="sharingTab === 'users'" class="flex flex-col divide-y divide-neutral-default_solid border border-neutral-default_solid rounded-md overflow-hidden">
+                      <div
+                        v-for="user in filteredSharingUsers"
+                        :key="user.id"
+                        class="flex items-center gap-sm px-md py-sm"
+                      >
+                        <PvCheckbox :value="user.id" v-model="selectedSharingUsers" />
+                        <div class="flex flex-col">
+                          <span class="text-body-sm-semi-bold text-neutral-base">{{ user.name }}</span>
+                          <span class="text-body-xs text-neutral-subtle">{{ user.email }}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div v-else class="flex flex-col divide-y divide-neutral-default_solid border border-neutral-default_solid rounded-md overflow-hidden">
+                      <div
+                        v-for="group in filteredSharingGroups"
+                        :key="group.id"
+                        class="flex items-center gap-sm px-md py-sm"
+                      >
+                        <PvCheckbox :value="group.id" v-model="selectedSharingGroups" />
+                        <span class="text-body-sm text-neutral-base">{{ group.name }}</span>
+                      </div>
+                    </div>
+                  </div>
                 </PvTabPanel>
               </PvTabPanels>
             </PvTabs>
@@ -2364,6 +3269,90 @@ const AdminPortalStory = defineComponent({
                 <PvButton label="Cancel" severity="secondary" variant="text" @click="showDatabasesDialog = false" />
                 <PvButton label="Save" />
               </div>
+            </template>
+          </PvDialog>
+        </ListPageLayout>
+
+        <ListPageLayout v-else-if="privilegedManagementTab === 'user-groups'" class="w-full! h-full!">
+          <div class="flex flex-col h-full gap-lg">
+            <div class="flex flex-col h-full relative">
+              <CircuitDataTable
+                :columns="userGroupsColumns"
+                :data="userGroupsData"
+                :card="true"
+                :scrollable="true"
+                scrollHeight="flex"
+                :paginator="true"
+                :rows="10"
+                :selection="selectedUserGroupRows"
+                selectionMode="multiple"
+                @update:selection="selectedUserGroupRows = $event"
+              >
+                <template #toolbar>
+                  <div class="flex items-center gap-sm mb-2">
+                    <DataTableToolbar
+                      addButtonLabel="Add"
+                      :showAddButton="true"
+                      :showFilterButton="false"
+                      :showRefreshButton="false"
+                      :showColumnsButton="false"
+                      :showDownloadButton="false"
+                      :showSaveViewButton="false"
+                      @add="showEnrollGroupsDialog = true"
+                    />
+                    <PvButton
+                      v-if="selectedUserGroupRows.length > 0"
+                      label="Remove Selected"
+                      severity="danger"
+                      variant="outlined"
+                      size="small"
+                      @click="removeSelectedUserGroups"
+                    />
+                  </div>
+                </template>
+              </CircuitDataTable>
+            </div>
+          </div>
+
+          <PvDialog
+            v-model:visible="showEnrollGroupsDialog"
+            :draggable="false"
+            modal
+            header="Enroll User Groups"
+            :style="{ width: '560px' }"
+          >
+            <template #closeicon><XMarkIcon /></template>
+            <div class="flex flex-col gap-md">
+              <PvInputText
+                v-model="enrollGroupsSearch"
+                placeholder="Search groups"
+                class="w-full"
+              />
+              <div class="flex items-center gap-sm px-md py-sm border border-neutral-default_solid rounded-md">
+                <PvCheckbox
+                  :modelValue="allGroupsSelected"
+                  :binary="true"
+                  @change="toggleSelectAllGroups"
+                />
+                <span class="text-body-sm-semi-bold text-neutral-base">Select All</span>
+              </div>
+              <div class="flex flex-col divide-y divide-neutral-default_solid border border-neutral-default_solid rounded-md overflow-hidden">
+                <div
+                  v-for="group in filteredAvailableGroups"
+                  :key="group.id"
+                  class="flex items-center gap-sm px-md py-sm"
+                >
+                  <PvCheckbox
+                    :value="group.id"
+                    v-model="selectedGroupsToEnroll"
+                  />
+                  <span class="text-body-sm text-neutral-base">{{ group.name }}</span>
+                </div>
+              </div>
+            </div>
+            <template #footer>
+              <PvButton label="Cancel" severity="secondary" variant="text" @click="showEnrollGroupsDialog = false" />
+              <PvButton label="Enroll" :disabled="selectedGroupsToEnroll.length === 0" @click="enrollSelectedGroups" />
             </template>
           </PvDialog>
         </ListPageLayout>
@@ -2382,7 +3371,7 @@ const AdminPortalStory = defineComponent({
 });
 
 const meta: Meta<typeof AdminPortalStory> = {
-  title: "Projects/Gabriel's Playground/Admin Portal/PAM and Access (PWM)",
+  title: "Projects/Gabriel's Playground/Admin Portal/Admin Portal (PAM and PWM)",
   component: AdminPortalStory,
   parameters: {
     layout: 'fullscreen',
