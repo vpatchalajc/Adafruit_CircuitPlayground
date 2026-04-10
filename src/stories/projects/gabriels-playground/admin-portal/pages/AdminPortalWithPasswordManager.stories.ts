@@ -11,6 +11,7 @@ import {
   DataTableToolbar,
   FormField,
   PageHeader,
+  Password,
   RadioButtonWithLabel,
 } from '@jumpcloud/circuit/components';
 import Button from 'primevue/button';
@@ -214,8 +215,8 @@ const profileMenuItems = [
   },
 ];
 
-export const AdminPortalStory = defineComponent({
-  name: 'AdminPortalStory',
+const AdminPortalWithPasswordManagerStory = defineComponent({
+  name: 'AdminPortalWithPasswordManagerStory',
   components: {
     AppNavigation,
     PageHeader,
@@ -231,6 +232,7 @@ export const AdminPortalStory = defineComponent({
     CheckboxWithLabel,
     RadioButtonWithLabel,
     FormField,
+    Password,
     PvButton: Button,
     PvCheckbox: Checkbox,
     PvDialog: Dialog,
@@ -243,6 +245,7 @@ export const AdminPortalStory = defineComponent({
     PvTab: Tab,
     PvTabPanels: TabPanels,
     PvTabPanel: TabPanel,
+    SelectButton,
     PvSelectButton: SelectButton,
     PvRadioButtonGroup: RadioButtonGroup,
     ChartBarSquareIcon,
@@ -263,10 +266,12 @@ export const AdminPortalStory = defineComponent({
     const pendingPage = ref({ key: 'pam-privileged-resources', label: 'Privileged Resources' });
     const currentPage = ref('home');
     const activeItem = ref('home');
-    const passwordVaultTab = ref('overview');
+    const passwordVaultTab = ref<'overview' | 'user-groups' | 'websites' | 'credentials'>('overview');
     const passwordVaultTabs = [
       { label: 'Overview', value: 'overview' },
-      { label: 'User Groups', value: 'credentials' },
+      { label: 'User Groups', value: 'user-groups' },
+      { label: 'Websites', value: 'websites' },
+      { label: 'Credentials', value: 'credentials' },
     ];
     const privilegedResourcesTab = ref('web-shield');
     const privilegedResourcesTabs = [
@@ -1438,6 +1443,361 @@ export const AdminPortalStory = defineComponent({
       pwmSelectedUserGroupRows.value = [];
     }
 
+    const vaultWebsitesData = [
+      { name: 'Gmail', address: 'https://mail.google.com', jumpServer: '--', status: 'Available', lastConnection: 'Today 9:15 AM' },
+      { name: 'LinkedIn', address: 'https://www.linkedin.com', jumpServer: '--', status: 'Available', lastConnection: 'Today 8:30 AM' },
+      { name: 'Slack', address: 'https://slack.com', jumpServer: '--', status: 'In Use', lastConnection: 'Today 10:00 AM' },
+      { name: 'Notion', address: 'https://www.notion.so', jumpServer: '--', status: 'Available', lastConnection: 'Yesterday 3:00 PM' },
+      { name: 'Figma', address: 'https://www.figma.com', jumpServer: '--', status: 'Available', lastConnection: 'Today 9:45 AM' },
+      { name: 'GitHub', address: 'https://github.com', jumpServer: '--', status: 'In Use', lastConnection: 'Today 11:00 AM' },
+      { name: 'Spotify', address: 'https://www.spotify.com', jumpServer: '--', status: 'Available', lastConnection: 'Yesterday 6:00 PM' },
+      { name: 'Twitter / X', address: 'https://twitter.com', jumpServer: '--', status: 'Available', lastConnection: 'Mar 30, 2026' },
+      { name: 'Netflix', address: 'https://www.netflix.com', jumpServer: '--', status: 'Available', lastConnection: 'Apr 1, 2026' },
+      { name: 'Amazon', address: 'https://www.amazon.com', jumpServer: '--', status: 'Available', lastConnection: 'Mar 28, 2026' },
+      { name: 'Dropbox', address: 'https://www.dropbox.com', jumpServer: '--', status: 'Available', lastConnection: 'Apr 2, 2026' },
+      { name: 'Zoom', address: 'https://zoom.us', jumpServer: '--', status: 'In Use', lastConnection: 'Today 10:30 AM' },
+      { name: 'Trello', address: 'https://trello.com', jumpServer: '--', status: 'Available', lastConnection: 'Apr 3, 2026' },
+      { name: 'Reddit', address: 'https://www.reddit.com', jumpServer: '--', status: 'Available', lastConnection: 'Yesterday 9:00 PM' },
+      { name: 'PayPal', address: 'https://www.paypal.com', jumpServer: '--', status: 'Available', lastConnection: 'Mar 25, 2026' },
+    ];
+    const vaultCredentialsData = [
+      { name: 'Gmail Password', address: 'gabriel.ramos@gmail.com', status: 'Available', lastConnection: 'Today 9:15 AM' },
+      { name: 'LinkedIn Password', address: 'gabriel.ramos@linkedin.com', status: 'Available', lastConnection: 'Today 8:30 AM' },
+      { name: 'Slack Password', address: 'gabriel@jumpcloud.com', status: 'In Use', lastConnection: 'Today 10:00 AM' },
+      { name: 'Notion Password', address: 'gabriel.ramos@notion.so', status: 'Available', lastConnection: 'Yesterday 3:00 PM' },
+      { name: 'Figma Password', address: 'gabriel@jumpcloud.com', status: 'Available', lastConnection: 'Today 9:45 AM' },
+      { name: 'GitHub Token', address: 'gabriel-ramos', status: 'In Use', lastConnection: 'Today 11:00 AM' },
+      { name: 'Spotify Password', address: 'gabriel.ramos@gmail.com', status: 'Available', lastConnection: 'Yesterday 6:00 PM' },
+      { name: 'Twitter / X Password', address: 'gabriel_ramos', status: 'Available', lastConnection: 'Mar 30, 2026' },
+      { name: 'Netflix Password', address: 'gabriel.ramos@gmail.com', status: 'Available', lastConnection: 'Apr 1, 2026' },
+      { name: 'Amazon Password', address: 'gabriel.ramos@gmail.com', status: 'Available', lastConnection: 'Mar 28, 2026' },
+      { name: 'Dropbox Password', address: 'gabriel@jumpcloud.com', status: 'Available', lastConnection: 'Apr 2, 2026' },
+      { name: 'Zoom Password', address: 'gabriel@jumpcloud.com', status: 'In Use', lastConnection: 'Today 10:30 AM' },
+      { name: 'Trello Password', address: 'gabriel.ramos@trello.com', status: 'Available', lastConnection: 'Apr 3, 2026' },
+      { name: 'PayPal Password', address: 'gabriel.ramos@gmail.com', status: 'Available', lastConnection: 'Mar 25, 2026' },
+    ];
+    const vaultWebsitesStatusOptions = [
+      { label: 'All', value: 'All' },
+      { label: 'Available', value: 'Available' },
+      { label: 'In Use', value: 'In Use' },
+    ];
+    const vaultCredentialsStatusOptions = [
+      { label: 'All', value: 'All' },
+      { label: 'Available', value: 'Available' },
+      { label: 'In Use', value: 'In Use' },
+    ];
+    const vaultWebsitesConnectorOptions = [
+      { label: 'Connector-01', value: 'Connector-01' },
+      { label: 'Connector-02', value: 'Connector-02' },
+      { label: 'Connector-03', value: 'Connector-03' },
+      { label: 'Connector-04', value: 'Connector-04' },
+    ];
+    const vaultCredentialsConnectorOptions = [
+      { label: 'Connector-01', value: 'Connector-01' },
+      { label: 'Connector-02', value: 'Connector-02' },
+      { label: 'Connector-03', value: 'Connector-03' },
+      { label: 'Connector-04', value: 'Connector-04' },
+    ];
+    const vaultWebsitesJumpServerOptions = [
+      { label: 'JS-AWS-E1', value: 'JS-AWS-E1' },
+      { label: 'JS-PROD-01', value: 'JS-PROD-01' },
+      { label: 'JS-EU-DC', value: 'JS-EU-DC' },
+    ];
+    const vaultCredentialsJumpServerOptions = [
+      { label: 'JS-AWS-E1', value: 'JS-AWS-E1' },
+      { label: 'JS-PROD-01', value: 'JS-PROD-01' },
+      { label: 'JS-EU-DC', value: 'JS-EU-DC' },
+    ];
+    const showVaultWebsitesFilterDialog = ref(false);
+    const appliedVaultWebsitesStatus = ref('All');
+    const appliedVaultWebsitesConnectors = ref([] as string[]);
+    const appliedVaultWebsitesJumpServers = ref([] as string[]);
+    const draftVaultWebsitesStatus = ref('All');
+    const draftVaultWebsitesConnectors = ref([] as string[]);
+    const draftVaultWebsitesJumpServers = ref([] as string[]);
+    const showVaultCredentialsFilterDialog = ref(false);
+    const appliedVaultCredentialsStatus = ref('All');
+    const appliedVaultCredentialsConnectors = ref([] as string[]);
+    const appliedVaultCredentialsJumpServers = ref([] as string[]);
+    const draftVaultCredentialsStatus = ref('All');
+    const draftVaultCredentialsConnectors = ref([] as string[]);
+    const draftVaultCredentialsJumpServers = ref([] as string[]);
+
+    const vaultWebsitesDraftFilterCount = computed(() => {
+      let count = 0;
+      if (draftVaultWebsitesStatus.value !== 'All') count += 1;
+      if (draftVaultWebsitesConnectors.value.length > 0) count += 1;
+      if (draftVaultWebsitesJumpServers.value.length > 0) count += 1;
+      return count;
+    });
+    const vaultCredentialsDraftFilterCount = computed(() => {
+      let count = 0;
+      if (draftVaultCredentialsStatus.value !== 'All') count += 1;
+      if (draftVaultCredentialsConnectors.value.length > 0) count += 1;
+      if (draftVaultCredentialsJumpServers.value.length > 0) count += 1;
+      return count;
+    });
+
+    const vaultWebsitesFilterChips = computed(() => {
+      const chips: { id: string; key: string; operator: string; value: string }[] = [];
+      if (appliedVaultWebsitesStatus.value !== 'All') {
+        chips.push({ id: 'status', key: 'Status', operator: 'is', value: appliedVaultWebsitesStatus.value });
+      }
+      if (appliedVaultWebsitesConnectors.value.length > 0) {
+        chips.push({
+          id: 'connector',
+          key: 'Connector',
+          operator: 'is',
+          value: formatGroupedValues(appliedVaultWebsitesConnectors.value),
+        });
+      }
+      if (appliedVaultWebsitesJumpServers.value.length > 0) {
+        chips.push({
+          id: 'jump-server',
+          key: 'Jump Server',
+          operator: 'is',
+          value: formatGroupedValues(appliedVaultWebsitesJumpServers.value),
+        });
+      }
+      return chips;
+    });
+    const vaultCredentialsFilterChips = computed(() => {
+      const chips: { id: string; key: string; operator: string; value: string }[] = [];
+      if (appliedVaultCredentialsStatus.value !== 'All') {
+        chips.push({ id: 'status', key: 'Status', operator: 'is', value: appliedVaultCredentialsStatus.value });
+      }
+      if (appliedVaultCredentialsConnectors.value.length > 0) {
+        chips.push({
+          id: 'connector',
+          key: 'Connector',
+          operator: 'is',
+          value: formatGroupedValues(appliedVaultCredentialsConnectors.value),
+        });
+      }
+      if (appliedVaultCredentialsJumpServers.value.length > 0) {
+        chips.push({
+          id: 'jump-server',
+          key: 'Jump Server',
+          operator: 'is',
+          value: formatGroupedValues(appliedVaultCredentialsJumpServers.value),
+        });
+      }
+      return chips;
+    });
+
+    function openVaultWebsitesFilterDialog() {
+      draftVaultWebsitesStatus.value = appliedVaultWebsitesStatus.value;
+      draftVaultWebsitesConnectors.value = [...appliedVaultWebsitesConnectors.value];
+      draftVaultWebsitesJumpServers.value = [...appliedVaultWebsitesJumpServers.value];
+      showVaultWebsitesFilterDialog.value = true;
+    }
+
+    function applyVaultWebsitesFilters() {
+      appliedVaultWebsitesStatus.value = draftVaultWebsitesStatus.value;
+      appliedVaultWebsitesConnectors.value = [...draftVaultWebsitesConnectors.value];
+      appliedVaultWebsitesJumpServers.value = [...draftVaultWebsitesJumpServers.value];
+      showVaultWebsitesFilterDialog.value = false;
+    }
+
+    function cancelVaultWebsitesFilters() {
+      showVaultWebsitesFilterDialog.value = false;
+    }
+
+    function clearVaultWebsitesDraftFilters() {
+      draftVaultWebsitesStatus.value = 'All';
+      draftVaultWebsitesConnectors.value = [];
+      draftVaultWebsitesJumpServers.value = [];
+    }
+
+    function clearAllVaultWebsitesFilters() {
+      appliedVaultWebsitesStatus.value = 'All';
+      appliedVaultWebsitesConnectors.value = [];
+      appliedVaultWebsitesJumpServers.value = [];
+    }
+
+    function removeVaultWebsitesFilterChip(chip: { id?: string }) {
+      const chipId = chip.id ?? '';
+      if (chipId === 'status') appliedVaultWebsitesStatus.value = 'All';
+      if (chipId === 'connector') appliedVaultWebsitesConnectors.value = [];
+      if (chipId === 'jump-server') appliedVaultWebsitesJumpServers.value = [];
+    }
+
+    function openVaultWebsitesDialog() {
+      console.log('Add vault website');
+    }
+
+    function openVaultCredentialsFilterDialog() {
+      draftVaultCredentialsStatus.value = appliedVaultCredentialsStatus.value;
+      draftVaultCredentialsConnectors.value = [...appliedVaultCredentialsConnectors.value];
+      draftVaultCredentialsJumpServers.value = [...appliedVaultCredentialsJumpServers.value];
+      showVaultCredentialsFilterDialog.value = true;
+    }
+
+    function applyVaultCredentialsFilters() {
+      appliedVaultCredentialsStatus.value = draftVaultCredentialsStatus.value;
+      appliedVaultCredentialsConnectors.value = [...draftVaultCredentialsConnectors.value];
+      appliedVaultCredentialsJumpServers.value = [...draftVaultCredentialsJumpServers.value];
+      showVaultCredentialsFilterDialog.value = false;
+    }
+
+    function cancelVaultCredentialsFilters() {
+      showVaultCredentialsFilterDialog.value = false;
+    }
+
+    function clearVaultCredentialsDraftFilters() {
+      draftVaultCredentialsStatus.value = 'All';
+      draftVaultCredentialsConnectors.value = [];
+      draftVaultCredentialsJumpServers.value = [];
+    }
+
+    function clearAllVaultCredentialsFilters() {
+      appliedVaultCredentialsStatus.value = 'All';
+      appliedVaultCredentialsConnectors.value = [];
+      appliedVaultCredentialsJumpServers.value = [];
+    }
+
+    function removeVaultCredentialsFilterChip(chip: { id?: string }) {
+      const chipId = chip.id ?? '';
+      if (chipId === 'status') appliedVaultCredentialsStatus.value = 'All';
+      if (chipId === 'connector') appliedVaultCredentialsConnectors.value = [];
+      if (chipId === 'jump-server') appliedVaultCredentialsJumpServers.value = [];
+    }
+
+    function openVaultCredentialsDialog() {
+      console.log('Add vault credential');
+    }
+
+    const VaultActionMenuCell = defineComponent({
+      name: 'VaultActionMenuCell',
+      components: { PvMenu: Menu, PvButton: Button },
+      props: {
+        iconButtons: { type: Array, default: () => [] },
+        menuItems: { type: Array, default: () => [] },
+      },
+      setup() {
+        const menu = ref<InstanceType<typeof Menu> | null>(null);
+        function toggleMenu(event: Event) {
+          menu.value?.toggle(event);
+        }
+        const menuPt = {
+          root: { class: 'bg-neutral-surface rounded-lg shadow-lg border border-neutral-default_solid' },
+          list: { class: 'flex flex-col w-full py-1' },
+          item: { class: 'w-full' },
+          itemLink: { class: 'px-3 py-2 text-body-md text-neutral-base hover:bg-neutral-hover cursor-pointer flex items-center w-full' },
+          itemLabel: { class: 'text-body-md text-neutral-base' },
+        };
+        return { menu, toggleMenu, EllipsisHorizontalIcon, menuPt };
+      },
+      template: `
+        <div class="flex items-center gap-xs">
+          <PvButton
+            v-for="(btn, idx) in iconButtons"
+            :key="idx"
+            severity="secondary"
+            variant="text"
+            size="small"
+            :aria-label="btn.ariaLabel"
+          >
+            <template #icon="iconProps">
+              <component :is="btn.icon" :class="iconProps.class" />
+            </template>
+          </PvButton>
+          <PvButton
+            v-if="menuItems.length"
+            severity="secondary"
+            variant="text"
+            size="small"
+            aria-label="More actions"
+            @click="toggleMenu"
+          >
+            <template #icon="iconProps">
+              <component :is="EllipsisHorizontalIcon" :class="iconProps.class" />
+            </template>
+          </PvButton>
+          <PvMenu
+            v-if="menuItems.length"
+            ref="menu"
+            :model="menuItems"
+            popup
+            :pt="menuPt"
+            style="z-index: 9999;"
+          />
+        </div>
+      `,
+    });
+
+    const vaultWebsitesActionMenuItems = [
+      { id: 'sessions', label: 'Sessions' },
+      { id: 'details', label: 'Details' },
+      { id: 'activity', label: 'Activity' },
+      { id: 'approval-requests', label: 'Approval Requests' },
+      { id: 'duplicates', label: 'Duplicates' },
+      { id: 'archive', label: 'Archive' },
+    ];
+
+    const vaultWebsitesActionButtons = [
+      { icon: markRaw(PencilSquareIcon), ariaLabel: 'Edit' },
+      { icon: markRaw(Square2StackIcon), ariaLabel: 'Copy' },
+      { icon: markRaw(TrashIcon), ariaLabel: 'Delete' },
+    ];
+
+    const vaultCredentialsActionMenuItems = [
+      { id: 'sessions', label: 'Sessions' },
+      { id: 'details', label: 'Details' },
+      { id: 'activity', label: 'Activity' },
+      { id: 'approval-requests', label: 'Approval Requests' },
+      { id: 'duplicates', label: 'Duplicates' },
+      { id: 'archive', label: 'Archive' },
+    ];
+
+    const vaultCredentialsActionButtons = [
+      { icon: markRaw(PencilSquareIcon), ariaLabel: 'Edit' },
+      { icon: markRaw(Square2StackIcon), ariaLabel: 'Copy' },
+      { icon: markRaw(TrashIcon), ariaLabel: 'Delete' },
+    ];
+
+    const vaultWebsitesColumns = [
+      { field: 'name', header: 'Name', sortable: true, component: markRaw(DataTableCellLink), componentProps: (sp: { data: Record<string, unknown> }) => ({ label: sp.data.name, href: '#' }) },
+      { field: 'address', header: 'Address', component: markRaw(DataTableCellText), componentProps: (sp: { data: Record<string, unknown> }) => ({ label: sp.data.address }) },
+      {
+        field: 'status',
+        header: 'Status',
+        component: markRaw(DataTableCellStatus),
+        componentProps: (sp: { data: Record<string, unknown> }) => {
+          const status = String(sp.data.status ?? '');
+          return privilegedAvailabilityTokenMapping[status] ?? { label: status, severity: 'info' };
+        },
+      },
+      { field: 'lastConnection', header: 'Last Connection', component: markRaw(DataTableCellText), componentProps: (sp: { data: Record<string, unknown> }) => ({ label: sp.data.lastConnection }) },
+      {
+        field: 'actions',
+        header: 'Actions',
+        component: markRaw(VaultActionMenuCell),
+        componentProps: () => ({ iconButtons: vaultWebsitesActionButtons, menuItems: vaultWebsitesActionMenuItems }),
+      },
+    ];
+
+    const vaultCredentialsColumns = [
+      { field: 'name', header: 'Name', sortable: true, component: markRaw(DataTableCellLink), componentProps: (sp: { data: Record<string, unknown> }) => ({ label: sp.data.name, href: '#' }) },
+      { field: 'address', header: 'Username / Email', component: markRaw(DataTableCellText), componentProps: (sp: { data: Record<string, unknown> }) => ({ label: sp.data.address }) },
+      {
+        field: 'status',
+        header: 'Status',
+        component: markRaw(DataTableCellStatus),
+        componentProps: (sp: { data: Record<string, unknown> }) => {
+          const status = String(sp.data.status ?? '');
+          return privilegedAvailabilityTokenMapping[status] ?? { label: status, severity: 'info' };
+        },
+      },
+      { field: 'lastConnection', header: 'Last Connection', component: markRaw(DataTableCellText), componentProps: (sp: { data: Record<string, unknown> }) => ({ label: sp.data.lastConnection }) },
+      {
+        field: 'actions',
+        header: 'Actions',
+        component: markRaw(VaultActionMenuCell),
+        componentProps: () => ({ iconButtons: vaultCredentialsActionButtons, menuItems: vaultCredentialsActionMenuItems }),
+      },
+    ];
+
     const showWebShieldDialog = ref(false);
     const showServersDialog = ref(false);
     const showDatabasesDialog = ref(false);
@@ -1652,6 +2012,42 @@ export const AdminPortalStory = defineComponent({
       pwmUserGroupsColumns,
       pwmEnrollSelectedGroups,
       pwmRemoveSelectedUserGroups,
+      vaultWebsitesData,
+      vaultCredentialsData,
+      vaultWebsitesStatusOptions,
+      vaultCredentialsStatusOptions,
+      vaultWebsitesConnectorOptions,
+      vaultCredentialsConnectorOptions,
+      vaultWebsitesJumpServerOptions,
+      vaultCredentialsJumpServerOptions,
+      showVaultWebsitesFilterDialog,
+      draftVaultWebsitesStatus,
+      draftVaultWebsitesConnectors,
+      draftVaultWebsitesJumpServers,
+      showVaultCredentialsFilterDialog,
+      draftVaultCredentialsStatus,
+      draftVaultCredentialsConnectors,
+      draftVaultCredentialsJumpServers,
+      vaultWebsitesDraftFilterCount,
+      vaultCredentialsDraftFilterCount,
+      vaultWebsitesFilterChips,
+      vaultCredentialsFilterChips,
+      openVaultWebsitesFilterDialog,
+      applyVaultWebsitesFilters,
+      cancelVaultWebsitesFilters,
+      clearVaultWebsitesDraftFilters,
+      clearAllVaultWebsitesFilters,
+      removeVaultWebsitesFilterChip,
+      openVaultWebsitesDialog,
+      openVaultCredentialsFilterDialog,
+      applyVaultCredentialsFilters,
+      cancelVaultCredentialsFilters,
+      clearVaultCredentialsDraftFilters,
+      clearAllVaultCredentialsFilters,
+      removeVaultCredentialsFilterChip,
+      openVaultCredentialsDialog,
+      vaultWebsitesColumns,
+      vaultCredentialsColumns,
       showWebShieldDialog,
       showServersDialog,
       showDatabasesDialog,
@@ -1713,26 +2109,12 @@ export const AdminPortalStory = defineComponent({
           />
         </template>
         <template v-else-if="currentPage === 'password-vault' && !overlayConfig">
-          <div class="relative">
-            <PageHeader
-              :title="pageTitle"
-              :tabs="passwordVaultTabs"
-              :activeTab="passwordVaultTab"
-              @update:activeTab="passwordVaultTab = $event"
-            />
-            <PvButton
-              class="absolute right-6"
-              style="bottom: 8px;"
-              severity="secondary"
-              variant="outlined"
-              @click="openPasswordVaultConfig"
-            >
-              <template #default>
-                <span>Configure Password Vault</span>
-                <ArrowTopRightOnSquareIcon class="size-4 shrink-0 ml-xs" />
-              </template>
-            </PvButton>
-          </div>
+          <PageHeader
+            :title="pageTitle"
+            :tabs="passwordVaultTabs"
+            :activeTab="passwordVaultTab"
+            @update:activeTab="passwordVaultTab = $event"
+          />
         </template>
         <PageHeader v-else :title="pageTitle" />
 
@@ -2045,7 +2427,7 @@ export const AdminPortalStory = defineComponent({
             </DashboardPageLayout>
 
             <ListPageLayout
-              v-else-if="passwordVaultTab === 'credentials'"
+              v-else-if="passwordVaultTab === 'user-groups'"
               class="w-full! h-full!"
             >
               <div class="flex flex-col h-full gap-lg">
@@ -2131,54 +2513,218 @@ export const AdminPortalStory = defineComponent({
               </PvDialog>
             </ListPageLayout>
 
-            <PvDialog
-              v-model:visible="showCredentialFilterDialog"
-              :draggable="false"
-              modal
-              header="Apply filters"
-              :style="{ width: '560px' }"
-              @update:visible="!$event && cancelCredentialFilters()"
+            <ListPageLayout
+              v-else-if="passwordVaultTab === 'websites'"
+              class="w-full! h-full!"
             >
-              <template #closeicon><XMarkIcon /></template>
-              <div class="flex flex-col gap-md">
-                <FormField label="Type">
-                  <template #default="{ inputId }">
-                    <PvMultiSelect
-                      :id="inputId"
-                      v-model="draftCredentialTypes"
-                      :options="credentialTypeOptions"
-                      optionLabel="label"
-                      optionValue="value"
-                      placeholder="All types"
-                      :maxSelectedLabels="2"
-                      class="w-full"
-                    />
-                  </template>
-                </FormField>
-                <FormField label="Tags">
-                  <template #default="{ inputId }">
-                    <PvMultiSelect
-                      :id="inputId"
-                      v-model="draftCredentialTags"
-                      :options="credentialTagOptions"
-                      placeholder="All tags"
-                      :maxSelectedLabels="2"
-                      class="w-full"
-                    />
-                  </template>
-                </FormField>
+              <div class="flex flex-col h-full gap-lg">
+                <div class="flex flex-col h-full relative">
+                  <CircuitDataTable
+                    :columns="vaultWebsitesColumns"
+                    :data="vaultWebsitesData"
+                    :card="true"
+                    :scrollable="true"
+                    scrollHeight="flex"
+                    :paginator="true"
+                    :rows="100"
+                    :pt="{
+                      root: { class: 'flex flex-col h-full min-h-0' },
+                      tableContainer: { class: 'flex-1 min-h-0 overflow-auto' },
+                      footer: { class: 'shrink-0' },
+                    }"
+                    :ptOptions="{ mergeSections: true, mergeProps: true }"
+                  >
+                    <template #toolbar>
+                      <DataTableToolbar
+                        addButtonLabel="Add"
+                        :showAddButton="true"
+                        :showFilterButton="true"
+                        :showRefreshButton="false"
+                        :showColumnsButton="false"
+                        :showDownloadButton="false"
+                        :showSaveViewButton="false"
+                        :activeFilters="vaultWebsitesFilterChips"
+                        :maxVisibleFilters="5"
+                        @add="openVaultWebsitesDialog"
+                        @filter="openVaultWebsitesFilterDialog"
+                        @clear-all="clearAllVaultWebsitesFilters"
+                        @filter-remove="removeVaultWebsitesFilterChip"
+                      />
+                    </template>
+                  </CircuitDataTable>
+                </div>
               </div>
-              <template #footer>
-                <div class="flex items-center flex-1 min-w-0">
-                  <span class="text-body-sm text-neutral-subtle">{{ credentialDraftFilterCount }} Filters applied</span>
+
+              <PvDialog
+                v-model:visible="showVaultWebsitesFilterDialog"
+                :draggable="false"
+                modal
+                header="Apply filters"
+                :style="{ width: '560px' }"
+                @update:visible="!$event && cancelVaultWebsitesFilters()"
+              >
+                <template #closeicon><XMarkIcon /></template>
+                <div class="flex flex-col gap-md">
+                  <FormField label="Status">
+                    <template #default="{ inputId }">
+                      <SelectButton
+                        :id="inputId"
+                        v-model="draftVaultWebsitesStatus"
+                        :options="vaultWebsitesStatusOptions"
+                        optionLabel="label"
+                        optionValue="value"
+                        :allowEmpty="false"
+                      />
+                    </template>
+                  </FormField>
+                  <FormField label="Connector">
+                    <template #default="{ inputId }">
+                      <PvMultiSelect
+                        :id="inputId"
+                        v-model="draftVaultWebsitesConnectors"
+                        :options="vaultWebsitesConnectorOptions"
+                        optionLabel="label"
+                        optionValue="value"
+                        placeholder="All connectors"
+                        :maxSelectedLabels="2"
+                        class="w-full"
+                      />
+                    </template>
+                  </FormField>
+                  <FormField label="Jump Server">
+                    <template #default="{ inputId }">
+                      <PvMultiSelect
+                        :id="inputId"
+                        v-model="draftVaultWebsitesJumpServers"
+                        :options="vaultWebsitesJumpServerOptions"
+                        optionLabel="label"
+                        optionValue="value"
+                        placeholder="All jump servers"
+                        :maxSelectedLabels="2"
+                        class="w-full"
+                      />
+                    </template>
+                  </FormField>
                 </div>
-                <div class="flex gap-sm shrink-0">
-                  <PvButton label="Cancel" severity="secondary" variant="text" @click="cancelCredentialFilters" />
-                  <PvButton label="Clear All" severity="secondary" variant="outlined" @click="clearDraftCredentialFilters" />
-                  <PvButton label="Apply" @click="applyCredentialFilters" />
+                <template #footer>
+                  <div class="flex items-center flex-1 min-w-0">
+                    <span class="text-body-sm text-neutral-subtle">{{ vaultWebsitesDraftFilterCount }} Filters applied</span>
+                  </div>
+                  <div class="flex gap-sm shrink-0">
+                    <PvButton label="Cancel" severity="secondary" variant="text" @click="cancelVaultWebsitesFilters" />
+                    <PvButton label="Clear All" severity="secondary" variant="outlined" @click="clearVaultWebsitesDraftFilters" />
+                    <PvButton label="Apply" @click="applyVaultWebsitesFilters" />
+                  </div>
+                </template>
+              </PvDialog>
+            </ListPageLayout>
+
+            <ListPageLayout
+              v-else-if="passwordVaultTab === 'credentials'"
+              class="w-full! h-full!"
+            >
+              <div class="flex flex-col h-full gap-lg">
+                <div class="flex flex-col h-full relative">
+                  <CircuitDataTable
+                    :columns="vaultCredentialsColumns"
+                    :data="vaultCredentialsData"
+                    :card="true"
+                    :scrollable="true"
+                    scrollHeight="flex"
+                    :paginator="true"
+                    :rows="100"
+                    :pt="{
+                      root: { class: 'flex flex-col h-full min-h-0' },
+                      tableContainer: { class: 'flex-1 min-h-0 overflow-auto' },
+                      footer: { class: 'shrink-0' },
+                    }"
+                    :ptOptions="{ mergeSections: true, mergeProps: true }"
+                  >
+                    <template #toolbar>
+                      <DataTableToolbar
+                        addButtonLabel="Add"
+                        :showAddButton="true"
+                        :showFilterButton="true"
+                        :showRefreshButton="false"
+                        :showColumnsButton="false"
+                        :showDownloadButton="false"
+                        :showSaveViewButton="false"
+                        :activeFilters="vaultCredentialsFilterChips"
+                        :maxVisibleFilters="5"
+                        @add="openVaultCredentialsDialog"
+                        @filter="openVaultCredentialsFilterDialog"
+                        @clear-all="clearAllVaultCredentialsFilters"
+                        @filter-remove="removeVaultCredentialsFilterChip"
+                      />
+                    </template>
+                  </CircuitDataTable>
                 </div>
-              </template>
-            </PvDialog>
+              </div>
+
+              <PvDialog
+                v-model:visible="showVaultCredentialsFilterDialog"
+                :draggable="false"
+                modal
+                header="Apply filters"
+                :style="{ width: '560px' }"
+                @update:visible="!$event && cancelVaultCredentialsFilters()"
+              >
+                <template #closeicon><XMarkIcon /></template>
+                <div class="flex flex-col gap-md">
+                  <FormField label="Status">
+                    <template #default="{ inputId }">
+                      <SelectButton
+                        :id="inputId"
+                        v-model="draftVaultCredentialsStatus"
+                        :options="vaultCredentialsStatusOptions"
+                        optionLabel="label"
+                        optionValue="value"
+                        :allowEmpty="false"
+                      />
+                    </template>
+                  </FormField>
+                  <FormField label="Connector">
+                    <template #default="{ inputId }">
+                      <PvMultiSelect
+                        :id="inputId"
+                        v-model="draftVaultCredentialsConnectors"
+                        :options="vaultCredentialsConnectorOptions"
+                        optionLabel="label"
+                        optionValue="value"
+                        placeholder="All connectors"
+                        :maxSelectedLabels="2"
+                        class="w-full"
+                      />
+                    </template>
+                  </FormField>
+                  <FormField label="Jump Server">
+                    <template #default="{ inputId }">
+                      <PvMultiSelect
+                        :id="inputId"
+                        v-model="draftVaultCredentialsJumpServers"
+                        :options="vaultCredentialsJumpServerOptions"
+                        optionLabel="label"
+                        optionValue="value"
+                        placeholder="All jump servers"
+                        :maxSelectedLabels="2"
+                        class="w-full"
+                      />
+                    </template>
+                  </FormField>
+                </div>
+                <template #footer>
+                  <div class="flex items-center flex-1 min-w-0">
+                    <span class="text-body-sm text-neutral-subtle">{{ vaultCredentialsDraftFilterCount }} Filters applied</span>
+                  </div>
+                  <div class="flex gap-sm shrink-0">
+                    <PvButton label="Cancel" severity="secondary" variant="text" @click="cancelVaultCredentialsFilters" />
+                    <PvButton label="Clear All" severity="secondary" variant="outlined" @click="clearVaultCredentialsDraftFilters" />
+                    <PvButton label="Apply" @click="applyVaultCredentialsFilters" />
+                  </div>
+                </template>
+              </PvDialog>
+            </ListPageLayout>
+
       </div>
     </template>
 
@@ -3370,10 +3916,9 @@ export const AdminPortalStory = defineComponent({
   `,
 });
 
-const meta: Meta<typeof AdminPortalStory> = {
-  title: "Projects/Gabriel's Playground/Admin Portal/Admin Portal (PAM and PWM)",
-  component: AdminPortalStory,
-  excludeStories: ['AdminPortalStory'],
+const meta: Meta<typeof AdminPortalWithPasswordManagerStory> = {
+  title: "Projects/Gabriel's Playground/Admin Portal/Admin Portal with Password Manager",
+  component: AdminPortalWithPasswordManagerStory,
   parameters: {
     layout: 'fullscreen',
   },
@@ -3381,6 +3926,6 @@ const meta: Meta<typeof AdminPortalStory> = {
 
 export default meta;
 
-type Story = StoryObj<typeof AdminPortalStory>;
+type Story = StoryObj<typeof AdminPortalWithPasswordManagerStory>;
 
 export const Default: Story = {};

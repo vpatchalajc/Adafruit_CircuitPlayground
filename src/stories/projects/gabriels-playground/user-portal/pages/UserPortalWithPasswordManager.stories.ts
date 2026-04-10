@@ -77,6 +77,7 @@ import {
 /** Sidebar for the classic User Portal "All Applications" area — no separate Privileged Resources nav item. */
 const menuItemsAllApplications = [
   { label: 'All Applications', leftIcon: markRaw(SsoIcon) },
+  { label: 'Password Vault', leftIcon: markRaw(LockClosedIcon) },
   { label: 'Requests', leftIcon: markRaw(AccessIcon) },
   { label: 'Tasks', leftIcon: markRaw(CheckListIcon) },
   { label: 'Security', leftIcon: markRaw(LockClosedIcon) },
@@ -1201,10 +1202,11 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
     const selectedRequest = ref<RequestableResource | null>(null);
     const showRequestDialog = ref(false);
     const requestReason = ref('');
-    const passwordVaultTab = ref<'credentials' | 'websites'>('credentials');
+    const passwordVaultTab = ref<'overview' | 'websites' | 'credentials'>('overview');
     const passwordVaultTabs = [
-      { label: 'Credentials', value: 'credentials' },
+      { label: 'Overview', value: 'overview' },
       { label: 'Websites', value: 'websites' },
+      { label: 'Credentials', value: 'credentials' },
     ];
     const vaultPasswordVaultStatCards = [
       {
@@ -2681,11 +2683,11 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
         :collapsible="true"
         :topNavToggle="true"
       >
-        <template v-if="inPasswordVault" #custom-component>
+        <template #custom-text>
           <div class="w-full border-b border-navigation-default">
-            <div class="p-4">
+            <div v-if="inPasswordVault" class="p-4">
               <PvButton
-                label="Go to User Portal"
+                label="Back to User Portal"
                 severity="secondary"
                 variant="outlined"
                 class="w-full"
@@ -2696,11 +2698,7 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
                 </template>
               </PvButton>
             </div>
-          </div>
-        </template>
-        <template #custom-text>
-          <div class="w-full border-b border-navigation-default">
-            <p v-if="!inPasswordVault" class="m-0 block p-4 text-body-xs text-neutral-base">
+            <p v-else class="m-0 block p-4 text-body-xs text-neutral-base">
               Powered by <span class="text-body-xs-bold text-neutral-base">JumpCloud</span>
             </p>
           </div>
@@ -3305,81 +3303,336 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
 
         <ListPageLayout v-else-if="currentView === 'password-vault'" class="w-full! h-full!">
           <div class="flex flex-col h-full relative">
-            <template v-if="passwordVaultTab === 'credentials'">
-              <div class="flex flex-col h-full min-h-0">
-                <CircuitDataTable
-                  :columns="credentialColumns"
-                  :data="filteredCredentialsData"
-                  :paginator="true"
-                  :rows="10"
-                  :scrollable="true"
-                  scrollHeight="flex"
-                  :pt="{
-                    root: { class: 'flex flex-col h-full min-h-0' },
-                    tableContainer: { class: 'flex-1 min-h-0 overflow-auto' },
-                    footer: { class: 'shrink-0' },
-                  }"
-                  :ptOptions="{ mergeSections: true, mergeProps: true }"
-                >
-                  <template #toolbar>
-                    <DataTableToolbar
-                      addButtonLabel="Add Credential"
-                      searchPlaceholder="Search credentials..."
-                      :showAddButton="true"
-                      :showFilterButton="true"
-                      :showRefreshButton="true"
-                      :showColumnsButton="false"
-                      :showDownloadButton="false"
-                      :showSaveViewButton="false"
-                      :activeFilters="credentialFilterChips"
-                      :maxVisibleFilters="5"
-                      @add="openAddCredentialDialog"
-                      @search="handleCredentialSearch"
-                      @filter="openCredentialFilterDialog"
-                      @clear-all="clearAllCredentialFilters"
-                      @filter-remove="removeCredentialFilterChip"
-                    />
-                  </template>
-                </CircuitDataTable>
-              </div>
+            <template v-if="passwordVaultTab === 'overview'">
+              <DashboardPageLayout class="w-full! h-full!">
+                <div class="flex flex-col gap-lg w-full">
+                  <div class="grid grid-cols-[max-content_1fr] gap-6 items-stretch">
+                    <div class="flex flex-col gap-6 items-start">
+                      <DashboardStatCard
+                        v-for="stat in vaultPasswordVaultStatCards"
+                        :key="stat.header"
+                        :header="stat.header"
+                        :value="stat.value"
+                        :icon="stat.icon"
+                        :changeValue="stat.changeValue"
+                        :changeLabel="stat.changeLabel"
+                        :showArrow="stat.showArrow"
+                        class="w-fit h-fit"
+                      />
+                    </div>
+
+                    <CollapsiblePanel header="Secrets Added Over Time" class="w-full h-full">
+                      <template #titleicon="iconProps">
+                        <ChartBarSquareIcon :class="iconProps.class" />
+                      </template>
+                      <div class="flex flex-col h-full">
+                        <div class="flex flex-col gap-sm flex-1">
+                          <div
+                            v-for="item in vaultSecretsAddedBars"
+                            :key="item.date"
+                            class="flex items-center gap-sm"
+                          >
+                            <div class="w-12 text-body-sm text-neutral-subtle text-right shrink-0">
+                              {{ item.date }}
+                            </div>
+                            <div class="flex-1">
+                              <div class="w-full h-4 rounded-sm bg-neutral-surface overflow-hidden">
+                                <div
+                                  class="h-4 rounded-sm bg-branding-base"
+                                  :style="{ width: ((item.value / vaultMaxSecretsAddedValue) * 100) + '%' }"
+                                />
+                              </div>
+                            </div>
+                            <div class="w-8 text-body-sm text-neutral-base text-right shrink-0">
+                              {{ item.value }}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </CollapsiblePanel>
+                  </div>
+
+                  <div class="grid grid-cols-2 gap-6">
+                    <CollapsiblePanel header="Weak Secrets" class="w-full overflow-hidden flex flex-col h-[264px]">
+                      <template #actions>
+                        <PvButton label="View All" severity="secondary" variant="outlined" size="small" />
+                      </template>
+                      <div class="flex flex-col gap-sm h-full">
+                        <div class="flex items-center gap-xs flex-shrink-0">
+                          <span class="text-body-sm-bold text-error-base">{{ vaultWeakSecretsSummary.count }}</span>
+                          <span class="text-body-sm text-neutral-base">{{ vaultWeakSecretsSummary.label }}</span>
+                        </div>
+                        <div class="flex flex-col divide-y divide-neutral-default_solid border-t border-neutral-default_solid flex-1 overflow-y-auto">
+                          <div
+                            v-for="secret in vaultWeakSecrets"
+                            :key="secret.name"
+                            class="flex items-center justify-between py-3"
+                          >
+                            <span class="text-body-sm-semi-bold text-neutral-base">{{ secret.name }}</span>
+                            <span class="text-body-sm-semi-bold text-error-base">{{ secret.risk }}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </CollapsiblePanel>
+
+                    <CollapsiblePanel header="Expiring Secrets" class="w-full overflow-hidden flex flex-col h-[264px]">
+                      <template #actions>
+                        <PvButton label="View All" severity="secondary" variant="outlined" size="small" />
+                      </template>
+                      <div class="flex flex-col gap-sm h-full">
+                        <div class="flex items-center gap-xs flex-shrink-0">
+                          <span class="text-body-sm-bold text-error-base">{{ vaultExpiringSecretsSummary.count }}</span>
+                          <span class="text-body-sm text-neutral-base">{{ vaultExpiringSecretsSummary.label }}</span>
+                        </div>
+                        <div class="flex flex-col divide-y divide-neutral-default_solid border-t border-neutral-default_solid flex-1 overflow-y-auto">
+                          <div
+                            v-for="secret in vaultExpiringSecrets"
+                            :key="secret.name"
+                            class="flex items-center justify-between py-3"
+                          >
+                            <span class="text-body-sm-semi-bold text-neutral-base">{{ secret.name }}</span>
+                            <div class="flex items-center gap-xs text-body-sm">
+                              <span class="text-neutral-subtle">{{ secret.metaLabel }}</span>
+                              <span class="text-body-sm-semi-bold text-error-base">{{ secret.metaValue }}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </CollapsiblePanel>
+                  </div>
+
+                  <div class="grid grid-cols-2 gap-6">
+                    <CollapsiblePanel header="Unused Secrets" class="w-full overflow-hidden flex flex-col h-[264px]">
+                      <template #actions>
+                        <PvButton label="View All" severity="secondary" variant="outlined" size="small" />
+                      </template>
+                      <div class="flex flex-col gap-sm h-full">
+                        <div class="flex items-center gap-xs flex-shrink-0">
+                          <span class="text-body-sm-bold text-error-base">{{ vaultUnusedSecretsSummary.count }}</span>
+                          <span class="text-body-sm text-neutral-base">{{ vaultUnusedSecretsSummary.label }}</span>
+                        </div>
+                        <div class="flex flex-col divide-y divide-neutral-default_solid border-t border-neutral-default_solid flex-1 overflow-y-auto">
+                          <div
+                            v-for="secret in vaultUnusedSecrets"
+                            :key="secret.name"
+                            class="flex items-center justify-between py-3"
+                          >
+                            <span class="text-body-sm-semi-bold text-neutral-base">{{ secret.name }}</span>
+                            <div class="flex items-center gap-xs text-body-sm">
+                              <span class="text-neutral-subtle">{{ secret.metaLabel }}</span>
+                              <span class="text-body-sm-semi-bold text-error-base">{{ secret.metaValue }}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </CollapsiblePanel>
+                  </div>
+                </div>
+              </DashboardPageLayout>
             </template>
             <template v-else-if="passwordVaultTab === 'websites'">
-              <div class="flex flex-col h-full min-h-0">
-                <CircuitDataTable
-                  :columns="websiteColumns"
-                  :data="filteredWebsitesData"
-                  :paginator="true"
-                  :rows="10"
-                  :scrollable="true"
-                  scrollHeight="flex"
-                  :pt="{
-                    root: { class: 'flex flex-col h-full min-h-0' },
-                    tableContainer: { class: 'flex-1 min-h-0 overflow-auto' },
-                    footer: { class: 'shrink-0' },
-                  }"
-                  :ptOptions="{ mergeSections: true, mergeProps: true }"
-                >
-                  <template #toolbar>
-                    <DataTableToolbar
-                      addButtonLabel="Add Website"
-                      searchPlaceholder="Search websites..."
-                      :showAddButton="true"
-                      :showFilterButton="true"
-                      :showRefreshButton="true"
-                      :showColumnsButton="false"
-                      :showDownloadButton="false"
-                      :showSaveViewButton="false"
-                      :activeFilters="websiteFilterChips"
-                      :maxVisibleFilters="5"
-                      @add="openAddWebsiteDialog"
-                      @search="handleWebsiteSearch"
-                      @filter="openWebsiteFilterDialog"
-                      @clear-all="clearAllWebsiteFilters"
-                      @filter-remove="removeWebsiteFilterChip"
-                    />
-                  </template>
-                </CircuitDataTable>
+              <div class="flex flex-col h-full gap-lg">
+                <div class="flex flex-col h-full relative">
+                  <CircuitDataTable
+                    :columns="vaultWebsitesColumns"
+                    :data="vaultWebsitesData"
+                    :card="true"
+                    :scrollable="true"
+                    scrollHeight="flex"
+                    :paginator="true"
+                    :rows="100"
+                    :pt="{
+                      root: { class: 'flex flex-col h-full min-h-0' },
+                      tableContainer: { class: 'flex-1 min-h-0 overflow-auto' },
+                      footer: { class: 'shrink-0' },
+                    }"
+                    :ptOptions="{ mergeSections: true, mergeProps: true }"
+                  >
+                    <template #toolbar>
+                      <DataTableToolbar
+                        addButtonLabel="Add"
+                        :showAddButton="true"
+                        :showFilterButton="true"
+                        :showRefreshButton="false"
+                        :showColumnsButton="false"
+                        :showDownloadButton="false"
+                        :showSaveViewButton="false"
+                        :activeFilters="vaultWebsitesFilterChips"
+                        :maxVisibleFilters="5"
+                        @add="openVaultWebsitesDialog"
+                        @filter="openVaultWebsitesFilterDialog"
+                        @clear-all="clearAllVaultWebsitesFilters"
+                        @filter-remove="removeVaultWebsitesFilterChip"
+                      />
+                    </template>
+                  </CircuitDataTable>
+                </div>
               </div>
+
+              <PvDialog
+                v-model:visible="showVaultWebsitesFilterDialog"
+                :draggable="false"
+                modal
+                header="Apply filters"
+                :style="{ width: '560px' }"
+                @update:visible="!$event && cancelVaultWebsitesFilters()"
+              >
+                <template #closeicon><XMarkIcon /></template>
+                <div class="flex flex-col gap-md">
+                  <FormField label="Status">
+                    <template #default="{ inputId }">
+                      <SelectButton
+                        :id="inputId"
+                        v-model="draftVaultWebsitesStatus"
+                        :options="vaultWebsitesStatusOptions"
+                        optionLabel="label"
+                        optionValue="value"
+                        :allowEmpty="false"
+                      />
+                    </template>
+                  </FormField>
+                  <FormField label="Connector">
+                    <template #default="{ inputId }">
+                      <PvMultiSelect
+                        :id="inputId"
+                        v-model="draftVaultWebsitesConnectors"
+                        :options="vaultWebsitesConnectorOptions"
+                        optionLabel="label"
+                        optionValue="value"
+                        placeholder="All connectors"
+                        :maxSelectedLabels="2"
+                        class="w-full"
+                      />
+                    </template>
+                  </FormField>
+                  <FormField label="Jump Server">
+                    <template #default="{ inputId }">
+                      <PvMultiSelect
+                        :id="inputId"
+                        v-model="draftVaultWebsitesJumpServers"
+                        :options="vaultWebsitesJumpServerOptions"
+                        optionLabel="label"
+                        optionValue="value"
+                        placeholder="All jump servers"
+                        :maxSelectedLabels="2"
+                        class="w-full"
+                      />
+                    </template>
+                  </FormField>
+                </div>
+                <template #footer>
+                  <div class="flex items-center flex-1 min-w-0">
+                    <span class="text-body-sm text-neutral-subtle">{{ vaultWebsitesDraftFilterCount }} Filters applied</span>
+                  </div>
+                  <div class="flex gap-sm shrink-0">
+                    <PvButton label="Cancel" severity="secondary" variant="text" @click="cancelVaultWebsitesFilters" />
+                    <PvButton label="Clear All" severity="secondary" variant="outlined" @click="clearVaultWebsitesDraftFilters" />
+                    <PvButton label="Apply" @click="applyVaultWebsitesFilters" />
+                  </div>
+                </template>
+              </PvDialog>
+            </template>
+            <template v-else>
+              <div class="flex flex-col h-full gap-lg">
+                <div class="flex flex-col h-full relative">
+                  <CircuitDataTable
+                    :columns="vaultCredentialsColumns"
+                    :data="vaultCredentialsData"
+                    :card="true"
+                    :scrollable="true"
+                    scrollHeight="flex"
+                    :paginator="true"
+                    :rows="100"
+                    :pt="{
+                      root: { class: 'flex flex-col h-full min-h-0' },
+                      tableContainer: { class: 'flex-1 min-h-0 overflow-auto' },
+                      footer: { class: 'shrink-0' },
+                    }"
+                    :ptOptions="{ mergeSections: true, mergeProps: true }"
+                  >
+                    <template #toolbar>
+                      <DataTableToolbar
+                        addButtonLabel="Add"
+                        :showAddButton="true"
+                        :showFilterButton="true"
+                        :showRefreshButton="false"
+                        :showColumnsButton="false"
+                        :showDownloadButton="false"
+                        :showSaveViewButton="false"
+                        :activeFilters="vaultCredentialsFilterChips"
+                        :maxVisibleFilters="5"
+                        @add="openVaultCredentialsDialog"
+                        @filter="openVaultCredentialsFilterDialog"
+                        @clear-all="clearAllVaultCredentialsFilters"
+                        @filter-remove="removeVaultCredentialsFilterChip"
+                      />
+                    </template>
+                  </CircuitDataTable>
+                </div>
+              </div>
+
+              <PvDialog
+                v-model:visible="showVaultCredentialsFilterDialog"
+                :draggable="false"
+                modal
+                header="Apply filters"
+                :style="{ width: '560px' }"
+                @update:visible="!$event && cancelVaultCredentialsFilters()"
+              >
+                <template #closeicon><XMarkIcon /></template>
+                <div class="flex flex-col gap-md">
+                  <FormField label="Status">
+                    <template #default="{ inputId }">
+                      <SelectButton
+                        :id="inputId"
+                        v-model="draftVaultCredentialsStatus"
+                        :options="vaultCredentialsStatusOptions"
+                        optionLabel="label"
+                        optionValue="value"
+                        :allowEmpty="false"
+                      />
+                    </template>
+                  </FormField>
+                  <FormField label="Connector">
+                    <template #default="{ inputId }">
+                      <PvMultiSelect
+                        :id="inputId"
+                        v-model="draftVaultCredentialsConnectors"
+                        :options="vaultCredentialsConnectorOptions"
+                        optionLabel="label"
+                        optionValue="value"
+                        placeholder="All connectors"
+                        :maxSelectedLabels="2"
+                        class="w-full"
+                      />
+                    </template>
+                  </FormField>
+                  <FormField label="Jump Server">
+                    <template #default="{ inputId }">
+                      <PvMultiSelect
+                        :id="inputId"
+                        v-model="draftVaultCredentialsJumpServers"
+                        :options="vaultCredentialsJumpServerOptions"
+                        optionLabel="label"
+                        optionValue="value"
+                        placeholder="All jump servers"
+                        :maxSelectedLabels="2"
+                        class="w-full"
+                      />
+                    </template>
+                  </FormField>
+                </div>
+                <template #footer>
+                  <div class="flex items-center flex-1 min-w-0">
+                    <span class="text-body-sm text-neutral-subtle">{{ vaultCredentialsDraftFilterCount }} Filters applied</span>
+                  </div>
+                  <div class="flex gap-sm shrink-0">
+                    <PvButton label="Cancel" severity="secondary" variant="text" @click="cancelVaultCredentialsFilters" />
+                    <PvButton label="Clear All" severity="secondary" variant="outlined" @click="clearVaultCredentialsDraftFilters" />
+                    <PvButton label="Apply" @click="applyVaultCredentialsFilters" />
+                  </div>
+                </template>
+              </PvDialog>
             </template>
           </div>
 
@@ -4164,7 +4417,7 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
 });
 
 const meta: Meta<typeof UserPortalAllAppsWithPrivilegedResourcesPage> = {
-  title: "Projects/Gabriel's Playground/User Portal/User Portal (PAM and PWM)",
+  title: "Projects/Gabriel's Playground/User Portal/User Portal with Password Manager",
   component: UserPortalAllAppsWithPrivilegedResourcesPage,
   parameters: {
     layout: 'fullscreen',
