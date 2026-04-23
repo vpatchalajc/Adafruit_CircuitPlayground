@@ -5,14 +5,14 @@ import TopBar from '@/components/TopBar.vue';
 import ConfigPageLayout from '@/components/layout/page-layouts/ConfigPageLayout.vue';
 import FactorCard from '../../quickwins/FactorCard.vue';
 import { defaultMfaFactors } from '../../quickwins/mfaFactorsData';
-import { menuItems, profileMenuItems } from '../../burak-agent0/features/agent0/shared/data/navigation';
+import { menuItems, profileMenuItems } from '../data/passwordVaultNavigation';
 import type { MfaFactor } from '../../quickwins/mfaFactorsData';
 
 defineOptions({
   name: 'MultiFactorAuthenticationPage',
 });
 
-const factors = ref<MfaFactor[]>(defaultMfaFactors);
+const factors = ref<MfaFactor[]>(defaultMfaFactors.map((item) => ({ ...item })));
 
 function updateFactorEnabled(id: string, enabled: boolean) {
   const f = factors.value.find((x) => x.id === id);
@@ -30,7 +30,7 @@ function updateFactorAdditionalChecked(id: string, checked: boolean) {
     <AppNavigation
       :menuItems="menuItems"
       :profileMenuItems="profileMenuItems"
-      activeItem="Security"
+      activeItem="security"
       :collapsible="true"
       :topNavToggle="true"
     />
