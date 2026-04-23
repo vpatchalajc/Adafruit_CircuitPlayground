@@ -34,12 +34,11 @@ function updateFactorAdditionalChecked(id: string, checked: boolean) {
       :collapsible="true"
       :topNavToggle="true"
     />
-    <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+    <div class="flex min-w-0 flex-1 flex-col overflow-hidden">
       <TopBar />
       <PageHeader title="MFA Configuration" />
-      <ConfigPageLayout class="w-full! h-full!">
+      <ConfigPageLayout class="h-full! w-full!">
         <div class="flex flex-col gap-lg">
-          <!-- Factors section header (Figma: Frame 1171276498) -->
           <div class="flex flex-col gap-md">
             <h2 class="text-heading-2 text-neutral-base">Factors</h2>
             <RichText
@@ -49,7 +48,6 @@ function updateFactorAdditionalChecked(id: string, checked: boolean) {
             />
           </div>
 
-          <!-- Factor cards (Figma: Factor Card instances) -->
           <div class="flex flex-col gap-md">
             <FactorCard
               v-for="factor in factors"
