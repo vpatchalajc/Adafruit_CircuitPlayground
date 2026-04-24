@@ -1,10 +1,6 @@
 <script setup lang="ts">
 import { LinkText } from '@jumpcloud/circuit/components';
 import Button from 'primevue/button';
-import { ArrowTopRightOnSquareIcon, ShieldCheckIcon } from '@heroicons/vue/24/outline';
-import { KeyIcon, LockClosedIcon, CreditCardIcon, IdentificationIcon } from '@heroicons/vue/24/outline';
-
-import ConfigPageLayout from '@/components/layout/page-layouts/ConfigPageLayout.vue';
 
 defineOptions({
   name: 'PasswordVaultPage',
@@ -12,56 +8,135 @@ defineOptions({
 </script>
 
 <template>
-  <ConfigPageLayout class="h-full! w-full! max-w-full!">
+  <div
+    class="flex h-full min-h-0 w-full flex-1 flex-col overflow-y-auto"
+    data-test-id="password-vault-landing"
+  >
     <div
-      class="flex min-h-0 flex-1 flex-col items-center justify-center gap-xl px-md py-xl"
+      class="mx-auto flex w-full max-w-2xl flex-1 flex-col items-center justify-center gap-xl px-md py-xl"
     >
-      <!-- Figma: Password Vault landing — node 3:7790 -->
-      <div
-        class="flex max-w-md flex-col items-center gap-6"
-        role="img"
-        aria-label="Password Vault illustration: browser window with secure credentials"
-      >
-        <div
-          class="relative w-full overflow-hidden rounded-md border border-neutral-default_solid bg-neutral-surface p-6 shadow-sm"
+      <!-- Figma 3:7790 — single SVG scales cleanly under PageHeader (no w-screen / flex-wrap issues) -->
+      <div class="w-full max-w-sm shrink-0">
+        <svg
+          class="h-auto w-full"
+          viewBox="0 0 400 260"
+          xmlns="http://www.w3.org/2000/svg"
+          aria-hidden="true"
         >
-          <div class="mb-3 flex h-2 gap-1">
-            <span class="size-2 rounded-full bg-neutral-subtle" />
-            <span class="size-2 rounded-full bg-neutral-subtle" />
-            <span class="size-2 rounded-full bg-neutral-subtle" />
-          </div>
-          <div
-            class="relative flex min-h-40 items-center justify-center gap-2 rounded-sm border border-field-default bg-neutral-surface p-4"
+          <!-- Browser: outer = border (subtle), inner = face (surface) so stroke is not the same as fill -->
+          <rect
+            x="16"
+            y="8"
+            width="368"
+            height="180"
+            rx="10"
+            class="text-neutral-subtle fill-current"
+          />
+          <rect
+            x="18"
+            y="10"
+            width="364"
+            height="176"
+            rx="8"
+            class="text-neutral-surface fill-current"
+          />
+          <circle class="text-neutral-subtle" cx="36" cy="28" r="3.5" fill="currentColor" opacity="0.5" />
+          <circle class="text-neutral-subtle" cx="52" cy="28" r="3.5" fill="currentColor" opacity="0.4" />
+          <circle class="text-neutral-subtle" cx="68" cy="28" r="3.5" fill="currentColor" opacity="0.3" />
+
+          <!-- Content panel (outer subtle ring + inner surface) -->
+          <rect
+            x="36"
+            y="50"
+            width="328"
+            height="120"
+            rx="6"
+            class="text-neutral-subtle fill-current"
+            opacity="0.35"
+          />
+          <rect
+            x="38"
+            y="52"
+            width="324"
+            height="116"
+            rx="4"
+            class="text-neutral-surface fill-current"
+          />
+
+          <!-- Floating credential glyphs (simple paths — valid in all SVG UAs) -->
+          <g
+            class="text-neutral-subtle"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.4"
+            stroke-linecap="round"
+            stroke-linejoin="round"
           >
-            <KeyIcon
-              class="size-6 shrink-0 text-neutral-subtle"
+            <!-- key (bit + shaft) -->
+            <circle cx="74" cy="100" r="3.5" />
+            <path d="M77 100h16l-2 2.5h-5.5v9.5h-3v-8H78l-2 1.5z" />
+            <!-- id card -->
+            <rect x="128" y="90" width="32" height="24" rx="3" />
+            <line x1="132" y1="96" x2="150" y2="96" />
+            <line x1="132" y1="102" x2="144" y2="102" />
+            <!-- card -->
+            <rect x="318" y="92" width="30" height="20" rx="2.5" />
+            <line x1="322" y1="98" x2="344" y2="98" />
+            <line x1="322" y1="104" x2="334" y2="104" />
+            <!-- lock -->
+            <rect x="308" y="116" width="20" height="16" rx="2" />
+            <path d="M312 116v-4.5a6 6 0 0 1 12 0V116" />
+          </g>
+
+          <!-- Center shield (brand emphasis) -->
+          <g class="text-button-primary-base">
+            <circle
+              cx="200"
+              cy="120"
+              r="40"
+              fill="currentColor"
+              fill-opacity="0.1"
+              stroke="currentColor"
+              stroke-width="1.5"
             />
-            <IdentificationIcon
-              class="size-6 shrink-0 text-neutral-subtle"
+            <path
+              d="M200 96c-10 0-18 8-18 18 0 12 9 20 18 28 9-8 18-16 18-28 0-10-8-18-18-18z"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linejoin="round"
             />
-            <div
-              class="flex size-16 shrink-0 items-center justify-center rounded-full border border-button-primary-base bg-button-primary-muted"
-            >
-              <ShieldCheckIcon class="size-8 text-button-primary-base" />
-            </div>
-            <CreditCardIcon
-              class="size-6 shrink-0 text-neutral-subtle"
-            />
-            <LockClosedIcon
-              class="size-6 shrink-0 text-neutral-subtle"
-            />
-          </div>
-        </div>
-        <div
-          class="flex items-center justify-center rounded-lg border border-field-default bg-neutral-surface_subtle px-4 py-2"
-        >
-          <span class="text-body-lg tracking-widest text-neutral-subtle" aria-hidden="true"
-            >* * *</span
-          >
-        </div>
+            <circle cx="200" cy="114" r="3.5" fill="currentColor" />
+            <path d="M200 120v10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+          </g>
+
+          <!-- Password pill -->
+          <rect
+            x="130"
+            y="204"
+            width="140"
+            height="40"
+            rx="20"
+            class="text-neutral-subtle fill-current"
+            opacity="0.3"
+          />
+          <rect
+            x="132"
+            y="206"
+            width="136"
+            height="36"
+            rx="18"
+            class="text-neutral-surface fill-current"
+          />
+          <g class="text-neutral-subtle" fill="currentColor" opacity="0.65">
+            <circle cx="168" cy="224" r="2.2" />
+            <circle cx="200" cy="224" r="2.2" />
+            <circle cx="232" cy="224" r="2.2" />
+          </g>
+        </svg>
       </div>
 
-      <div class="flex max-w-2xl flex-col items-center gap-md text-center">
+      <div class="flex w-full max-w-2xl shrink-0 flex-col items-center gap-md text-center">
         <h2 class="text-heading-2 text-neutral-base">
           Password Vault: Secure Credential Management
         </h2>
@@ -82,5 +157,5 @@ defineOptions({
         </div>
       </div>
     </div>
-  </ConfigPageLayout>
+  </div>
 </template>
