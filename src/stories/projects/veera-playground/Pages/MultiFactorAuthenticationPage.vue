@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { AppNavigation, PageHeader, RichText } from '@jumpcloud/circuit/components';
+import { AppNavigation, LinkText, PageHeader, RichText } from '@jumpcloud/circuit/components';
 import TopBar from '@/components/TopBar.vue';
 import ConfigPageLayout from '@/components/layout/page-layouts/ConfigPageLayout.vue';
 import FactorCard from '../../quickwins/FactorCard.vue';
@@ -33,7 +33,21 @@ function updateFactorAdditionalChecked(id: string, checked: boolean) {
       activeItem="security"
       :collapsible="true"
       :topNavToggle="true"
-    />
+    >
+      <template #custom-text>
+        <p class="px-2 text-left text-body-xs text-neutral-subtle">
+          Having trouble with the new navigation?
+          <LinkText
+            label="Check out the guide"
+            href="https://jumpcloud.com/support"
+            target="_blank"
+            rel="noopener noreferrer"
+            :showIcon="false"
+            customClass="text-body-xs"
+          />
+        </p>
+      </template>
+    </AppNavigation>
     <div class="flex min-w-0 flex-1 flex-col overflow-hidden">
       <TopBar />
       <PageHeader title="MFA Configuration" />

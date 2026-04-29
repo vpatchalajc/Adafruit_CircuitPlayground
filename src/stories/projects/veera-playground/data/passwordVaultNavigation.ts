@@ -40,7 +40,7 @@ export const menuItems = [
     leftIcon: markRaw(HomeIcon),
   },
   {
-    label: 'Alerts',
+    label: 'Alert',
     leftIcon: markRaw(BellIcon),
     count: 23,
   },
