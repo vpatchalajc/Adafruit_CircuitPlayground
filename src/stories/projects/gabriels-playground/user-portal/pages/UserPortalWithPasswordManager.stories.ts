@@ -16,7 +16,9 @@ import {
   ToastNotification,
 } from '@jumpcloud/circuit/components';
 import Button from 'primevue/button';
+import Checkbox from 'primevue/checkbox';
 import Dialog from 'primevue/dialog';
+import Divider from 'primevue/divider';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
 import InputText from 'primevue/inputtext';
@@ -38,8 +40,10 @@ import DashboardStatCard from '@/stories/projects/burak-agent0/features/agent0/d
 
 import {
   ArrowLeftIcon,
+  ArrowPathIcon,
   ArrowRightStartOnRectangleIcon,
   ArrowTopRightOnSquareIcon,
+  CalendarDaysIcon,
   ChartBarSquareIcon,
   CheckCircleIcon,
   ChevronRightIcon,
@@ -77,7 +81,7 @@ import {
 /** Sidebar for the classic User Portal "All Applications" area — no separate Privileged Resources nav item. */
 const menuItemsAllApplications = [
   { label: 'All Applications', leftIcon: markRaw(SsoIcon) },
-  { label: 'Password Vault', leftIcon: markRaw(LockClosedIcon) },
+  { label: 'Password Vault', leftIcon: markRaw(PasswordManagerIcon) },
   { label: 'Requests', leftIcon: markRaw(AccessIcon) },
   { label: 'Tasks', leftIcon: markRaw(CheckListIcon) },
   { label: 'Security', leftIcon: markRaw(LockClosedIcon) },
@@ -821,6 +825,62 @@ const credentialTypeOptions = [
   { label: 'Secure Note', value: 'Secure Note' },
   { label: 'Payment Card', value: 'Payment Card' },
 ];
+const addCredentialTypeOptions = [
+  { label: 'Password', value: 'Password' },
+  { label: 'Key', value: 'Key' },
+  { label: 'Payment Card', value: 'Payment Card' },
+  { label: 'Secure Note', value: 'Secure Note' },
+  { label: '2FA', value: '2FA' },
+  { label: 'ID Card', value: 'ID Card' },
+  { label: 'Identity', value: 'Identity' },
+];
+const addCredentialMonthOptions = [
+  { label: 'Jan', value: 'Jan' },
+  { label: 'Feb', value: 'Feb' },
+  { label: 'Mar', value: 'Mar' },
+  { label: 'Apr', value: 'Apr' },
+  { label: 'May', value: 'May' },
+  { label: 'Jun', value: 'Jun' },
+  { label: 'Jul', value: 'Jul' },
+  { label: 'Aug', value: 'Aug' },
+  { label: 'Sep', value: 'Sep' },
+  { label: 'Oct', value: 'Oct' },
+  { label: 'Nov', value: 'Nov' },
+  { label: 'Dec', value: 'Dec' },
+];
+const addCredentialCountryOptions = [
+  { label: 'United States', value: 'United States' },
+  { label: 'Brazil', value: 'Brazil' },
+  { label: 'United Kingdom', value: 'United Kingdom' },
+  { label: 'Canada', value: 'Canada' },
+  { label: 'Germany', value: 'Germany' },
+  { label: 'France', value: 'France' },
+  { label: 'Australia', value: 'Australia' },
+];
+const addCredentialIdTypeOptions = [
+  { label: 'Passport', value: 'Passport' },
+  { label: "Driver's License", value: "Driver's License" },
+  { label: 'Social Security', value: 'Social Security' },
+  { label: 'ID Card', value: 'ID Card' },
+  { label: 'Tax Number', value: 'Tax Number' },
+  { label: 'Bank Account', value: 'Bank Account' },
+  { label: 'Insurance Card', value: 'Insurance Card' },
+  { label: 'Health Card', value: 'Health Card' },
+  { label: 'Membership', value: 'Membership' },
+  { label: 'Software License', value: 'Software License' },
+];
+const addCredentialTitleOptions = [
+  { label: 'Mr', value: 'Mr' },
+  { label: 'Mrs', value: 'Mrs' },
+  { label: 'Ms', value: 'Ms' },
+  { label: 'Dr', value: 'Dr' },
+];
+const addCredentialGenderOptions = [
+  { label: 'Male', value: 'Male' },
+  { label: 'Female', value: 'Female' },
+  { label: 'Non-binary', value: 'Non-binary' },
+  { label: 'Prefer not to say', value: 'Prefer not to say' },
+];
 
 const credentialTagOptions = ['cloud', 'prod', 'infra', 'linux', 'windows', 'finance'];
 const websiteTagOptions = ['dev', 'cloud', 'identity', 'monitoring', 'productivity', 'design', 'communication'];
@@ -1139,7 +1199,9 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
     PageHeader,
     ToastNotification,
     PvButton: Button,
+    PvCheckbox: Checkbox,
     PvDialog: Dialog,
+    PvDivider: Divider,
     PvIconField: IconField,
     PvInputIcon: InputIcon,
     PvInputText: InputText,
@@ -1152,7 +1214,10 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
     PvTab: Tab,
     PvTabPanels: TabPanels,
     PvTabPanel: TabPanel,
+    ArrowPathIcon,
+    CalendarDaysIcon,
     ChartBarSquareIcon,
+    GlobeAltIcon,
     MagnifyingGlassIcon,
     ArrowLeftIcon,
     ArrowTopRightOnSquareIcon,
@@ -1205,8 +1270,8 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
     const passwordVaultTab = ref<'overview' | 'websites' | 'credentials'>('overview');
     const passwordVaultTabs = [
       { label: 'Overview', value: 'overview' },
-      { label: 'Websites', value: 'websites' },
       { label: 'Credentials', value: 'credentials' },
+      { label: 'Websites', value: 'websites' },
     ];
     const vaultPasswordVaultStatCards = [
       {
@@ -1272,69 +1337,151 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
       Math.max(...vaultSecretsAddedBars.map(item => item.value)),
     );
     const vaultWebsitesData = [
-      { name: 'Gmail', address: 'https://mail.google.com', jumpServer: '--', status: 'Available', lastConnection: 'Today 9:15 AM' },
-      { name: 'LinkedIn', address: 'https://www.linkedin.com', jumpServer: '--', status: 'Available', lastConnection: 'Today 8:30 AM' },
-      { name: 'Slack', address: 'https://slack.com', jumpServer: '--', status: 'In Use', lastConnection: 'Today 10:00 AM' },
-      { name: 'Notion', address: 'https://www.notion.so', jumpServer: '--', status: 'Available', lastConnection: 'Yesterday 3:00 PM' },
-      { name: 'Figma', address: 'https://www.figma.com', jumpServer: '--', status: 'Available', lastConnection: 'Today 9:45 AM' },
-      { name: 'GitHub', address: 'https://github.com', jumpServer: '--', status: 'In Use', lastConnection: 'Today 11:00 AM' },
-      { name: 'Spotify', address: 'https://www.spotify.com', jumpServer: '--', status: 'Available', lastConnection: 'Yesterday 6:00 PM' },
-      { name: 'Twitter / X', address: 'https://twitter.com', jumpServer: '--', status: 'Available', lastConnection: 'Mar 30, 2026' },
-      { name: 'Netflix', address: 'https://www.netflix.com', jumpServer: '--', status: 'Available', lastConnection: 'Apr 1, 2026' },
-      { name: 'Amazon', address: 'https://www.amazon.com', jumpServer: '--', status: 'Available', lastConnection: 'Mar 28, 2026' },
-      { name: 'Dropbox', address: 'https://www.dropbox.com', jumpServer: '--', status: 'Available', lastConnection: 'Apr 2, 2026' },
-      { name: 'Zoom', address: 'https://zoom.us', jumpServer: '--', status: 'In Use', lastConnection: 'Today 10:30 AM' },
-      { name: 'Trello', address: 'https://trello.com', jumpServer: '--', status: 'Available', lastConnection: 'Apr 3, 2026' },
-      { name: 'Reddit', address: 'https://www.reddit.com', jumpServer: '--', status: 'Available', lastConnection: 'Yesterday 9:00 PM' },
-      { name: 'PayPal', address: 'https://www.paypal.com', jumpServer: '--', status: 'Available', lastConnection: 'Mar 25, 2026' },
+      { name: 'Gmail', address: 'https://mail.google.com', tags: ['work', 'google'] },
+      { name: 'LinkedIn', address: 'https://www.linkedin.com', tags: ['work'] },
+      { name: 'Slack', address: 'https://slack.com', tags: ['work', 'communication'] },
+      { name: 'Notion', address: 'https://www.notion.so', tags: ['productivity'] },
+      { name: 'Figma', address: 'https://www.figma.com', tags: ['design', 'work'] },
+      { name: 'GitHub', address: 'https://github.com', tags: ['dev'] },
+      { name: 'Spotify', address: 'https://www.spotify.com', tags: ['personal'] },
+      { name: 'Twitter / X', address: 'https://twitter.com', tags: ['social'] },
+      { name: 'Netflix', address: 'https://www.netflix.com', tags: ['personal'] },
+      { name: 'Amazon', address: 'https://www.amazon.com', tags: ['shopping', 'personal'] },
+      { name: 'Dropbox', address: 'https://www.dropbox.com', tags: ['work', 'storage'] },
+      { name: 'Zoom', address: 'https://zoom.us', tags: ['work', 'communication'] },
+      { name: 'Trello', address: 'https://trello.com', tags: ['productivity', 'work'] },
+      { name: 'Reddit', address: 'https://www.reddit.com', tags: ['social'] },
+      { name: 'PayPal', address: 'https://www.paypal.com', tags: ['finance'] },
     ];
     const vaultCredentialsData = [
-      { name: 'Gmail Password', address: 'gabriel.ramos@gmail.com', status: 'Available', lastConnection: 'Today 9:15 AM' },
-      { name: 'LinkedIn Password', address: 'gabriel.ramos@linkedin.com', status: 'Available', lastConnection: 'Today 8:30 AM' },
-      { name: 'Slack Password', address: 'gabriel@jumpcloud.com', status: 'In Use', lastConnection: 'Today 10:00 AM' },
-      { name: 'Notion Password', address: 'gabriel.ramos@notion.so', status: 'Available', lastConnection: 'Yesterday 3:00 PM' },
-      { name: 'Figma Password', address: 'gabriel@jumpcloud.com', status: 'Available', lastConnection: 'Today 9:45 AM' },
-      { name: 'GitHub Token', address: 'gabriel-ramos', status: 'In Use', lastConnection: 'Today 11:00 AM' },
-      { name: 'Spotify Password', address: 'gabriel.ramos@gmail.com', status: 'Available', lastConnection: 'Yesterday 6:00 PM' },
-      { name: 'Twitter / X Password', address: 'gabriel_ramos', status: 'Available', lastConnection: 'Mar 30, 2026' },
-      { name: 'Netflix Password', address: 'gabriel.ramos@gmail.com', status: 'Available', lastConnection: 'Apr 1, 2026' },
-      { name: 'Amazon Password', address: 'gabriel.ramos@gmail.com', status: 'Available', lastConnection: 'Mar 28, 2026' },
-      { name: 'Dropbox Password', address: 'gabriel@jumpcloud.com', status: 'Available', lastConnection: 'Apr 2, 2026' },
-      { name: 'Zoom Password', address: 'gabriel@jumpcloud.com', status: 'In Use', lastConnection: 'Today 10:30 AM' },
-      { name: 'Trello Password', address: 'gabriel.ramos@trello.com', status: 'Available', lastConnection: 'Apr 3, 2026' },
-      { name: 'PayPal Password', address: 'gabriel.ramos@gmail.com', status: 'Available', lastConnection: 'Mar 25, 2026' },
+      {
+        name: 'Gmail Password',
+        type: 'Password',
+        expirationDate: '--',
+        tags: ['work', 'google'],
+        lastTimeUsed: 'Apr 27, 2026 @ 9:15 AM',
+      },
+      {
+        name: 'LinkedIn Password',
+        type: 'Password',
+        expirationDate: '--',
+        tags: ['work'],
+        lastTimeUsed: 'Apr 27, 2026 @ 8:30 AM',
+      },
+      {
+        name: 'AWS Root Account',
+        type: 'Password',
+        expirationDate: 'May 1, 2026',
+        tags: ['aws', 'critical'],
+        lastTimeUsed: 'Apr 25, 2026 @ 3:00 PM',
+      },
+      {
+        name: 'GitHub Token',
+        type: 'Password',
+        expirationDate: 'Jun 15, 2026',
+        tags: ['dev', 'github'],
+        lastTimeUsed: 'Apr 27, 2026 @ 11:00 AM',
+      },
+      {
+        name: 'AWS Access Keys',
+        type: 'Secure Note',
+        expirationDate: '--',
+        tags: ['aws', 'dev'],
+        lastTimeUsed: 'Apr 20, 2026 @ 2:00 PM',
+      },
+      {
+        name: 'Recovery Codes - Okta',
+        type: 'Secure Note',
+        expirationDate: '--',
+        tags: ['mfa', 'okta'],
+        lastTimeUsed: 'Mar 10, 2026 @ 9:00 AM',
+      },
+      {
+        name: 'SSH Keys - Prod Server',
+        type: 'Secure Note',
+        expirationDate: '--',
+        tags: ['infra', 'prod'],
+        lastTimeUsed: 'Apr 15, 2026 @ 7:45 AM',
+      },
+      {
+        name: 'Visa Corp Card',
+        type: 'Payment Card',
+        expirationDate: 'Dec 31, 2027',
+        tags: ['finance'],
+        lastTimeUsed: 'Apr 10, 2026 @ 4:30 PM',
+      },
+      {
+        name: 'Amex Travel Card',
+        type: 'Payment Card',
+        expirationDate: 'Mar 31, 2028',
+        tags: ['finance', 'travel'],
+        lastTimeUsed: 'Mar 28, 2026 @ 1:15 PM',
+      },
+      {
+        name: 'Netflix Password',
+        type: 'Password',
+        expirationDate: '--',
+        tags: [],
+        lastTimeUsed: 'Apr 1, 2026 @ 8:00 PM',
+      },
+      {
+        name: 'Figma Password',
+        type: 'Password',
+        expirationDate: '--',
+        tags: ['design'],
+        lastTimeUsed: 'Apr 27, 2026 @ 9:45 AM',
+      },
+      {
+        name: 'Slack Password',
+        type: 'Password',
+        expirationDate: '--',
+        tags: ['work'],
+        lastTimeUsed: 'Apr 27, 2026 @ 10:00 AM',
+      },
     ];
-    const vaultWebsitesStatusOptions = [
+    const filteredVaultCredentialsData = computed(() => {
+      const q = vaultCredentialSearch.value.toLowerCase().trim();
+      if (!q) return vaultCredentialsData;
+      return vaultCredentialsData.filter(c => c.name.toLowerCase().includes(q));
+    });
+    const vaultWebsitesTagOptions = [
+      'work',
+      'google',
+      'communication',
+      'productivity',
+      'design',
+      'dev',
+      'personal',
+      'social',
+      'shopping',
+      'storage',
+      'finance',
+    ];
+    const vaultCredentialsTypeOptions = [
       { label: 'All', value: 'All' },
-      { label: 'Available', value: 'Available' },
-      { label: 'In Use', value: 'In Use' },
+      { label: 'Password', value: 'Password' },
+      { label: 'Secure Note', value: 'Secure Note' },
+      { label: 'Payment Card', value: 'Payment Card' },
     ];
-    const vaultCredentialsStatusOptions = [
+    const vaultCredentialsTagOptions = [
+      'work',
+      'google',
+      'aws',
+      'critical',
+      'dev',
+      'github',
+      'design',
+      'mfa',
+      'okta',
+      'infra',
+      'prod',
+      'finance',
+      'travel',
+    ];
+    const vaultCredentialsExpiredOptions = [
       { label: 'All', value: 'All' },
-      { label: 'Available', value: 'Available' },
-      { label: 'In Use', value: 'In Use' },
-    ];
-    const vaultWebsitesConnectorOptions = [
-      { label: 'Connector-01', value: 'Connector-01' },
-      { label: 'Connector-02', value: 'Connector-02' },
-      { label: 'Connector-03', value: 'Connector-03' },
-      { label: 'Connector-04', value: 'Connector-04' },
-    ];
-    const vaultCredentialsConnectorOptions = [
-      { label: 'Connector-01', value: 'Connector-01' },
-      { label: 'Connector-02', value: 'Connector-02' },
-      { label: 'Connector-03', value: 'Connector-03' },
-      { label: 'Connector-04', value: 'Connector-04' },
-    ];
-    const vaultWebsitesJumpServerOptions = [
-      { label: 'JS-AWS-E1', value: 'JS-AWS-E1' },
-      { label: 'JS-PROD-01', value: 'JS-PROD-01' },
-      { label: 'JS-EU-DC', value: 'JS-EU-DC' },
-    ];
-    const vaultCredentialsJumpServerOptions = [
-      { label: 'JS-AWS-E1', value: 'JS-AWS-E1' },
-      { label: 'JS-PROD-01', value: 'JS-PROD-01' },
-      { label: 'JS-EU-DC', value: 'JS-EU-DC' },
+      { label: 'Yes', value: 'Yes' },
+      { label: 'No', value: 'No' },
     ];
     const credentials = ref<CredentialRecord[]>(
       JSON.parse(JSON.stringify(credentialsSeed)) as CredentialRecord[],
@@ -1344,6 +1491,7 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
     );
     const credentialSearch = ref('');
     const websiteSearch = ref('');
+    const vaultCredentialSearch = ref('');
     const showCredentialDialog = ref(false);
     const showWebsiteDialog = ref(false);
     const editingCredential = ref<CredentialRecord | null>(null);
@@ -1357,11 +1505,67 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
       tags: '',
       notes: '',
     });
+    const showAddCredentialDialog = ref(false);
+    const addCredentialForm = ref({
+      type: 'Password',
+      name: '',
+      usernameOrEmail: '',
+      domain: '',
+      password: '',
+      hasMfa: false,
+      expirationDate: '',
+      tags: '',
+      notes: '',
+      privateKey: '',
+      publicKey: '',
+      passphrase: '',
+      cardholderName: '',
+      cardNumber: '',
+      expiryMonth: '',
+      expiryYear: '',
+      cvv: '',
+      secureNoteContent: '',
+      twoFaSecretKey: '',
+      idCountry: 'United States',
+      idType: '',
+      nameOnId: '',
+      idNumber: '',
+      issuanceDate: '',
+      identityTitle: '',
+      identityGender: '',
+      firstName: '',
+      middleName: '',
+      lastName: '',
+      email: '',
+      phone: '',
+      addressLine1: '',
+      addressLine2: '',
+      city: '',
+      postalCode: '',
+      country: 'United States',
+    });
     const websiteForm = ref({
       name: '',
       uri: '',
       tags: '',
       notes: '',
+    });
+    const showAddWebsiteDialog = ref(false);
+    const addWebsiteActiveTab = ref('general');
+    const addWebsiteForm = ref({
+      name: '',
+      uri: '',
+      tags: '',
+      notes: '',
+      usernameFieldSelector: '',
+      passwordFieldSelector: '',
+      nextButtonSelector: '',
+      loginButtonSelector: '',
+      fieldSelectorToHide: '',
+      delayAfterNext: '',
+      fillDelay: '',
+      fillMoreThanOnce: false,
+      automaticLogin: true,
     });
     const showCredentialFilterDialog = ref(false);
     const appliedCredentialTypes = ref<string[]>([]);
@@ -1372,19 +1576,21 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
     const appliedWebsiteTags = ref<string[]>([]);
     const draftWebsiteTags = ref<string[]>([]);
     const showVaultWebsitesFilterDialog = ref(false);
-    const appliedVaultWebsitesStatus = ref('All');
-    const appliedVaultWebsitesConnectors = ref([] as string[]);
-    const appliedVaultWebsitesJumpServers = ref([] as string[]);
-    const draftVaultWebsitesStatus = ref('All');
-    const draftVaultWebsitesConnectors = ref([] as string[]);
-    const draftVaultWebsitesJumpServers = ref([] as string[]);
+    const appliedVaultWebsitesTags = ref([] as string[]);
+    const appliedVaultWebsitesAddress = ref('');
+    const draftVaultWebsitesTags = ref([] as string[]);
+    const draftVaultWebsitesAddress = ref('');
     const showVaultCredentialsFilterDialog = ref(false);
-    const appliedVaultCredentialsStatus = ref('All');
-    const appliedVaultCredentialsConnectors = ref([] as string[]);
-    const appliedVaultCredentialsJumpServers = ref([] as string[]);
-    const draftVaultCredentialsStatus = ref('All');
-    const draftVaultCredentialsConnectors = ref([] as string[]);
-    const draftVaultCredentialsJumpServers = ref([] as string[]);
+    const appliedVaultCredentialsType = ref('All');
+    const appliedVaultCredentialsTags = ref([] as string[]);
+    const appliedVaultCredentialsExpired = ref('All');
+    const appliedVaultCredentialsExpirationStart = ref('');
+    const appliedVaultCredentialsExpirationEnd = ref('');
+    const draftVaultCredentialsType = ref('All');
+    const draftVaultCredentialsTags = ref([] as string[]);
+    const draftVaultCredentialsExpired = ref('All');
+    const draftVaultCredentialsExpirationStart = ref('');
+    const draftVaultCredentialsExpirationEnd = ref('');
 
     const portalNavMenuItems = computed(() =>
       menuItemsAllApplications.map(item => {
@@ -1511,6 +1717,83 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
       return values.length > 0 ? values.join(', ') : '--';
     }
 
+    function formatDateRange(start: string, end: string): string {
+      if (start && end) return `${start} - ${end}`;
+      return start || end || '--';
+    }
+
+    function isExpiringSoon(value: string): boolean {
+      if (value === '--') return false;
+      const parsed = new Date(value);
+      if (Number.isNaN(parsed.getTime())) return false;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const target = new Date(parsed);
+      target.setHours(0, 0, 0, 0);
+      const diffDays = (target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24);
+      return diffDays >= 0 && diffDays <= 30;
+    }
+
+    function resetAddCredentialForm() {
+      addCredentialForm.value = {
+        type: 'Password',
+        name: '',
+        usernameOrEmail: '',
+        domain: '',
+        password: '',
+        hasMfa: false,
+        expirationDate: '',
+        tags: '',
+        notes: '',
+        privateKey: '',
+        publicKey: '',
+        passphrase: '',
+        cardholderName: '',
+        cardNumber: '',
+        expiryMonth: '',
+        expiryYear: '',
+        cvv: '',
+        secureNoteContent: '',
+        twoFaSecretKey: '',
+        idCountry: 'United States',
+        idType: '',
+        nameOnId: '',
+        idNumber: '',
+        issuanceDate: '',
+        identityTitle: '',
+        identityGender: '',
+        firstName: '',
+        middleName: '',
+        lastName: '',
+        email: '',
+        phone: '',
+        addressLine1: '',
+        addressLine2: '',
+        city: '',
+        postalCode: '',
+        country: 'United States',
+      };
+    }
+
+    function resetAddWebsiteForm() {
+      addWebsiteForm.value = {
+        name: '',
+        uri: '',
+        tags: '',
+        notes: '',
+        usernameFieldSelector: '',
+        passwordFieldSelector: '',
+        nextButtonSelector: '',
+        loginButtonSelector: '',
+        fieldSelectorToHide: '',
+        delayAfterNext: '',
+        fillDelay: '',
+        fillMoreThanOnce: false,
+        automaticLogin: true,
+      };
+      addWebsiteActiveTab.value = 'general';
+    }
+
     const credentialDraftFilterCount = computed(() => {
       let count = 0;
       if (draftCredentialTypes.value.length > 0) count += 1;
@@ -1525,16 +1808,21 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
     });
     const vaultWebsitesDraftFilterCount = computed(() => {
       let count = 0;
-      if (draftVaultWebsitesStatus.value !== 'All') count += 1;
-      if (draftVaultWebsitesConnectors.value.length > 0) count += 1;
-      if (draftVaultWebsitesJumpServers.value.length > 0) count += 1;
+      if (draftVaultWebsitesTags.value.length > 0) count += 1;
+      if (draftVaultWebsitesAddress.value.trim()) count += 1;
       return count;
     });
     const vaultCredentialsDraftFilterCount = computed(() => {
       let count = 0;
-      if (draftVaultCredentialsStatus.value !== 'All') count += 1;
-      if (draftVaultCredentialsConnectors.value.length > 0) count += 1;
-      if (draftVaultCredentialsJumpServers.value.length > 0) count += 1;
+      if (draftVaultCredentialsType.value !== 'All') count += 1;
+      if (draftVaultCredentialsTags.value.length > 0) count += 1;
+      if (draftVaultCredentialsExpired.value !== 'All') count += 1;
+      if (
+        draftVaultCredentialsExpirationStart.value.trim() ||
+        draftVaultCredentialsExpirationEnd.value.trim()
+      ) {
+        count += 1;
+      }
       return count;
     });
 
@@ -1573,46 +1861,62 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
     });
     const vaultWebsitesFilterChips = computed(() => {
       const chips: { id: string; key: string; operator: string; value: string }[] = [];
-      if (appliedVaultWebsitesStatus.value !== 'All') {
-        chips.push({ id: 'status', key: 'Status', operator: 'is', value: appliedVaultWebsitesStatus.value });
-      }
-      if (appliedVaultWebsitesConnectors.value.length > 0) {
+      if (appliedVaultWebsitesTags.value.length > 0) {
         chips.push({
-          id: 'connector',
-          key: 'Connector',
+          id: 'tags',
+          key: 'Tags',
           operator: 'is',
-          value: formatGroupedValues(appliedVaultWebsitesConnectors.value),
+          value: formatGroupedValues(appliedVaultWebsitesTags.value),
         });
       }
-      if (appliedVaultWebsitesJumpServers.value.length > 0) {
+      if (appliedVaultWebsitesAddress.value.trim()) {
         chips.push({
-          id: 'jump-server',
-          key: 'Jump Server',
-          operator: 'is',
-          value: formatGroupedValues(appliedVaultWebsitesJumpServers.value),
+          id: 'address',
+          key: 'Address',
+          operator: 'contains',
+          value: appliedVaultWebsitesAddress.value,
         });
       }
       return chips;
     });
     const vaultCredentialsFilterChips = computed(() => {
       const chips: { id: string; key: string; operator: string; value: string }[] = [];
-      if (appliedVaultCredentialsStatus.value !== 'All') {
-        chips.push({ id: 'status', key: 'Status', operator: 'is', value: appliedVaultCredentialsStatus.value });
-      }
-      if (appliedVaultCredentialsConnectors.value.length > 0) {
+      if (appliedVaultCredentialsType.value !== 'All') {
         chips.push({
-          id: 'connector',
-          key: 'Connector',
+          id: 'type',
+          key: 'Credential Type',
           operator: 'is',
-          value: formatGroupedValues(appliedVaultCredentialsConnectors.value),
+          value: appliedVaultCredentialsType.value,
         });
       }
-      if (appliedVaultCredentialsJumpServers.value.length > 0) {
+      if (appliedVaultCredentialsTags.value.length > 0) {
         chips.push({
-          id: 'jump-server',
-          key: 'Jump Server',
+          id: 'tags',
+          key: 'Tags',
           operator: 'is',
-          value: formatGroupedValues(appliedVaultCredentialsJumpServers.value),
+          value: formatGroupedValues(appliedVaultCredentialsTags.value),
+        });
+      }
+      if (appliedVaultCredentialsExpired.value !== 'All') {
+        chips.push({
+          id: 'expired',
+          key: 'Expired',
+          operator: 'is',
+          value: appliedVaultCredentialsExpired.value,
+        });
+      }
+      if (
+        appliedVaultCredentialsExpirationStart.value.trim() ||
+        appliedVaultCredentialsExpirationEnd.value.trim()
+      ) {
+        chips.push({
+          id: 'expiration-range',
+          key: 'Expiration Date',
+          operator: 'between',
+          value: formatDateRange(
+            appliedVaultCredentialsExpirationStart.value,
+            appliedVaultCredentialsExpirationEnd.value,
+          ),
         });
       }
       return chips;
@@ -1733,16 +2037,14 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
     }
 
     function openVaultWebsitesFilterDialog() {
-      draftVaultWebsitesStatus.value = appliedVaultWebsitesStatus.value;
-      draftVaultWebsitesConnectors.value = [...appliedVaultWebsitesConnectors.value];
-      draftVaultWebsitesJumpServers.value = [...appliedVaultWebsitesJumpServers.value];
+      draftVaultWebsitesTags.value = [...appliedVaultWebsitesTags.value];
+      draftVaultWebsitesAddress.value = appliedVaultWebsitesAddress.value;
       showVaultWebsitesFilterDialog.value = true;
     }
 
     function applyVaultWebsitesFilters() {
-      appliedVaultWebsitesStatus.value = draftVaultWebsitesStatus.value;
-      appliedVaultWebsitesConnectors.value = [...draftVaultWebsitesConnectors.value];
-      appliedVaultWebsitesJumpServers.value = [...draftVaultWebsitesJumpServers.value];
+      appliedVaultWebsitesTags.value = [...draftVaultWebsitesTags.value];
+      appliedVaultWebsitesAddress.value = draftVaultWebsitesAddress.value;
       showVaultWebsitesFilterDialog.value = false;
     }
 
@@ -1751,39 +2053,46 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
     }
 
     function clearVaultWebsitesDraftFilters() {
-      draftVaultWebsitesStatus.value = 'All';
-      draftVaultWebsitesConnectors.value = [];
-      draftVaultWebsitesJumpServers.value = [];
+      draftVaultWebsitesTags.value = [];
+      draftVaultWebsitesAddress.value = '';
     }
 
     function clearAllVaultWebsitesFilters() {
-      appliedVaultWebsitesStatus.value = 'All';
-      appliedVaultWebsitesConnectors.value = [];
-      appliedVaultWebsitesJumpServers.value = [];
+      appliedVaultWebsitesTags.value = [];
+      appliedVaultWebsitesAddress.value = '';
     }
 
     function removeVaultWebsitesFilterChip(chip: { id?: string }) {
       const chipId = chip.id ?? '';
-      if (chipId === 'status') appliedVaultWebsitesStatus.value = 'All';
-      if (chipId === 'connector') appliedVaultWebsitesConnectors.value = [];
-      if (chipId === 'jump-server') appliedVaultWebsitesJumpServers.value = [];
+      if (chipId === 'tags') appliedVaultWebsitesTags.value = [];
+      if (chipId === 'address') appliedVaultWebsitesAddress.value = '';
     }
 
     function openVaultWebsitesDialog() {
-      console.log('Add vault website');
+      showAddWebsiteDialog.value = true;
+      resetAddWebsiteForm();
+    }
+
+    function closeAddWebsiteDialog() {
+      showAddWebsiteDialog.value = false;
+      resetAddWebsiteForm();
     }
 
     function openVaultCredentialsFilterDialog() {
-      draftVaultCredentialsStatus.value = appliedVaultCredentialsStatus.value;
-      draftVaultCredentialsConnectors.value = [...appliedVaultCredentialsConnectors.value];
-      draftVaultCredentialsJumpServers.value = [...appliedVaultCredentialsJumpServers.value];
+      draftVaultCredentialsType.value = appliedVaultCredentialsType.value;
+      draftVaultCredentialsTags.value = [...appliedVaultCredentialsTags.value];
+      draftVaultCredentialsExpired.value = appliedVaultCredentialsExpired.value;
+      draftVaultCredentialsExpirationStart.value = appliedVaultCredentialsExpirationStart.value;
+      draftVaultCredentialsExpirationEnd.value = appliedVaultCredentialsExpirationEnd.value;
       showVaultCredentialsFilterDialog.value = true;
     }
 
     function applyVaultCredentialsFilters() {
-      appliedVaultCredentialsStatus.value = draftVaultCredentialsStatus.value;
-      appliedVaultCredentialsConnectors.value = [...draftVaultCredentialsConnectors.value];
-      appliedVaultCredentialsJumpServers.value = [...draftVaultCredentialsJumpServers.value];
+      appliedVaultCredentialsType.value = draftVaultCredentialsType.value;
+      appliedVaultCredentialsTags.value = [...draftVaultCredentialsTags.value];
+      appliedVaultCredentialsExpired.value = draftVaultCredentialsExpired.value;
+      appliedVaultCredentialsExpirationStart.value = draftVaultCredentialsExpirationStart.value;
+      appliedVaultCredentialsExpirationEnd.value = draftVaultCredentialsExpirationEnd.value;
       showVaultCredentialsFilterDialog.value = false;
     }
 
@@ -1792,26 +2101,40 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
     }
 
     function clearVaultCredentialsDraftFilters() {
-      draftVaultCredentialsStatus.value = 'All';
-      draftVaultCredentialsConnectors.value = [];
-      draftVaultCredentialsJumpServers.value = [];
+      draftVaultCredentialsType.value = 'All';
+      draftVaultCredentialsTags.value = [];
+      draftVaultCredentialsExpired.value = 'All';
+      draftVaultCredentialsExpirationStart.value = '';
+      draftVaultCredentialsExpirationEnd.value = '';
     }
 
     function clearAllVaultCredentialsFilters() {
-      appliedVaultCredentialsStatus.value = 'All';
-      appliedVaultCredentialsConnectors.value = [];
-      appliedVaultCredentialsJumpServers.value = [];
+      appliedVaultCredentialsType.value = 'All';
+      appliedVaultCredentialsTags.value = [];
+      appliedVaultCredentialsExpired.value = 'All';
+      appliedVaultCredentialsExpirationStart.value = '';
+      appliedVaultCredentialsExpirationEnd.value = '';
     }
 
     function removeVaultCredentialsFilterChip(chip: { id?: string }) {
       const chipId = chip.id ?? '';
-      if (chipId === 'status') appliedVaultCredentialsStatus.value = 'All';
-      if (chipId === 'connector') appliedVaultCredentialsConnectors.value = [];
-      if (chipId === 'jump-server') appliedVaultCredentialsJumpServers.value = [];
+      if (chipId === 'type') appliedVaultCredentialsType.value = 'All';
+      if (chipId === 'tags') appliedVaultCredentialsTags.value = [];
+      if (chipId === 'expired') appliedVaultCredentialsExpired.value = 'All';
+      if (chipId === 'expiration-range') {
+        appliedVaultCredentialsExpirationStart.value = '';
+        appliedVaultCredentialsExpirationEnd.value = '';
+      }
     }
 
     function openVaultCredentialsDialog() {
-      console.log('Add vault credential');
+      showAddCredentialDialog.value = true;
+      resetAddCredentialForm();
+    }
+
+    function closeAddCredentialDialog() {
+      showAddCredentialDialog.value = false;
+      resetAddCredentialForm();
     }
 
     const credentialDialogTitle = computed(() =>
@@ -2196,11 +2519,17 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
       props: {
         iconButtons: { type: Array, default: () => [] },
         menuItems: { type: Array, default: () => [] },
+        showMenuButton: { type: Boolean, default: false },
       },
-      setup() {
+      setup(props) {
         const menu = ref<InstanceType<typeof Menu> | null>(null);
         function toggleMenu(event: Event) {
           menu.value?.toggle(event);
+        }
+        function handleMenuClick(event: Event) {
+          if (props.menuItems.length > 0) {
+            toggleMenu(event);
+          }
         }
         const menuPt = {
           root: { class: 'bg-neutral-surface rounded-lg shadow-lg border border-neutral-default_solid' },
@@ -2209,7 +2538,10 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
           itemLink: { class: 'px-3 py-2 text-body-md text-neutral-base hover:bg-neutral-hover cursor-pointer flex items-center w-full' },
           itemLabel: { class: 'text-body-md text-neutral-base' },
         };
-        return { menu, toggleMenu, EllipsisHorizontalIcon, menuPt };
+        const showMenuButton = computed(
+          () => props.menuItems.length > 0 || props.showMenuButton,
+        );
+        return { menu, handleMenuClick, EllipsisHorizontalIcon, menuPt, showMenuButton };
       },
       template: `
         <div class="flex items-center gap-xs">
@@ -2226,12 +2558,12 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
             </template>
           </PvButton>
           <PvButton
-            v-if="menuItems.length"
+            v-if="showMenuButton"
             severity="secondary"
             variant="text"
             size="small"
             aria-label="More actions"
-            @click="toggleMenu"
+            @click="handleMenuClick"
           >
             <template #icon="iconProps">
               <component :is="EllipsisHorizontalIcon" :class="iconProps.class" />
@@ -2249,33 +2581,62 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
       `,
     });
 
-    const vaultWebsitesActionMenuItems = [
-      { id: 'sessions', label: 'Sessions' },
-      { id: 'details', label: 'Details' },
-      { id: 'activity', label: 'Activity' },
-      { id: 'approval-requests', label: 'Approval Requests' },
-      { id: 'duplicates', label: 'Duplicates' },
-      { id: 'archive', label: 'Archive' },
-    ];
+    const VaultCredentialsTagsCell = markRaw(defineComponent({
+      name: 'VaultCredentialsTagsCell',
+      props: {
+        tags: { type: Array as PropType<string[]>, required: true },
+      },
+      setup(props) {
+        return () => {
+          if (props.tags.length === 0) {
+            return h('span', { class: 'text-body-md text-neutral-subtle' }, '--');
+          }
+          return h(
+            'div',
+            { class: 'flex flex-wrap gap-xs' },
+            props.tags.map(tag =>
+              h(Tag, { value: tag, severity: 'secondary', class: 'text-body-sm !normal-case' }),
+            ),
+          );
+        };
+      },
+    }));
+
+    const VaultCredentialsExpirationCell = markRaw(defineComponent({
+      name: 'VaultCredentialsExpirationCell',
+      props: {
+        value: { type: String, required: true },
+      },
+      setup(props) {
+        return () => {
+          const displayValue = props.value?.trim() || '--';
+          if (displayValue === '--') {
+            return h('span', { class: 'text-body-md text-neutral-subtle' }, displayValue);
+          }
+          const children = [
+            h('span', { class: 'text-body-md text-neutral-base' }, displayValue),
+          ];
+          if (isExpiringSoon(displayValue)) {
+            children.push(
+              h(Tag, { value: 'Expiring soon', severity: 'warn', class: 'text-body-sm !normal-case' }),
+            );
+          }
+          return h('div', { class: 'flex items-center gap-xs' }, children);
+        };
+      },
+    }));
+
+    const vaultWebsitesActionMenuItems: { id: string; label: string }[] = [];
 
     const vaultWebsitesActionButtons = [
-      { icon: markRaw(PencilSquareIcon), ariaLabel: 'Edit' },
       { icon: markRaw(Square2StackIcon), ariaLabel: 'Copy' },
       { icon: markRaw(TrashIcon), ariaLabel: 'Delete' },
     ];
 
-    const vaultCredentialsActionMenuItems = [
-      { id: 'sessions', label: 'Sessions' },
-      { id: 'details', label: 'Details' },
-      { id: 'activity', label: 'Activity' },
-      { id: 'approval-requests', label: 'Approval Requests' },
-      { id: 'duplicates', label: 'Duplicates' },
-      { id: 'archive', label: 'Archive' },
-    ];
+    const vaultCredentialsActionMenuItems: { id: string; label: string }[] = [];
 
     const vaultCredentialsActionButtons = [
-      { icon: markRaw(PencilSquareIcon), ariaLabel: 'Edit' },
-      { icon: markRaw(Square2StackIcon), ariaLabel: 'Copy' },
+      { icon: markRaw(KeyIcon), ariaLabel: 'Copy' },
       { icon: markRaw(TrashIcon), ariaLabel: 'Delete' },
     ];
 
@@ -2383,41 +2744,57 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
       { field: 'name', header: 'Name', sortable: true, component: markRaw(DataTableCellLink), componentProps: (sp: { data: Record<string, unknown> }) => ({ label: sp.data.name, href: '#' }) },
       { field: 'address', header: 'Address', component: markRaw(DataTableCellText), componentProps: (sp: { data: Record<string, unknown> }) => ({ label: sp.data.address }) },
       {
-        field: 'status',
-        header: 'Status',
-        component: markRaw(DataTableCellStatus),
-        componentProps: (sp: { data: Record<string, unknown> }) => {
-          const status = String(sp.data.status ?? '');
-          return privilegedAvailabilityTokenMapping[status] ?? { label: status, severity: 'info' };
-        },
+        field: 'tags',
+        header: 'Tags',
+        component: VaultCredentialsTagsCell,
+        componentProps: (sp: { data: Record<string, unknown> }) => ({
+          tags: Array.isArray(sp.data.tags) ? sp.data.tags : [],
+        }),
       },
-      { field: 'lastConnection', header: 'Last Connection', component: markRaw(DataTableCellText), componentProps: (sp: { data: Record<string, unknown> }) => ({ label: sp.data.lastConnection }) },
       {
         field: 'actions',
         header: 'Actions',
         component: markRaw(VaultActionMenuCell),
-        componentProps: () => ({ iconButtons: vaultWebsitesActionButtons, menuItems: vaultWebsitesActionMenuItems }),
+        componentProps: () => ({
+          iconButtons: vaultWebsitesActionButtons,
+          menuItems: vaultWebsitesActionMenuItems,
+          showMenuButton: true,
+        }),
       },
     ];
 
     const vaultCredentialsColumns = [
       { field: 'name', header: 'Name', sortable: true, component: markRaw(DataTableCellLink), componentProps: (sp: { data: Record<string, unknown> }) => ({ label: sp.data.name, href: '#' }) },
-      { field: 'address', header: 'Username / Email', component: markRaw(DataTableCellText), componentProps: (sp: { data: Record<string, unknown> }) => ({ label: sp.data.address }) },
+      { field: 'type', header: 'Type', sortable: true, component: markRaw(DataTableCellText), componentProps: (sp: { data: Record<string, unknown> }) => ({ label: sp.data.type }) },
       {
-        field: 'status',
-        header: 'Status',
-        component: markRaw(DataTableCellStatus),
-        componentProps: (sp: { data: Record<string, unknown> }) => {
-          const status = String(sp.data.status ?? '');
-          return privilegedAvailabilityTokenMapping[status] ?? { label: status, severity: 'info' };
-        },
+        field: 'expirationDate',
+        header: 'Expiration Date',
+        sortable: true,
+        style: 'text-align: left',
+        component: VaultCredentialsExpirationCell,
+        componentProps: (sp: { data: Record<string, unknown> }) => ({
+          value: String(sp.data.expirationDate ?? '--'),
+        }),
       },
-      { field: 'lastConnection', header: 'Last Connection', component: markRaw(DataTableCellText), componentProps: (sp: { data: Record<string, unknown> }) => ({ label: sp.data.lastConnection }) },
+      {
+        field: 'tags',
+        header: 'Tags',
+        style: 'text-align: left',
+        component: VaultCredentialsTagsCell,
+        componentProps: (sp: { data: Record<string, unknown> }) => ({
+          tags: Array.isArray(sp.data.tags) ? sp.data.tags : [],
+        }),
+      },
+      { field: 'lastTimeUsed', header: 'Last Time Used', sortable: true, component: markRaw(DataTableCellText), componentProps: (sp: { data: Record<string, unknown> }) => ({ label: sp.data.lastTimeUsed }) },
       {
         field: 'actions',
         header: 'Actions',
         component: markRaw(VaultActionMenuCell),
-        componentProps: () => ({ iconButtons: vaultCredentialsActionButtons, menuItems: vaultCredentialsActionMenuItems }),
+        componentProps: () => ({
+          iconButtons: vaultCredentialsActionButtons,
+          menuItems: vaultCredentialsActionMenuItems,
+          showMenuButton: true,
+        }),
       },
     ];
 
@@ -2575,24 +2952,25 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
       vaultUnusedSecrets,
       vaultWebsitesData,
       vaultCredentialsData,
+      filteredVaultCredentialsData,
       vaultWebsitesColumns,
       vaultCredentialsColumns,
       vaultWebsitesFilterChips,
       vaultCredentialsFilterChips,
       vaultWebsitesDraftFilterCount,
       vaultCredentialsDraftFilterCount,
-      vaultWebsitesStatusOptions,
-      vaultCredentialsStatusOptions,
-      vaultWebsitesConnectorOptions,
-      vaultCredentialsConnectorOptions,
-      vaultWebsitesJumpServerOptions,
-      vaultCredentialsJumpServerOptions,
-      draftVaultWebsitesStatus,
-      draftVaultWebsitesConnectors,
-      draftVaultWebsitesJumpServers,
-      draftVaultCredentialsStatus,
-      draftVaultCredentialsConnectors,
-      draftVaultCredentialsJumpServers,
+      vaultWebsitesTagOptions,
+      vaultCredentialsTypeOptions,
+      vaultCredentialsTagOptions,
+      vaultCredentialsExpiredOptions,
+      draftVaultWebsitesTags,
+      draftVaultWebsitesAddress,
+      draftVaultCredentialsType,
+      draftVaultCredentialsTags,
+      draftVaultCredentialsExpired,
+      draftVaultCredentialsExpirationStart,
+      draftVaultCredentialsExpirationEnd,
+      vaultCredentialSearch,
       showVaultWebsitesFilterDialog,
       showVaultCredentialsFilterDialog,
       openVaultWebsitesDialog,
@@ -2616,13 +2994,24 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
       credentialDialogTitle,
       websiteDialogTitle,
       credentialForm,
+      addCredentialForm,
+      addWebsiteForm,
+      addWebsiteActiveTab,
       websiteForm,
       credentialTypeOptions,
+      addCredentialTypeOptions,
+      addCredentialMonthOptions,
+      addCredentialCountryOptions,
+      addCredentialIdTypeOptions,
+      addCredentialTitleOptions,
+      addCredentialGenderOptions,
       credentialTagOptions,
       websiteTagOptions,
       credentialDraftFilterCount,
       websiteDraftFilterCount,
       showCredentialDialog,
+      showAddCredentialDialog,
+      showAddWebsiteDialog,
       showWebsiteDialog,
       showCredentialFilterDialog,
       showWebsiteFilterDialog,
@@ -2635,6 +3024,8 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
       leavePasswordVault,
       openPasswordVault,
       closeCredentialDialog,
+      closeAddCredentialDialog,
+      closeAddWebsiteDialog,
       closeWebsiteDialog,
       handleCredentialSearch,
       handleWebsiteSearch,
@@ -3005,42 +3396,27 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
             >
               <template #closeicon><XMarkIcon /></template>
               <div class="flex flex-col gap-md">
-                <FormField label="Status">
-                  <template #default="{ inputId }">
-                    <SelectButton
-                      :id="inputId"
-                      v-model="draftVaultCredentialsStatus"
-                      :options="vaultCredentialsStatusOptions"
-                      optionLabel="label"
-                      optionValue="value"
-                      :allowEmpty="false"
-                    />
-                  </template>
-                </FormField>
-                <FormField label="Connector">
+                <FormField label="Tags">
                   <template #default="{ inputId }">
                     <PvMultiSelect
                       :id="inputId"
-                      v-model="draftVaultCredentialsConnectors"
-                      :options="vaultCredentialsConnectorOptions"
-                      optionLabel="label"
-                      optionValue="value"
-                      placeholder="All connectors"
+                      v-model="draftVaultWebsitesTags"
+                      :options="vaultWebsitesTagOptions"
+                      placeholder="All tags"
                       :maxSelectedLabels="2"
                       class="w-full"
+                      :filter="true"
+                      filterPlaceholder="Search tags..."
+                      :showToggleAll="false"
                     />
                   </template>
                 </FormField>
-                <FormField label="Jump Server">
+                <FormField label="Address">
                   <template #default="{ inputId }">
-                    <PvMultiSelect
+                    <PvInputText
                       :id="inputId"
-                      v-model="draftVaultCredentialsJumpServers"
-                      :options="vaultCredentialsJumpServerOptions"
-                      optionLabel="label"
-                      optionValue="value"
-                      placeholder="All jump servers"
-                      :maxSelectedLabels="2"
+                      v-model="draftVaultWebsitesAddress"
+                      placeholder="Filter by domain or URL"
                       class="w-full"
                     />
                   </template>
@@ -3110,42 +3486,27 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
             >
               <template #closeicon><XMarkIcon /></template>
               <div class="flex flex-col gap-md">
-                <FormField label="Status">
-                  <template #default="{ inputId }">
-                    <SelectButton
-                      :id="inputId"
-                      v-model="draftVaultWebsitesStatus"
-                      :options="vaultWebsitesStatusOptions"
-                      optionLabel="label"
-                      optionValue="value"
-                      :allowEmpty="false"
-                    />
-                  </template>
-                </FormField>
-                <FormField label="Connector">
+                <FormField label="Tags">
                   <template #default="{ inputId }">
                     <PvMultiSelect
                       :id="inputId"
-                      v-model="draftVaultWebsitesConnectors"
-                      :options="vaultWebsitesConnectorOptions"
-                      optionLabel="label"
-                      optionValue="value"
-                      placeholder="All connectors"
+                      v-model="draftVaultWebsitesTags"
+                      :options="vaultWebsitesTagOptions"
+                      placeholder="All tags"
                       :maxSelectedLabels="2"
                       class="w-full"
+                      :filter="true"
+                      filterPlaceholder="Search tags..."
+                      :showToggleAll="false"
                     />
                   </template>
                 </FormField>
-                <FormField label="Jump Server">
+                <FormField label="Address">
                   <template #default="{ inputId }">
-                    <PvMultiSelect
+                    <PvInputText
                       :id="inputId"
-                      v-model="draftVaultWebsitesJumpServers"
-                      :options="vaultWebsitesJumpServerOptions"
-                      optionLabel="label"
-                      optionValue="value"
-                      placeholder="All jump servers"
-                      :maxSelectedLabels="2"
+                      v-model="draftVaultWebsitesAddress"
+                      placeholder="Filter by domain or URL"
                       class="w-full"
                     />
                   </template>
@@ -3470,6 +3831,152 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
               </div>
 
               <PvDialog
+                v-model:visible="showAddWebsiteDialog"
+                :draggable="false"
+                modal
+                :style="{ width: '680px' }"
+                @update:visible="!$event && closeAddWebsiteDialog()"
+              >
+                <template #header>
+                  <div class="flex items-center gap-sm">
+                    <GlobeAltIcon class="size-5 text-neutral-base" />
+                    <span class="text-heading-3 text-neutral-base">Add Website</span>
+                  </div>
+                </template>
+                <template #closeicon><XMarkIcon /></template>
+
+                <PvTabs v-model:value="addWebsiteActiveTab">
+                  <PvTabList>
+                    <PvTab value="general">General</PvTab>
+                    <PvTab value="autofill">Autofill Parameters</PvTab>
+                  </PvTabList>
+                  <PvTabPanels>
+                    <PvTabPanel value="general">
+                      <div class="flex flex-col gap-md">
+                        <FormField label="Name" required>
+                          <template #default="{ inputId }">
+                            <PvInputText
+                              :id="inputId"
+                              v-model="addWebsiteForm.name"
+                              placeholder="Website Name"
+                              class="w-full"
+                            />
+                          </template>
+                        </FormField>
+                        <FormField label="URI (Hostname, IP, Address, etc.)" required>
+                          <template #default="{ inputId }">
+                            <PvInputText
+                              :id="inputId"
+                              v-model="addWebsiteForm.uri"
+                              placeholder="https://"
+                              class="w-full"
+                            />
+                          </template>
+                        </FormField>
+                        <FormField label="Tags">
+                          <template #default="{ inputId }">
+                            <PvInputText :id="inputId" v-model="addWebsiteForm.tags" class="w-full" />
+                          </template>
+                        </FormField>
+                        <FormField label="Notes">
+                          <template #default="{ inputId }">
+                            <PvTextarea :id="inputId" v-model="addWebsiteForm.notes" class="w-full" :rows="3" />
+                          </template>
+                        </FormField>
+                      </div>
+                    </PvTabPanel>
+                    <PvTabPanel value="autofill">
+                      <div class="flex flex-col gap-md">
+                        <div class="flex flex-col gap-xs">
+                          <span class="text-body-lg font-semibold text-neutral-base">Field Selectors</span>
+                          <span class="text-body-sm text-neutral-subtle">
+                            Provide the CSS selectors for the login form elements. Use the inspector tool in your browser to find them.
+                          </span>
+                        </div>
+                        <FormField label="Username/Email Field Selector">
+                          <template #default="{ inputId }">
+                            <PvInputText :id="inputId" v-model="addWebsiteForm.usernameFieldSelector" class="w-full" />
+                          </template>
+                        </FormField>
+                        <FormField label="Password Field Selector">
+                          <template #default="{ inputId }">
+                            <PvInputText :id="inputId" v-model="addWebsiteForm.passwordFieldSelector" class="w-full" />
+                          </template>
+                        </FormField>
+                        <FormField label="Next Button Selector">
+                          <template #default="{ inputId }">
+                            <PvInputText :id="inputId" v-model="addWebsiteForm.nextButtonSelector" class="w-full" />
+                          </template>
+                        </FormField>
+                        <FormField label="Login Button Selector">
+                          <template #default="{ inputId }">
+                            <PvInputText :id="inputId" v-model="addWebsiteForm.loginButtonSelector" class="w-full" />
+                          </template>
+                        </FormField>
+                        <FormField
+                          label="Field Selector to Hide"
+                          helpText="Selectors must be separated by semicolon"
+                        >
+                          <template #default="{ inputId }">
+                            <PvTextarea
+                              :id="inputId"
+                              v-model="addWebsiteForm.fieldSelectorToHide"
+                              placeholder="Type here selectors separated by ; if you have more than one."
+                              class="w-full"
+                              :rows="3"
+                            />
+                          </template>
+                        </FormField>
+
+                        <PvDivider />
+
+                        <div class="flex flex-col gap-xs">
+                          <span class="text-body-lg font-semibold text-neutral-base">Behaviours & Timing</span>
+                          <span class="text-body-sm text-neutral-subtle">
+                            Adjust how the extension interacts with the page.
+                          </span>
+                        </div>
+                        <FormField label="Delay after clicking next button (seconds)" helpText="Maximum 15 seconds">
+                          <template #default="{ inputId }">
+                            <PvInputText :id="inputId" v-model="addWebsiteForm.delayAfterNext" class="w-full" />
+                          </template>
+                        </FormField>
+                        <FormField label="Fill Delay (Seconds)" helpText="Maximum 15 seconds">
+                          <template #default="{ inputId }">
+                            <PvInputText :id="inputId" v-model="addWebsiteForm.fillDelay" class="w-full" />
+                          </template>
+                        </FormField>
+                        <FormField label="Fill in Fields More than Once">
+                          <template #default="{ inputId }">
+                            <div class="flex items-center gap-sm">
+                              <PvCheckbox :inputId="inputId" v-model="addWebsiteForm.fillMoreThanOnce" :binary="true" />
+                              <span class="text-body-md text-neutral-base">Fill in Fields More than Once</span>
+                            </div>
+                          </template>
+                        </FormField>
+                        <FormField label="Automatic Login">
+                          <template #default="{ inputId }">
+                            <div class="flex items-center gap-sm">
+                              <PvCheckbox :inputId="inputId" v-model="addWebsiteForm.automaticLogin" :binary="true" />
+                              <span class="text-body-md text-neutral-base">Automatic Login</span>
+                            </div>
+                          </template>
+                        </FormField>
+                      </div>
+                    </PvTabPanel>
+                  </PvTabPanels>
+                </PvTabs>
+
+                <template #footer>
+                  <div class="flex items-center flex-1 min-w-0"></div>
+                  <div class="flex gap-sm shrink-0">
+                    <PvButton label="Cancel" severity="secondary" variant="text" @click="closeAddWebsiteDialog" />
+                    <PvButton label="Save" @click="closeAddWebsiteDialog" />
+                  </div>
+                </template>
+              </PvDialog>
+
+              <PvDialog
                 v-model:visible="showVaultWebsitesFilterDialog"
                 :draggable="false"
                 modal
@@ -3479,42 +3986,27 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
               >
                 <template #closeicon><XMarkIcon /></template>
                 <div class="flex flex-col gap-md">
-                  <FormField label="Status">
-                    <template #default="{ inputId }">
-                      <SelectButton
-                        :id="inputId"
-                        v-model="draftVaultWebsitesStatus"
-                        :options="vaultWebsitesStatusOptions"
-                        optionLabel="label"
-                        optionValue="value"
-                        :allowEmpty="false"
-                      />
-                    </template>
-                  </FormField>
-                  <FormField label="Connector">
+                  <FormField label="Tags">
                     <template #default="{ inputId }">
                       <PvMultiSelect
                         :id="inputId"
-                        v-model="draftVaultWebsitesConnectors"
-                        :options="vaultWebsitesConnectorOptions"
-                        optionLabel="label"
-                        optionValue="value"
-                        placeholder="All connectors"
+                        v-model="draftVaultWebsitesTags"
+                        :options="vaultWebsitesTagOptions"
+                        placeholder="All tags"
                         :maxSelectedLabels="2"
                         class="w-full"
+                        :filter="true"
+                        filterPlaceholder="Search tags..."
+                        :showToggleAll="false"
                       />
                     </template>
                   </FormField>
-                  <FormField label="Jump Server">
+                  <FormField label="Address">
                     <template #default="{ inputId }">
-                      <PvMultiSelect
+                      <PvInputText
                         :id="inputId"
-                        v-model="draftVaultWebsitesJumpServers"
-                        :options="vaultWebsitesJumpServerOptions"
-                        optionLabel="label"
-                        optionValue="value"
-                        placeholder="All jump servers"
-                        :maxSelectedLabels="2"
+                        v-model="draftVaultWebsitesAddress"
+                        placeholder="Filter by domain or URL"
                         class="w-full"
                       />
                     </template>
@@ -3537,7 +4029,7 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
                 <div class="flex flex-col h-full relative">
                   <CircuitDataTable
                     :columns="vaultCredentialsColumns"
-                    :data="vaultCredentialsData"
+                    :data="filteredVaultCredentialsData"
                     :card="true"
                     :scrollable="true"
                     scrollHeight="flex"
@@ -3562,6 +4054,7 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
                         :activeFilters="vaultCredentialsFilterChips"
                         :maxVisibleFilters="5"
                         @add="openVaultCredentialsDialog"
+                        @search="vaultCredentialSearch.value = $event"
                         @filter="openVaultCredentialsFilterDialog"
                         @clear-all="clearAllVaultCredentialsFilters"
                         @filter-remove="removeVaultCredentialsFilterChip"
@@ -3570,6 +4063,535 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
                   </CircuitDataTable>
                 </div>
               </div>
+
+              <PvDialog
+                v-model:visible="showAddCredentialDialog"
+                :draggable="false"
+                modal
+                header="Add Credential"
+                :style="{ width: '560px' }"
+                @update:visible="!$event && closeAddCredentialDialog()"
+              >
+                <template #closeicon><XMarkIcon /></template>
+                <div class="flex flex-col gap-md">
+                  <FormField label="Credential Type">
+                    <template #default="{ inputId }">
+                      <PvSelect
+                        :id="inputId"
+                        v-model="addCredentialForm.type"
+                        :options="addCredentialTypeOptions"
+                        optionLabel="label"
+                        optionValue="value"
+                        placeholder="Select type"
+                        class="w-full!"
+                      />
+                    </template>
+                  </FormField>
+
+                  <template v-if="addCredentialForm.type === 'Password'">
+                    <FormField label="Name" required>
+                      <template #default="{ inputId }">
+                        <PvInputText
+                          :id="inputId"
+                          v-model="addCredentialForm.name"
+                          placeholder="Password Name"
+                          class="w-full"
+                        />
+                      </template>
+                    </FormField>
+                    <FormField label="Username or Email">
+                      <template #default="{ inputId }">
+                        <PvInputText :id="inputId" v-model="addCredentialForm.usernameOrEmail" class="w-full" />
+                      </template>
+                    </FormField>
+                    <FormField label="Domain">
+                      <template #default="{ inputId }">
+                        <PvInputText :id="inputId" v-model="addCredentialForm.domain" class="w-full" />
+                      </template>
+                    </FormField>
+                    <FormField label="Password" required>
+                      <template #default="{ inputId }">
+                        <div class="flex items-center gap-sm">
+                          <Password
+                            :inputId="inputId"
+                            v-model="addCredentialForm.password"
+                            toggleMask
+                            class="w-full"
+                          />
+                          <PvButton
+                            severity="secondary"
+                            variant="text"
+                            size="small"
+                            aria-label="Generate password"
+                          >
+                            <template #icon="iconProps">
+                              <ArrowPathIcon :class="iconProps.class" />
+                            </template>
+                          </PvButton>
+                        </div>
+                      </template>
+                    </FormField>
+                    <FormField label="Credential has MFA">
+                      <template #default="{ inputId }">
+                        <PvCheckbox :inputId="inputId" v-model="addCredentialForm.hasMfa" :binary="true" />
+                      </template>
+                    </FormField>
+                    <FormField label="Expiration Date">
+                      <template #default="{ inputId }">
+                        <PvIconField>
+                          <PvInputIcon>
+                            <CalendarDaysIcon />
+                          </PvInputIcon>
+                          <PvInputText
+                            :id="inputId"
+                            v-model="addCredentialForm.expirationDate"
+                            class="w-full"
+                          />
+                        </PvIconField>
+                      </template>
+                    </FormField>
+                    <FormField label="Tags">
+                      <template #default="{ inputId }">
+                        <PvInputText :id="inputId" v-model="addCredentialForm.tags" class="w-full" />
+                      </template>
+                    </FormField>
+                    <FormField label="Notes">
+                      <template #default="{ inputId }">
+                        <PvTextarea :id="inputId" v-model="addCredentialForm.notes" class="w-full" :rows="3" />
+                      </template>
+                    </FormField>
+                  </template>
+
+                  <template v-else-if="addCredentialForm.type === 'Key'">
+                    <FormField label="Name" required>
+                      <template #default="{ inputId }">
+                        <PvInputText
+                          :id="inputId"
+                          v-model="addCredentialForm.name"
+                          placeholder="Key Name"
+                          class="w-full"
+                        />
+                      </template>
+                    </FormField>
+                    <FormField label="Username or Email">
+                      <template #default="{ inputId }">
+                        <PvInputText :id="inputId" v-model="addCredentialForm.usernameOrEmail" class="w-full" />
+                      </template>
+                    </FormField>
+                    <FormField label="Domain">
+                      <template #default="{ inputId }">
+                        <PvInputText :id="inputId" v-model="addCredentialForm.domain" class="w-full" />
+                      </template>
+                    </FormField>
+                    <FormField label="Private Key" required>
+                      <template #default="{ inputId }">
+                        <PvTextarea
+                          :id="inputId"
+                          v-model="addCredentialForm.privateKey"
+                          placeholder="Enter Private Key"
+                          class="w-full"
+                          :rows="3"
+                        />
+                      </template>
+                    </FormField>
+                    <FormField label="Public Key">
+                      <template #default="{ inputId }">
+                        <PvTextarea
+                          :id="inputId"
+                          v-model="addCredentialForm.publicKey"
+                          placeholder="Enter Public Key"
+                          class="w-full"
+                          :rows="3"
+                        />
+                      </template>
+                    </FormField>
+                    <FormField label="Passphrase">
+                      <template #default="{ inputId }">
+                        <Password
+                          :inputId="inputId"
+                          v-model="addCredentialForm.passphrase"
+                          toggleMask
+                          class="w-full"
+                        />
+                      </template>
+                    </FormField>
+                    <FormField label="Credential has MFA">
+                      <template #default="{ inputId }">
+                        <PvCheckbox :inputId="inputId" v-model="addCredentialForm.hasMfa" :binary="true" />
+                      </template>
+                    </FormField>
+                    <FormField label="Expiration Date">
+                      <template #default="{ inputId }">
+                        <PvIconField>
+                          <PvInputIcon>
+                            <CalendarDaysIcon />
+                          </PvInputIcon>
+                          <PvInputText
+                            :id="inputId"
+                            v-model="addCredentialForm.expirationDate"
+                            class="w-full"
+                          />
+                        </PvIconField>
+                      </template>
+                    </FormField>
+                    <FormField label="Tags">
+                      <template #default="{ inputId }">
+                        <PvInputText :id="inputId" v-model="addCredentialForm.tags" class="w-full" />
+                      </template>
+                    </FormField>
+                    <FormField label="Notes">
+                      <template #default="{ inputId }">
+                        <PvTextarea :id="inputId" v-model="addCredentialForm.notes" class="w-full" :rows="3" />
+                      </template>
+                    </FormField>
+                  </template>
+
+                  <template v-else-if="addCredentialForm.type === 'Payment Card'">
+                    <FormField label="Name" required>
+                      <template #default="{ inputId }">
+                        <PvInputText
+                          :id="inputId"
+                          v-model="addCredentialForm.name"
+                          placeholder="Payment Card Name"
+                          class="w-full"
+                        />
+                      </template>
+                    </FormField>
+                    <FormField label="Cardholder Name">
+                      <template #default="{ inputId }">
+                        <PvInputText :id="inputId" v-model="addCredentialForm.cardholderName" class="w-full" />
+                      </template>
+                    </FormField>
+                    <FormField label="Card Number" required>
+                      <template #default="{ inputId }">
+                        <PvInputText
+                          :id="inputId"
+                          v-model="addCredentialForm.cardNumber"
+                          placeholder="Ex: 1234032195381504"
+                          class="w-full"
+                        />
+                      </template>
+                    </FormField>
+                    <FormField label="Expiry Month">
+                      <template #default="{ inputId }">
+                        <PvSelect
+                          :id="inputId"
+                          v-model="addCredentialForm.expiryMonth"
+                          :options="addCredentialMonthOptions"
+                          optionLabel="label"
+                          optionValue="value"
+                          placeholder="Select"
+                          class="w-full!"
+                        />
+                      </template>
+                    </FormField>
+                    <FormField label="Expiry Year">
+                      <template #default="{ inputId }">
+                        <PvInputText
+                          :id="inputId"
+                          v-model="addCredentialForm.expiryYear"
+                          placeholder="YYYY"
+                          class="w-full"
+                        />
+                      </template>
+                    </FormField>
+                    <FormField label="CVV/CVC" required>
+                      <template #default="{ inputId }">
+                        <Password :inputId="inputId" v-model="addCredentialForm.cvv" toggleMask class="w-full" />
+                      </template>
+                    </FormField>
+                    <FormField label="Tags">
+                      <template #default="{ inputId }">
+                        <PvInputText :id="inputId" v-model="addCredentialForm.tags" class="w-full" />
+                      </template>
+                    </FormField>
+                    <FormField label="Notes">
+                      <template #default="{ inputId }">
+                        <PvTextarea :id="inputId" v-model="addCredentialForm.notes" class="w-full" :rows="3" />
+                      </template>
+                    </FormField>
+                  </template>
+
+                  <template v-else-if="addCredentialForm.type === 'Secure Note'">
+                    <FormField label="Name" required>
+                      <template #default="{ inputId }">
+                        <PvInputText
+                          :id="inputId"
+                          v-model="addCredentialForm.name"
+                          placeholder="Secure Note Name"
+                          class="w-full"
+                        />
+                      </template>
+                    </FormField>
+                    <FormField label="Content" required>
+                      <template #default="{ inputId }">
+                        <PvTextarea
+                          :id="inputId"
+                          v-model="addCredentialForm.secureNoteContent"
+                          placeholder="Enter your content"
+                          class="w-full"
+                          :rows="3"
+                        />
+                      </template>
+                    </FormField>
+                    <FormField label="Tags">
+                      <template #default="{ inputId }">
+                        <PvInputText :id="inputId" v-model="addCredentialForm.tags" class="w-full" />
+                      </template>
+                    </FormField>
+                    <FormField label="Notes">
+                      <template #default="{ inputId }">
+                        <PvTextarea :id="inputId" v-model="addCredentialForm.notes" class="w-full" :rows="3" />
+                      </template>
+                    </FormField>
+                  </template>
+
+                  <template v-else-if="addCredentialForm.type === '2FA'">
+                    <FormField label="Name" required>
+                      <template #default="{ inputId }">
+                        <PvInputText
+                          :id="inputId"
+                          v-model="addCredentialForm.name"
+                          placeholder="2FA Name"
+                          class="w-full"
+                        />
+                      </template>
+                    </FormField>
+                    <FormField label="2FA Secret Key" required>
+                      <template #default="{ inputId }">
+                        <div class="flex flex-col gap-xs">
+                          <PvInputText
+                            :id="inputId"
+                            v-model="addCredentialForm.twoFaSecretKey"
+                            placeholder="Enter secret key or upload QR code"
+                            class="w-full"
+                          />
+                          <div class="text-body-sm text-neutral-subtle">
+                            To upload the QR Code image:
+                            <button type="button" class="text-link-base hover:underline">Click Here</button>
+                          </div>
+                        </div>
+                      </template>
+                    </FormField>
+                    <FormField label="Tags">
+                      <template #default="{ inputId }">
+                        <PvInputText :id="inputId" v-model="addCredentialForm.tags" class="w-full" />
+                      </template>
+                    </FormField>
+                    <FormField label="Notes">
+                      <template #default="{ inputId }">
+                        <PvTextarea :id="inputId" v-model="addCredentialForm.notes" class="w-full" :rows="3" />
+                      </template>
+                    </FormField>
+                  </template>
+
+                  <template v-else-if="addCredentialForm.type === 'ID Card'">
+                    <FormField label="Name" required>
+                      <template #default="{ inputId }">
+                        <PvInputText
+                          :id="inputId"
+                          v-model="addCredentialForm.name"
+                          placeholder="ID Card Name"
+                          class="w-full"
+                        />
+                      </template>
+                    </FormField>
+                    <FormField label="Issuing Country">
+                      <template #default="{ inputId }">
+                        <PvSelect
+                          :id="inputId"
+                          v-model="addCredentialForm.idCountry"
+                          :options="addCredentialCountryOptions"
+                          optionLabel="label"
+                          optionValue="value"
+                          class="w-full!"
+                        />
+                      </template>
+                    </FormField>
+                    <FormField label="ID Type">
+                      <template #default="{ inputId }">
+                        <PvSelect
+                          :id="inputId"
+                          v-model="addCredentialForm.idType"
+                          :options="addCredentialIdTypeOptions"
+                          optionLabel="label"
+                          optionValue="value"
+                          placeholder="Select"
+                          class="w-full!"
+                        />
+                      </template>
+                    </FormField>
+                    <FormField label="Name on ID" required>
+                      <template #default="{ inputId }">
+                        <PvInputText :id="inputId" v-model="addCredentialForm.nameOnId" class="w-full" />
+                      </template>
+                    </FormField>
+                    <FormField label="ID Number">
+                      <template #default="{ inputId }">
+                        <PvInputText :id="inputId" v-model="addCredentialForm.idNumber" class="w-full" />
+                      </template>
+                    </FormField>
+                    <FormField label="Issuance Date">
+                      <template #default="{ inputId }">
+                        <PvIconField>
+                          <PvInputIcon>
+                            <CalendarDaysIcon />
+                          </PvInputIcon>
+                          <PvInputText
+                            :id="inputId"
+                            v-model="addCredentialForm.issuanceDate"
+                            class="w-full"
+                          />
+                        </PvIconField>
+                      </template>
+                    </FormField>
+                    <FormField label="Expiration Date">
+                      <template #default="{ inputId }">
+                        <PvIconField>
+                          <PvInputIcon>
+                            <CalendarDaysIcon />
+                          </PvInputIcon>
+                          <PvInputText
+                            :id="inputId"
+                            v-model="addCredentialForm.expirationDate"
+                            class="w-full"
+                          />
+                        </PvIconField>
+                      </template>
+                    </FormField>
+                    <FormField label="Tags">
+                      <template #default="{ inputId }">
+                        <PvInputText :id="inputId" v-model="addCredentialForm.tags" class="w-full" />
+                      </template>
+                    </FormField>
+                    <FormField label="Notes">
+                      <template #default="{ inputId }">
+                        <PvTextarea :id="inputId" v-model="addCredentialForm.notes" class="w-full" :rows="3" />
+                      </template>
+                    </FormField>
+                  </template>
+
+                  <template v-else-if="addCredentialForm.type === 'Identity'">
+                    <FormField label="Name" required>
+                      <template #default="{ inputId }">
+                        <PvInputText
+                          :id="inputId"
+                          v-model="addCredentialForm.name"
+                          placeholder="Identity Name"
+                          class="w-full"
+                        />
+                      </template>
+                    </FormField>
+                    <FormField label="Title">
+                      <template #default="{ inputId }">
+                        <PvSelect
+                          :id="inputId"
+                          v-model="addCredentialForm.identityTitle"
+                          :options="addCredentialTitleOptions"
+                          optionLabel="label"
+                          optionValue="value"
+                          placeholder="Select"
+                          class="w-full!"
+                        />
+                      </template>
+                    </FormField>
+                    <FormField label="Gender">
+                      <template #default="{ inputId }">
+                        <PvSelect
+                          :id="inputId"
+                          v-model="addCredentialForm.identityGender"
+                          :options="addCredentialGenderOptions"
+                          optionLabel="label"
+                          optionValue="value"
+                          placeholder="Select"
+                          class="w-full!"
+                        />
+                      </template>
+                    </FormField>
+                    <FormField label="First Name">
+                      <template #default="{ inputId }">
+                        <PvInputText :id="inputId" v-model="addCredentialForm.firstName" class="w-full" />
+                      </template>
+                    </FormField>
+                    <FormField label="Middle Name">
+                      <template #default="{ inputId }">
+                        <PvInputText :id="inputId" v-model="addCredentialForm.middleName" class="w-full" />
+                      </template>
+                    </FormField>
+                    <FormField label="Last Name">
+                      <template #default="{ inputId }">
+                        <PvInputText :id="inputId" v-model="addCredentialForm.lastName" class="w-full" />
+                      </template>
+                    </FormField>
+                    <FormField label="Email">
+                      <template #default="{ inputId }">
+                        <PvInputText :id="inputId" v-model="addCredentialForm.email" class="w-full" />
+                      </template>
+                    </FormField>
+                    <FormField label="Phone">
+                      <template #default="{ inputId }">
+                        <PvInputText :id="inputId" v-model="addCredentialForm.phone" class="w-full" />
+                      </template>
+                    </FormField>
+
+                    <div class="flex items-center gap-sm">
+                      <span class="text-body-sm text-neutral-subtle">Address</span>
+                      <PvDivider class="flex-1" />
+                    </div>
+
+                    <FormField label="Address Line 1">
+                      <template #default="{ inputId }">
+                        <PvInputText :id="inputId" v-model="addCredentialForm.addressLine1" class="w-full" />
+                      </template>
+                    </FormField>
+                    <FormField label="Address Line 2">
+                      <template #default="{ inputId }">
+                        <PvInputText :id="inputId" v-model="addCredentialForm.addressLine2" class="w-full" />
+                      </template>
+                    </FormField>
+                    <FormField label="City">
+                      <template #default="{ inputId }">
+                        <PvInputText :id="inputId" v-model="addCredentialForm.city" class="w-full" />
+                      </template>
+                    </FormField>
+                    <FormField label="Zip / Postal Code">
+                      <template #default="{ inputId }">
+                        <PvInputText :id="inputId" v-model="addCredentialForm.postalCode" class="w-full" />
+                      </template>
+                    </FormField>
+                    <FormField label="Country">
+                      <template #default="{ inputId }">
+                        <PvSelect
+                          :id="inputId"
+                          v-model="addCredentialForm.country"
+                          :options="addCredentialCountryOptions"
+                          optionLabel="label"
+                          optionValue="value"
+                          class="w-full!"
+                        />
+                      </template>
+                    </FormField>
+                    <FormField label="Tags">
+                      <template #default="{ inputId }">
+                        <PvInputText :id="inputId" v-model="addCredentialForm.tags" class="w-full" />
+                      </template>
+                    </FormField>
+                    <FormField label="Notes">
+                      <template #default="{ inputId }">
+                        <PvTextarea :id="inputId" v-model="addCredentialForm.notes" class="w-full" :rows="3" />
+                      </template>
+                    </FormField>
+                  </template>
+                </div>
+
+                <template #footer>
+                  <div class="flex items-center flex-1 min-w-0"></div>
+                  <div class="flex gap-sm shrink-0">
+                    <PvButton label="Cancel" severity="secondary" variant="text" @click="closeAddCredentialDialog" />
+                    <PvButton label="Save" @click="closeAddCredentialDialog" />
+                  </div>
+                </template>
+              </PvDialog>
 
               <PvDialog
                 v-model:visible="showVaultCredentialsFilterDialog"
@@ -3581,46 +4603,74 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
               >
                 <template #closeicon><XMarkIcon /></template>
                 <div class="flex flex-col gap-md">
-                  <FormField label="Status">
-                    <template #default="{ inputId }">
-                      <SelectButton
-                        :id="inputId"
-                        v-model="draftVaultCredentialsStatus"
-                        :options="vaultCredentialsStatusOptions"
-                        optionLabel="label"
-                        optionValue="value"
-                        :allowEmpty="false"
-                      />
-                    </template>
-                  </FormField>
-                  <FormField label="Connector">
-                    <template #default="{ inputId }">
-                      <PvMultiSelect
-                        :id="inputId"
-                        v-model="draftVaultCredentialsConnectors"
-                        :options="vaultCredentialsConnectorOptions"
-                        optionLabel="label"
-                        optionValue="value"
-                        placeholder="All connectors"
-                        :maxSelectedLabels="2"
-                        class="w-full"
-                      />
-                    </template>
-                  </FormField>
-                  <FormField label="Jump Server">
-                    <template #default="{ inputId }">
-                      <PvMultiSelect
-                        :id="inputId"
-                        v-model="draftVaultCredentialsJumpServers"
-                        :options="vaultCredentialsJumpServerOptions"
-                        optionLabel="label"
-                        optionValue="value"
-                        placeholder="All jump servers"
-                        :maxSelectedLabels="2"
-                        class="w-full"
-                      />
-                    </template>
-                  </FormField>
+                <FormField label="Credential Type">
+                  <template #default="{ inputId }">
+                    <PvSelect
+                      :id="inputId"
+                      v-model="draftVaultCredentialsType"
+                      :options="vaultCredentialsTypeOptions"
+                      optionLabel="label"
+                      optionValue="value"
+                      placeholder="All types"
+                      class="w-full!"
+                    />
+                  </template>
+                </FormField>
+                <FormField label="Tags">
+                  <template #default="{ inputId }">
+                    <PvMultiSelect
+                      :id="inputId"
+                      v-model="draftVaultCredentialsTags"
+                      :options="vaultCredentialsTagOptions"
+                      placeholder="All tags"
+                      :maxSelectedLabels="2"
+                      class="w-full"
+                      :filter="true"
+                      filterPlaceholder="Search tags..."
+                      :showToggleAll="false"
+                    />
+                  </template>
+                </FormField>
+                <FormField label="Expired">
+                  <template #default="{ inputId }">
+                    <SelectButton
+                      :id="inputId"
+                      v-model="draftVaultCredentialsExpired"
+                      :options="vaultCredentialsExpiredOptions"
+                      optionLabel="label"
+                      optionValue="value"
+                      :allowEmpty="false"
+                    />
+                  </template>
+                </FormField>
+                <FormField label="Expiration Date Range">
+                  <template #default="{ inputId }">
+                    <div class="grid grid-cols-2 gap-sm">
+                      <PvIconField>
+                        <PvInputIcon>
+                          <CalendarDaysIcon />
+                        </PvInputIcon>
+                        <PvInputText
+                          :id="inputId"
+                          v-model="draftVaultCredentialsExpirationStart"
+                          placeholder="Start date"
+                          class="w-full"
+                        />
+                      </PvIconField>
+                      <PvIconField>
+                        <PvInputIcon>
+                          <CalendarDaysIcon />
+                        </PvInputIcon>
+                        <PvInputText
+                          :id="inputId + '-end'"
+                          v-model="draftVaultCredentialsExpirationEnd"
+                          placeholder="End date"
+                          class="w-full"
+                        />
+                      </PvIconField>
+                    </div>
+                  </template>
+                </FormField>
                 </div>
                 <template #footer>
                   <div class="flex items-center flex-1 min-w-0">
@@ -4417,7 +5467,7 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
 });
 
 const meta: Meta<typeof UserPortalAllAppsWithPrivilegedResourcesPage> = {
-  title: "Projects/Gabriel's Playground/User Portal/User Portal with Password Manager",
+  title: "Projects/Gabriel's Playground/User Portal/User Portal (PAM and Password Vault)",
   component: UserPortalAllAppsWithPrivilegedResourcesPage,
   parameters: {
     layout: 'fullscreen',

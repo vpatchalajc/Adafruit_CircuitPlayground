@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/vue3';
-import { computed, defineComponent, markRaw, ref } from 'vue';
+import { computed, defineComponent, h, markRaw, ref } from 'vue';
 import {
   AppNavigation,
   CheckboxWithLabel,
@@ -28,6 +28,7 @@ import TabList from 'primevue/tablist';
 import TabPanel from 'primevue/tabpanel';
 import TabPanels from 'primevue/tabpanels';
 import Tabs from 'primevue/tabs';
+import Tag from 'primevue/tag';
 import Textarea from 'primevue/textarea';
 import {
   RocketLaunchIcon,
@@ -44,6 +45,7 @@ import {
   ClipboardDocumentListIcon,
   ClipboardDocumentCheckIcon,
   ArrowRightStartOnRectangleIcon,
+  ArrowUpIcon,
   ArrowTopRightOnSquareIcon,
   ArrowsRightLeftIcon,
   CircleStackIcon,
@@ -131,21 +133,10 @@ const menuItems = [
       { label: 'Access Requests', leftIcon: markRaw(ClipboardDocumentCheckIcon) },
       { label: 'AI & SaaS Management', leftIcon: markRaw(SaasManagementIcon) },
       { label: 'Password Vault', leftIcon: markRaw(PasswordManagerIcon), isNew: true },
+      { label: 'PAM', leftIcon: markRaw(ServerStackIcon), isNew: true },
       { separator: true },
       { label: 'LDAP' },
       { label: 'RADIUS' },
-    ],
-  },
-  {
-    label: 'PAM',
-    leftIcon: markRaw(ServerStackIcon),
-    isNew: true,
-    items: [
-      { label: 'Privileged Management', leftIcon: markRaw(ClipboardDocumentCheckIcon) },
-      { label: 'Privileged Resources', leftIcon: markRaw(ServerStackIcon) },
-      { label: 'Blocking Rules', leftIcon: markRaw(NoSymbolIcon) },
-      { label: 'Jump Servers', leftIcon: markRaw(ArrowsRightLeftIcon) },
-      { label: 'Session History', leftIcon: markRaw(ClockIcon) },
     ],
   },
   {
@@ -248,10 +239,13 @@ const AdminPortalWithPasswordManagerStory = defineComponent({
     SelectButton,
     PvSelectButton: SelectButton,
     PvRadioButtonGroup: RadioButtonGroup,
+    PvTag: Tag,
     ChartBarSquareIcon,
     CircleStackIcon,
     ArrowTopRightOnSquareIcon,
+    ArrowUpIcon,
     ChevronRightIcon,
+    EllipsisHorizontalIcon,
     GlobeAltIcon,
     NoSymbolIcon,
     PowerIcon,
@@ -263,16 +257,29 @@ const AdminPortalWithPasswordManagerStory = defineComponent({
   setup() {
     const pamEnabled = ref(false);
     const passwordVaultEnabled = ref(false);
-    const pendingPage = ref({ key: 'pam-privileged-resources', label: 'Privileged Resources' });
+    const pendingPage = ref({ key: 'pam', label: 'PAM' });
     const currentPage = ref('home');
     const activeItem = ref('home');
-    const passwordVaultTab = ref<'overview' | 'user-groups' | 'websites' | 'credentials'>('overview');
+    const passwordVaultTab = ref<'overview' | 'user-groups' | 'websites' | 'credentials' | 'folders' | 'users'>('overview');
     const passwordVaultTabs = [
       { label: 'Overview', value: 'overview' },
-      { label: 'User Groups', value: 'user-groups' },
       { label: 'Websites', value: 'websites' },
       { label: 'Credentials', value: 'credentials' },
+      { label: 'Folders', value: 'folders' },
+      { label: 'Users', value: 'users' },
     ];
+    const passwordVaultIcon = markRaw(
+      defineComponent({
+        name: 'PasswordVaultHeaderIcon',
+        inheritAttrs: false,
+        setup(_, { attrs }) {
+          return () =>
+            h(PasswordManagerIcon, {
+              class: ['size-8', 'mr-0', '-mt-1.5', attrs.class],
+            });
+        },
+      }),
+    );
     const privilegedResourcesTab = ref('web-shield');
     const privilegedResourcesTabs = [
       { label: 'Web Shield', value: 'web-shield' },
@@ -285,33 +292,26 @@ const AdminPortalWithPasswordManagerStory = defineComponent({
       { label: 'Overview', value: 'overview' },
       { label: 'User Groups', value: 'user-groups' },
     ];
-    const pamTab = ref('blocking-rules');
+    const pamTab = ref('overview');
     const pamTabs = [
+      { label: 'Overview', value: 'overview' },
+      { label: 'Privileged Resources', value: 'privileged-resources' },
       { label: 'Blocking Rules', value: 'blocking-rules' },
-      { label: 'Session History', value: 'session-history' },
       { label: 'Jump Servers', value: 'jump-servers' },
+      { label: 'Session History', value: 'session-history' },
+      { label: 'User Groups', value: 'user-groups' },
     ];
 
     const pageKeyByLabel: Record<string, string> = {
       Home: 'home',
       'Password Vault': 'password-vault',
       PAM: 'pam',
-      'Privileged Management': 'pam-privileged-management',
-      'Privileged Resources': 'pam-privileged-resources',
-      'Blocking Rules': 'pam-blocking-rules',
-      'Session History': 'pam-session-history',
-      'Jump Servers': 'pam-jump-servers',
     };
 
     const pageTitleByKey: Record<string, string> = {
       home: 'Home',
       'password-vault': 'Password Vault',
-      pam: 'PAM',
-      'pam-privileged-management': 'Privileged Management',
-      'pam-privileged-resources': 'Privileged Resources',
-      'pam-blocking-rules': 'Blocking Rules',
-      'pam-session-history': 'Session History',
-      'pam-jump-servers': 'Jump Servers',
+      pam: 'Privileged Access Management',
     };
 
     const subItemToParent = new Map<string, string>();
@@ -351,18 +351,29 @@ const AdminPortalWithPasswordManagerStory = defineComponent({
     }
 
     function goToPage(pageKey: string, activeLabel: string) {
-      currentPage.value = pageKey;
+      if (pageKey.startsWith('pam-')) {
+        currentPage.value = 'pam';
+        if (pageKey === 'pam-privileged-resources') {
+          pamTab.value = 'privileged-resources';
+          privilegedResourcesTab.value = 'web-shield';
+        } else if (pageKey === 'pam-privileged-management') {
+          pamTab.value = 'overview';
+          privilegedManagementTab.value = 'overview';
+        } else if (pageKey === 'pam-blocking-rules') {
+          pamTab.value = 'blocking-rules';
+        } else if (pageKey === 'pam-session-history') {
+          pamTab.value = 'session-history';
+        } else if (pageKey === 'pam-jump-servers') {
+          pamTab.value = 'jump-servers';
+        }
+      } else {
+        currentPage.value = pageKey;
+      }
       if (pageKey === 'password-vault') {
         passwordVaultTab.value = 'overview';
       }
-      if (pageKey === 'pam-privileged-resources') {
-        privilegedResourcesTab.value = 'web-shield';
-      }
-      if (pageKey === 'pam-privileged-management') {
-        privilegedManagementTab.value = 'overview';
-      }
       if (pageKey === 'pam') {
-        pamTab.value = 'blocking-rules';
+        pamTab.value = 'overview';
       }
       setActiveItemFromLabel(activeLabel);
     }
@@ -370,6 +381,9 @@ const AdminPortalWithPasswordManagerStory = defineComponent({
     function goToPamTab(tabValue: string) {
       currentPage.value = 'pam';
       pamTab.value = tabValue;
+      if (tabValue === 'privileged-resources') {
+        privilegedResourcesTab.value = 'web-shield';
+      }
       setActiveItemFromLabel('PAM');
     }
 
@@ -381,7 +395,7 @@ const AdminPortalWithPasswordManagerStory = defineComponent({
       const label = processedItem.item?.label?.trim() ?? '';
       if (!label) return;
       const pageKey = pageKeyFromLabel(label);
-      if (pageKey.startsWith('pam-') && !pamEnabled.value) {
+      if (pageKey === 'pam' && !pamEnabled.value) {
         pendingPage.value = { key: pageKey, label };
         currentPage.value = pageKey;
         setActiveItemFromLabel(label);
@@ -392,7 +406,7 @@ const AdminPortalWithPasswordManagerStory = defineComponent({
 
     const pageTitle = computed(() => pageTitleFromKey(currentPage.value));
 
-    const isPamPage = computed(() => currentPage.value.startsWith('pam-'));
+    const isPamPage = computed(() => currentPage.value === 'pam');
     const showPasswordVaultOverlay = computed(
       () => currentPage.value === 'password-vault' && !passwordVaultEnabled.value,
     );
@@ -416,7 +430,7 @@ const AdminPortalWithPasswordManagerStory = defineComponent({
         return {
           title: 'Password Vault: Secure Credential Management',
           description:
-            "Create, store, and protect user credentials, and centrally manage passwords using JumpCloud's Password Vault.",
+            'An all-in-one solution for password management. Secure user credentials, enforce policies, and control access to high-risk resources.',
           ctaLabel: 'Enable Password Vault',
           onCta: enablePasswordVault,
         };
@@ -566,55 +580,78 @@ const AdminPortalWithPasswordManagerStory = defineComponent({
 
     const passwordVaultStatCards = [
       {
-        header: 'Password Vault Users',
-        value: '128',
-        icon: markRaw(UsersIcon),
-        changeValue: '12%',
+        header: 'Websites',
+        value: '386',
+        changeValue: '23%',
         changeLabel: 'vs last month',
         showArrow: true,
       },
       {
-        header: 'Total Secrets',
-        value: '3,482',
-        icon: markRaw(ClipboardDocumentListIcon),
-        changeValue: '9%',
+        header: 'Credentials',
+        value: '1,332',
+        changeValue: '23%',
+        changeLabel: 'vs last month',
+        showArrow: true,
+      },
+      {
+        header: 'Shared Folders',
+        value: '134',
+        changeValue: '8%',
+        changeLabel: 'vs last month',
+        showArrow: true,
+      },
+      {
+        header: 'User Groups',
+        value: '134',
+        changeValue: '8%',
         changeLabel: 'vs last month',
         showArrow: true,
       },
     ];
 
-    const passwordVaultLoginCount = 26;
-    const passwordVaultLastLogins = [
-      { name: 'Sarah Chen', email: 'sarah.chen@acme.com', time: '8 minutes ago' },
-      { name: 'Marcus Rodriguez', email: 'marcus.rodriguez@acme.com', time: '36 minutes ago' },
-      { name: 'Emily Johnson', email: 'emily.johnson@acme.com', time: '2 hours ago' },
-      { name: 'Michael Smith', email: 'michael.smith@acme.com', time: '16 hours ago' },
-      { name: 'Olivia Patel', email: 'olivia.patel@acme.com', time: '22 hours ago' },
+    const passwordVaultMostConnectedResources = [
+      { name: 'Finance Admin Console', type: 'Website', action: 'View' },
+      { name: 'AWS Root Key', type: 'Credential', action: 'View' },
+      { name: 'HR Shared Vault', type: 'Shared Folder', action: 'View' },
+      { name: 'Okta Admin', type: 'Website', action: 'View' },
     ];
 
-    const expiringSecretsSummary = { count: 9, label: 'Expiring in the next 7 days' };
-    const expiringSecrets = [
-      { name: 'AWS Root Key', metaLabel: 'Expires in', metaValue: '3 days' },
-      { name: 'Okta Admin', metaLabel: 'Expires in', metaValue: '5 days' },
-      { name: 'Finance MySQL', metaLabel: 'Expires in', metaValue: '6 days' },
-      { name: 'GitHub Deploy Key', metaLabel: 'Expires in', metaValue: '7 days' },
-      { name: 'Azure AD App', metaLabel: 'Expires in', metaValue: '7 days' },
+    const passwordVaultMostConnectedColumns = [
+      { field: 'name', header: 'Name', component: markRaw(DataTableCellText), componentProps: (sp: { data: Record<string, unknown> }) => ({ label: sp.data.name }) },
+      { field: 'type', header: 'Type', component: markRaw(DataTableCellText), componentProps: (sp: { data: Record<string, unknown> }) => ({ label: sp.data.type }) },
+      { field: 'actions', header: 'Actions', component: markRaw(DataTableCellText), componentProps: (sp: { data: Record<string, unknown> }) => ({ label: sp.data.action }) },
     ];
 
-    const weakSecretsSummary = { count: 11, label: 'Secrets' };
-    const weakSecrets = [
-      { name: 'AWS Billing', risk: 'Weak API Key' },
-      { name: 'Payroll Admin', risk: 'Weak Password' },
-      { name: 'ServiceNow Admin', risk: 'Weak Password' },
-      { name: 'Datadog Root', risk: 'Weak API Key' },
+    const credentialExpirationsSummary = { count: 7, label: 'Expiring Soon', range: 'Next 7 days' };
+    const credentialExpirations = [
+      { name: 'Sarah Chen', email: 'sarah@company.com', metaLabel: 'Key: Expires', metaValue: '1 day', metaClass: 'text-error-base' },
+      { name: 'Marcus Rodriguez', email: 'marcus@company.com', metaLabel: 'Password: Expires', metaValue: '2 days', metaClass: 'text-error-base' },
+      { name: 'Emily Johnson', email: 'emily@company.com', metaLabel: 'Password: Expires', metaValue: '3 days', metaClass: 'text-warning-base' },
+      { name: 'Michael Smith', email: 'michael@company.com', metaLabel: 'Key: Expires', metaValue: '6 days', metaClass: 'text-info-base' },
     ];
 
-    const unusedSecretsSummary = { count: 14, label: 'Unused' };
-    const unusedSecrets = [
-      { name: 'AWS Ops Key', metaLabel: 'Last Used', metaValue: '46 days ago' },
-      { name: 'Stripe Admin', metaLabel: 'Last Used', metaValue: '123 days ago' },
-      { name: 'Grafana Admin', metaLabel: 'Last Used', metaValue: '53 days ago' },
-      { name: 'MySQL Prod', metaLabel: 'Last Used', metaValue: '66 days ago' },
+    const credentialExpiredSummary = { count: 7, label: 'Expired', range: 'Last 7 days' };
+    const credentialExpired = [
+      { name: 'Sarah Chen', email: 'sarah@company.com', metaLabel: 'Key: Expires', metaValue: '1 day', metaClass: 'text-error-base' },
+      { name: 'Marcus Rodriguez', email: 'marcus@company.com', metaLabel: 'Password: Expires', metaValue: '2 days', metaClass: 'text-error-base' },
+      { name: 'Emily Johnson', email: 'emily@company.com', metaLabel: 'Password: Expires', metaValue: '3 days', metaClass: 'text-warning-base' },
+      { name: 'Michael Smith', email: 'michael@company.com', metaLabel: 'Key: Expires', metaValue: '6 days', metaClass: 'text-info-base' },
+    ];
+
+    const weakCredentialsSummary = { count: 11, label: 'Credentials' };
+    const weakCredentials = [
+      { name: 'AWS Gabriel', metaValue: 'Key Credential', metaClass: 'text-error-base' },
+      { name: 'Test 10', metaValue: 'Password Credential', metaClass: 'text-error-base' },
+      { name: 'AWS Gabriel', metaValue: 'Password Credential', metaClass: 'text-error-base' },
+      { name: 'MySQL Admin', metaValue: 'Key Credential', metaClass: 'text-error-base' },
+    ];
+
+    const unusedCredentialsSummary = { count: 14, label: 'Unused' };
+    const unusedCredentials = [
+      { name: 'AWS Gabriel', metaLabel: 'Key: Last Used', metaValue: '46 days ago', metaClass: 'text-error-base' },
+      { name: 'Test 10', metaLabel: 'Password: Last Used', metaValue: '123 days ago', metaClass: 'text-error-base' },
+      { name: 'AWS Gabriel', metaLabel: 'Password: Last Used', metaValue: '53 days ago', metaClass: 'text-error-base' },
+      { name: 'MySQL Admin', metaLabel: 'Key: Last Used', metaValue: '66 days ago', metaClass: 'text-error-base' },
     ];
 
     const credentialTypeOptions = [
@@ -647,22 +684,6 @@ const AdminPortalWithPasswordManagerStory = defineComponent({
       { name: 'Staging SSH Key', type: 'Key', expirationDate: '--', tags: 'infra', lastUsed: '--', favorite: false },
       { name: 'Docker Hub', type: 'Password', expirationDate: '--', tags: '--', lastUsed: 'Mar 27, 2026', favorite: false },
     ];
-
-    const secretsAddedBars = [
-      { date: 'Aug 1', value: 68 },
-      { date: 'Sep 1', value: 74 },
-      { date: 'Oct 1', value: 88 },
-      { date: 'Nov 1', value: 92 },
-      { date: 'Dec 1', value: 124 },
-      { date: 'Jan 1', value: 158 },
-      { date: 'Feb 1', value: 142 },
-      { date: 'Mar 1', value: 176 },
-      { date: 'Apr 1', value: 168 },
-      { date: 'Apr 7', value: 132 },
-    ];
-    const maxSecretsAddedValue = computed(() =>
-      Math.max(...secretsAddedBars.map(item => item.value)),
-    );
 
     const credentialColumns = [
       {
@@ -1444,22 +1465,32 @@ const AdminPortalWithPasswordManagerStory = defineComponent({
     }
 
     const vaultWebsitesData = [
-      { name: 'Gmail', address: 'https://mail.google.com', jumpServer: '--', status: 'Available', lastConnection: 'Today 9:15 AM' },
-      { name: 'LinkedIn', address: 'https://www.linkedin.com', jumpServer: '--', status: 'Available', lastConnection: 'Today 8:30 AM' },
-      { name: 'Slack', address: 'https://slack.com', jumpServer: '--', status: 'In Use', lastConnection: 'Today 10:00 AM' },
-      { name: 'Notion', address: 'https://www.notion.so', jumpServer: '--', status: 'Available', lastConnection: 'Yesterday 3:00 PM' },
-      { name: 'Figma', address: 'https://www.figma.com', jumpServer: '--', status: 'Available', lastConnection: 'Today 9:45 AM' },
-      { name: 'GitHub', address: 'https://github.com', jumpServer: '--', status: 'In Use', lastConnection: 'Today 11:00 AM' },
-      { name: 'Spotify', address: 'https://www.spotify.com', jumpServer: '--', status: 'Available', lastConnection: 'Yesterday 6:00 PM' },
-      { name: 'Twitter / X', address: 'https://twitter.com', jumpServer: '--', status: 'Available', lastConnection: 'Mar 30, 2026' },
-      { name: 'Netflix', address: 'https://www.netflix.com', jumpServer: '--', status: 'Available', lastConnection: 'Apr 1, 2026' },
-      { name: 'Amazon', address: 'https://www.amazon.com', jumpServer: '--', status: 'Available', lastConnection: 'Mar 28, 2026' },
-      { name: 'Dropbox', address: 'https://www.dropbox.com', jumpServer: '--', status: 'Available', lastConnection: 'Apr 2, 2026' },
-      { name: 'Zoom', address: 'https://zoom.us', jumpServer: '--', status: 'In Use', lastConnection: 'Today 10:30 AM' },
-      { name: 'Trello', address: 'https://trello.com', jumpServer: '--', status: 'Available', lastConnection: 'Apr 3, 2026' },
-      { name: 'Reddit', address: 'https://www.reddit.com', jumpServer: '--', status: 'Available', lastConnection: 'Yesterday 9:00 PM' },
-      { name: 'PayPal', address: 'https://www.paypal.com', jumpServer: '--', status: 'Available', lastConnection: 'Mar 25, 2026' },
+      { id: '1', name: 'Gmail', address: 'https://mail.google.com', jumpServer: '--', status: 'Available', lastSeen: 'Today 9:15 AM', tags: ['Marketing', 'Prod'] },
+      { id: '2', name: 'LinkedIn', address: 'https://www.linkedin.com', jumpServer: '--', status: 'Available', lastSeen: 'Today 8:30 AM', tags: ['HR', 'Marketing'] },
+      { id: '3', name: 'Slack', address: 'https://slack.com', jumpServer: '--', status: 'In Use', lastSeen: 'Today 10:00 AM', tags: ['Engineering', 'Prod'] },
+      { id: '4', name: 'Notion', address: 'https://www.notion.so', jumpServer: '--', status: 'Available', lastSeen: 'Yesterday 3:00 PM', tags: ['Design', 'Dev'] },
+      { id: '5', name: 'Figma', address: 'https://www.figma.com', jumpServer: '--', status: 'Available', lastSeen: 'Today 9:45 AM', tags: ['Design', 'Prod'] },
+      { id: '6', name: 'GitHub', address: 'https://github.com', jumpServer: '--', status: 'In Use', lastSeen: 'Today 11:00 AM', tags: ['Engineering', 'Dev'] },
+      { id: '7', name: 'Spotify', address: 'https://www.spotify.com', jumpServer: '--', status: 'Available', lastSeen: 'Yesterday 6:00 PM', tags: ['Marketing', 'Dev'] },
+      { id: '8', name: 'Twitter / X', address: 'https://twitter.com', jumpServer: '--', status: 'Available', lastSeen: 'Mar 30, 2026', tags: ['Marketing'] },
+      { id: '9', name: 'Netflix', address: 'https://www.netflix.com', jumpServer: '--', status: 'Available', lastSeen: 'Apr 1, 2026', tags: ['Prod'] },
+      { id: '10', name: 'Amazon', address: 'https://www.amazon.com', jumpServer: '--', status: 'Available', lastSeen: 'Mar 28, 2026', tags: ['Finance', 'Prod'] },
+      { id: '11', name: 'Dropbox', address: 'https://www.dropbox.com', jumpServer: '--', status: 'Available', lastSeen: 'Apr 2, 2026', tags: ['Engineering', 'Prod'] },
+      { id: '12', name: 'Zoom', address: 'https://zoom.us', jumpServer: '--', status: 'In Use', lastSeen: 'Today 10:30 AM', tags: ['HR', 'Prod'] },
+      { id: '13', name: 'Trello', address: 'https://trello.com', jumpServer: '--', status: 'Available', lastSeen: 'Apr 3, 2026', tags: ['Engineering', 'Dev'] },
+      { id: '14', name: 'Reddit', address: 'https://www.reddit.com', jumpServer: '--', status: 'Available', lastSeen: 'Yesterday 9:00 PM', tags: ['Marketing'] },
+      { id: '15', name: 'PayPal', address: 'https://www.paypal.com', jumpServer: '--', status: 'Available', lastSeen: 'Mar 25, 2026', tags: ['Finance', 'Prod'] },
     ];
+    const vaultWebsitesSelection = ref([] as string[]);
+
+    function getWebsiteFaviconUrl(address: string): string {
+      try {
+        const domain = new URL(address).hostname;
+        return `https://www.google.com/s2/favicons?domain=${domain}&sz=32`;
+      } catch {
+        return '';
+      }
+    }
     const vaultCredentialsData = [
       { name: 'Gmail Password', address: 'gabriel.ramos@gmail.com', status: 'Available', lastConnection: 'Today 9:15 AM' },
       { name: 'LinkedIn Password', address: 'gabriel.ramos@linkedin.com', status: 'Available', lastConnection: 'Today 8:30 AM' },
@@ -1726,19 +1757,111 @@ const AdminPortalWithPasswordManagerStory = defineComponent({
       `,
     });
 
-    const vaultWebsitesActionMenuItems = [
-      { id: 'sessions', label: 'Sessions' },
-      { id: 'details', label: 'Details' },
-      { id: 'activity', label: 'Activity' },
-      { id: 'approval-requests', label: 'Approval Requests' },
-      { id: 'duplicates', label: 'Duplicates' },
-      { id: 'archive', label: 'Archive' },
-    ];
+    const VaultWebsiteNameCell = defineComponent({
+      name: 'VaultWebsiteNameCell',
+      components: { DataTableCellLink },
+      props: {
+        data: { type: Object, required: true },
+      },
+      setup(props) {
+        const faviconUrl = computed(() => getWebsiteFaviconUrl(String((props.data as Record<string, unknown>).address ?? '')));
+        return { faviconUrl };
+      },
+      template: `
+        <div class="flex items-center gap-sm pl-2">
+          <div class="w-7 h-7 rounded-md overflow-hidden flex items-center justify-center bg-neutral-hover">
+            <img v-if="faviconUrl" :src="faviconUrl" alt="" class="w-5 h-5" />
+          </div>
+          <DataTableCellLink :label="data.name" href="#" />
+        </div>
+      `,
+    });
 
-    const vaultWebsitesActionButtons = [
-      { icon: markRaw(PencilSquareIcon), ariaLabel: 'Edit' },
-      { icon: markRaw(Square2StackIcon), ariaLabel: 'Copy' },
-      { icon: markRaw(TrashIcon), ariaLabel: 'Delete' },
+    const VaultWebsiteTagsCell = defineComponent({
+      name: 'VaultWebsiteTagsCell',
+      components: { PvTag: Tag },
+      props: {
+        data: { type: Object, required: true },
+      },
+      setup(props) {
+        const tags = computed(() => {
+          const value = (props.data as Record<string, unknown>).tags;
+          return Array.isArray(value) ? value : [];
+        });
+        return { tags };
+      },
+      template: `
+        <div class="flex flex-wrap items-center gap-xs">
+          <PvTag
+            v-for="(tag, idx) in tags"
+            :key="idx"
+            :value="tag"
+            severity="secondary"
+          />
+          <span v-if="tags.length === 0" class="text-body-md text-neutral-subtle">--</span>
+        </div>
+      `,
+    });
+
+    const VaultWebsiteActionCell = defineComponent({
+      name: 'VaultWebsiteActionCell',
+      components: { PvMenu: Menu, PvButton: Button },
+      props: {
+        menuItems: { type: Array, default: () => [] },
+      },
+      setup() {
+        const menu = ref<InstanceType<typeof Menu> | null>(null);
+        function toggleMenu(event: Event) {
+          menu.value?.toggle(event);
+        }
+        const menuPt = {
+          root: { class: 'bg-neutral-surface rounded-lg shadow-lg border border-neutral-default_solid' },
+          list: { class: 'flex flex-col w-full py-1' },
+          item: { class: 'w-full' },
+          itemLink: { class: 'px-3 py-2 text-body-md text-neutral-base hover:bg-neutral-hover cursor-pointer flex items-center w-full' },
+          itemLabel: ({ context }: { context: { item?: { class?: string } } }) => ({
+            class: `text-body-md ${context.item?.class ?? 'text-neutral-base'}`,
+          }),
+        };
+        return { menu, toggleMenu, EllipsisHorizontalIcon, menuPt };
+      },
+      template: `
+        <div class="flex items-center gap-xs">
+          <PvButton
+            label="Launch"
+            severity="secondary"
+            variant="outlined"
+            size="small"
+          />
+          <PvButton
+            v-if="menuItems.length"
+            severity="secondary"
+            variant="text"
+            size="small"
+            aria-label="More actions"
+            @click="toggleMenu"
+          >
+            <template #icon="iconProps">
+              <component :is="EllipsisHorizontalIcon" :class="iconProps.class" />
+            </template>
+          </PvButton>
+          <PvMenu
+            v-if="menuItems.length"
+            ref="menu"
+            :model="menuItems"
+            popup
+            :pt="menuPt"
+            style="z-index: 9999;"
+          />
+        </div>
+      `,
+    });
+
+    const vaultWebsitesActionMenuItems = [
+      { id: 'link-credential', label: 'Link Credential' },
+      { id: 'share', label: 'Share' },
+      { id: 'export', label: 'Export' },
+      { id: 'delete', label: 'Delete', class: 'text-danger-base' },
     ];
 
     const vaultCredentialsActionMenuItems = [
@@ -1757,23 +1880,30 @@ const AdminPortalWithPasswordManagerStory = defineComponent({
     ];
 
     const vaultWebsitesColumns = [
-      { field: 'name', header: 'Name', sortable: true, component: markRaw(DataTableCellLink), componentProps: (sp: { data: Record<string, unknown> }) => ({ label: sp.data.name, href: '#' }) },
-      { field: 'address', header: 'Address', component: markRaw(DataTableCellText), componentProps: (sp: { data: Record<string, unknown> }) => ({ label: sp.data.address }) },
       {
-        field: 'status',
-        header: 'Status',
-        component: markRaw(DataTableCellStatus),
-        componentProps: (sp: { data: Record<string, unknown> }) => {
-          const status = String(sp.data.status ?? '');
-          return privilegedAvailabilityTokenMapping[status] ?? { label: status, severity: 'info' };
-        },
+        field: 'name',
+        header: 'Name',
+        sortable: true,
+        component: markRaw(VaultWebsiteNameCell),
+        componentProps: (sp: { data: Record<string, unknown> }) => ({ data: sp.data }),
       },
-      { field: 'lastConnection', header: 'Last Connection', component: markRaw(DataTableCellText), componentProps: (sp: { data: Record<string, unknown> }) => ({ label: sp.data.lastConnection }) },
+      {
+        field: 'tags',
+        header: 'Tags',
+        component: markRaw(VaultWebsiteTagsCell),
+        componentProps: (sp: { data: Record<string, unknown> }) => ({ data: sp.data }),
+      },
+      {
+        field: 'lastSeen',
+        header: 'Last Seen',
+        component: markRaw(DataTableCellText),
+        componentProps: (sp: { data: Record<string, unknown> }) => ({ label: sp.data.lastSeen }),
+      },
       {
         field: 'actions',
         header: 'Actions',
-        component: markRaw(VaultActionMenuCell),
-        componentProps: () => ({ iconButtons: vaultWebsitesActionButtons, menuItems: vaultWebsitesActionMenuItems }),
+        component: markRaw(VaultWebsiteActionCell),
+        componentProps: () => ({ menuItems: vaultWebsitesActionMenuItems }),
       },
     ];
 
@@ -1885,6 +2015,7 @@ const AdminPortalWithPasswordManagerStory = defineComponent({
       passwordVaultEnabled,
       currentPage,
       activeItem,
+      passwordVaultIcon,
       privilegedResourcesTab,
       privilegedResourcesTabs,
       privilegedManagementTab,
@@ -1898,22 +2029,22 @@ const AdminPortalWithPasswordManagerStory = defineComponent({
       passwordVaultTabs,
       pamStatCards,
       passwordVaultStatCards,
-      passwordVaultLoginCount,
-      passwordVaultLastLogins,
-      expiringSecretsSummary,
-      expiringSecrets,
-      weakSecretsSummary,
-      weakSecrets,
-      unusedSecretsSummary,
-      unusedSecrets,
+      passwordVaultMostConnectedResources,
+      passwordVaultMostConnectedColumns,
+      credentialExpirationsSummary,
+      credentialExpirations,
+      credentialExpiredSummary,
+      credentialExpired,
+      weakCredentialsSummary,
+      weakCredentials,
+      unusedCredentialsSummary,
+      unusedCredentials,
       credentialTypeOptions,
       credentialTagOptions,
       credentialColumns,
       filteredCredentialsData,
       draftCredentialTypes,
       draftCredentialTags,
-      secretsAddedBars,
-      maxSecretsAddedValue,
       mostAccessedResources,
       recentConnections,
       sessionActivityBars,
@@ -2013,6 +2144,7 @@ const AdminPortalWithPasswordManagerStory = defineComponent({
       pwmEnrollSelectedGroups,
       pwmRemoveSelectedUserGroups,
       vaultWebsitesData,
+      vaultWebsitesSelection,
       vaultCredentialsData,
       vaultWebsitesStatusOptions,
       vaultCredentialsStatusOptions,
@@ -2084,37 +2216,41 @@ const AdminPortalWithPasswordManagerStory = defineComponent({
         :style="overlayActive ? 'background-color: #F7F7FB;' : undefined"
       >
         <TopBar />
-        <template v-if="currentPage === 'pam-privileged-resources' && !overlayConfig">
+        <template v-if="currentPage === 'pam' && !overlayConfig">
           <PageHeader
-            :title="pageTitle"
-            :tabs="privilegedResourcesTabs"
-            :activeTab="privilegedResourcesTab"
-            @update:activeTab="privilegedResourcesTab = $event"
-          />
-        </template>
-        <template v-else-if="currentPage === 'pam-privileged-management' && !overlayConfig">
-          <PageHeader
-            :title="pageTitle"
-            :tabs="privilegedManagementTabs"
-            :activeTab="privilegedManagementTab"
-            @update:activeTab="privilegedManagementTab = $event"
-          />
-        </template>
-        <template v-else-if="currentPage === 'pam'">
-          <PageHeader
-            :title="pageTitle"
+            title="Privileged Access Management"
             :tabs="pamTabs"
             :activeTab="pamTab"
             @update:activeTab="pamTab = $event"
           />
         </template>
-        <template v-else-if="currentPage === 'password-vault' && !overlayConfig">
+        <template v-else-if="currentPage === 'password-vault'">
           <PageHeader
             :title="pageTitle"
-            :tabs="passwordVaultTabs"
-            :activeTab="passwordVaultTab"
-            @update:activeTab="passwordVaultTab = $event"
-          />
+            :icon="passwordVaultIcon"
+            :tabs="!overlayConfig ? passwordVaultTabs : undefined"
+            :activeTab="!overlayConfig ? passwordVaultTab : undefined"
+            @update:activeTab="!overlayConfig ? passwordVaultTab = $event : null"
+          >
+            <template v-if="!overlayConfig" #actions>
+              <div class="flex items-center gap-sm">
+                <PvButton
+                  label="Settings"
+                  severity="secondary"
+                  variant="outlined"
+                />
+                <PvButton
+                  severity="secondary"
+                  variant="outlined"
+                  aria-label="More actions"
+                >
+                  <template #icon="iconProps">
+                    <EllipsisHorizontalIcon :class="iconProps.class" />
+                  </template>
+                </PvButton>
+              </div>
+            </template>
+          </PageHeader>
         </template>
         <PageHeader v-else :title="pageTitle" />
 
@@ -2139,7 +2275,7 @@ const AdminPortalWithPasswordManagerStory = defineComponent({
               </div>
               <div
                 class="flex items-center justify-between"
-                style="width: 362px; height: 32px;"
+                style="width: 362px;"
               >
                 <a
                   href="#"
@@ -2148,20 +2284,10 @@ const AdminPortalWithPasswordManagerStory = defineComponent({
                   style="width: 134px; color: #4373C7; font-size: 14px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; font-family: 'SF Pro Text', sans-serif; line-height: normal;"
                 >
                   Learn More
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
-                    <g clip-path="url(#clip0_21_35)">
-                      <path d="M4.51175 12.7299L11.2701 5.97155L11.3474 11.9541C11.3536 12.4322 11.7509 12.8295 12.229 12.8357C12.7071 12.8419 13.0883 12.4607 13.0821 11.9826L12.9778 3.90376C12.9716 3.42565 12.5804 3.03449 12.1023 3.02831L4.02331 2.91168C3.5452 2.9055 3.16403 3.28668 3.1702 3.76479C3.17638 4.2429 3.56754 4.63406 4.04565 4.64023L10.0283 4.72978L3.26998 11.4881C2.93721 11.8209 2.94434 12.3726 3.28582 12.714C3.62731 13.0555 4.17897 13.0627 4.51175 12.7299Z" fill="#4373C7"/>
-                    </g>
-                    <defs>
-                      <clipPath id="clip0_21_35">
-                        <rect width="16" height="16" fill="white"/>
-                      </clipPath>
-                    </defs>
-                  </svg>
+                  <ArrowTopRightOnSquareIcon class="size-4" style="color: #4373C7;" />
                 </a>
                 <PvButton
                   :label="overlayConfig.ctaLabel"
-                  class="h-full"
                   style="width: 212px;"
                   @click="overlayConfig.onCta"
                 />
@@ -2171,7 +2297,7 @@ const AdminPortalWithPasswordManagerStory = defineComponent({
         </ListPageLayout>
 
         <DashboardPageLayout
-          v-else-if="currentPage === 'pam-privileged-management' && privilegedManagementTab === 'overview'"
+          v-else-if="currentPage === 'pam' && pamTab === 'overview'"
           class="w-full! h-full!"
         >
           <div class="flex flex-col gap-lg w-full">
@@ -2272,151 +2398,168 @@ const AdminPortalWithPasswordManagerStory = defineComponent({
             <DashboardPageLayout
               v-if="passwordVaultTab === 'overview'"
               class="w-full! h-full!"
+              maxWidth="1440"
             >
               <div class="flex flex-col gap-lg w-full">
-                <div class="grid grid-cols-[max-content_1fr] gap-6 items-stretch">
-                  <div class="flex flex-col gap-6 items-start">
-                    <DashboardStatCard
-                      v-for="stat in passwordVaultStatCards"
-                      :key="stat.header"
-                      :header="stat.header"
-                      :value="stat.value"
-                      :icon="stat.icon"
-                      :changeValue="stat.changeValue"
-                      :changeLabel="stat.changeLabel"
-                      :showArrow="stat.showArrow"
-                      class="w-fit h-fit"
-                    />
-                  </div>
-
-                  <CollapsiblePanel header="Secrets Added Over Time" class="w-full h-full">
-                    <template #titleicon="iconProps">
-                      <ChartBarSquareIcon :class="iconProps.class" />
-                    </template>
-                    <div class="flex flex-col h-full">
-                      <div class="flex flex-col gap-sm flex-1">
-                        <div
-                          v-for="item in secretsAddedBars"
-                          :key="item.date"
-                          class="flex items-center gap-sm"
-                        >
-                          <div class="w-12 text-body-sm text-neutral-subtle text-right shrink-0">
-                            {{ item.date }}
-                          </div>
-                          <div class="flex-1">
-                            <div class="w-full h-4 rounded-sm bg-neutral-surface overflow-hidden">
-                              <div
-                                class="h-4 rounded-sm bg-branding-base"
-                                :style="{ width: ((item.value / maxSecretsAddedValue) * 100) + '%' }"
-                              />
-                            </div>
-                          </div>
-                          <div class="w-8 text-body-sm text-neutral-base text-right shrink-0">
-                            {{ item.value }}
-                          </div>
-                        </div>
+                <div class="grid grid-cols-4 gap-4">
+                  <CollapsiblePanel
+                    v-for="stat in passwordVaultStatCards"
+                    :key="stat.header"
+                    :header="stat.header"
+                    class="w-full"
+                  >
+                    <div class="flex flex-col gap-sm">
+                      <div class="text-heading-0 text-neutral-base">{{ stat.value }}</div>
+                      <div class="flex items-center gap-xs">
+                        <ArrowUpIcon v-if="stat.showArrow" class="w-4 h-4 text-success-base" />
+                        <span class="text-body-sm-bold text-success-base">{{ stat.changeValue }}</span>
+                        <span class="text-body-sm text-neutral-subtle">{{ stat.changeLabel }}</span>
                       </div>
                     </div>
                   </CollapsiblePanel>
                 </div>
 
-                <div class="grid grid-cols-2 gap-6">
-                  <CollapsiblePanel header="Last Logins" class="w-full overflow-hidden flex flex-col h-[264px]">
+                <CollapsiblePanel header="Most Connected Resources" class="w-full">
+                  <CircuitDataTable
+                    :columns="passwordVaultMostConnectedColumns"
+                    :data="passwordVaultMostConnectedResources"
+                    :card="false"
+                    size="small"
+                  />
+                </CollapsiblePanel>
+
+                <div class="grid grid-cols-2 gap-4">
+                  <CollapsiblePanel header="Credential Expirations" class="w-full">
                     <template #actions>
                       <PvButton label="View All" severity="secondary" variant="outlined" size="small" />
                     </template>
-                    <div class="flex flex-col gap-sm h-full">
-                      <div class="flex items-center gap-xs flex-shrink-0">
-                        <span class="text-body-sm-bold text-error-base">{{ passwordVaultLoginCount }}</span>
-                        <span class="text-body-sm text-neutral-base">Logins in the last 48 hours</span>
+                    <div class="flex flex-col gap-sm">
+                      <div class="flex items-center gap-xs text-body-sm">
+                        <span class="text-body-sm-bold text-error-base">{{ credentialExpirationsSummary.count }}</span>
+                        <span class="text-body-sm text-neutral-base">{{ credentialExpirationsSummary.label }}</span>
+                        <div class="h-4 w-px bg-neutral-default_solid"></div>
+                        <span class="text-body-sm text-neutral-subtle">{{ credentialExpirationsSummary.range }}</span>
                       </div>
-                      <div class="flex flex-col divide-y divide-neutral-default_solid border-t border-neutral-default_solid flex-1 overflow-y-auto">
+                      <div class="flex flex-col divide-y divide-neutral-default_solid border-t border-neutral-default_solid">
                         <div
-                          v-for="login in passwordVaultLastLogins"
-                          :key="login.email"
+                          v-for="item in credentialExpirations"
+                          :key="item.name"
                           class="flex items-center justify-between py-2"
                         >
                           <div class="flex flex-col">
-                            <span class="text-body-sm-semi-bold text-neutral-base">{{ login.name }}</span>
-                            <span class="text-body-xs text-neutral-subtle">{{ login.email }}</span>
+                            <span class="text-body-sm-semi-bold text-neutral-base">{{ item.name }}</span>
+                            <span v-if="item.email" class="text-body-xs text-neutral-subtle">{{ item.email }}</span>
                           </div>
                           <div class="flex items-center gap-xs text-body-sm">
-                            <span class="text-neutral-subtle">Logged in:</span>
-                            <span class="text-body-sm-semi-bold text-error-base">{{ login.time }}</span>
+                            <span v-if="item.metaLabel" class="text-neutral-subtle">{{ item.metaLabel }}</span>
+                            <span class="text-body-sm-semi-bold" :class="item.metaClass">{{ item.metaValue }}</span>
+                            <div class="h-4 w-px bg-neutral-default_solid"></div>
+                            <PvButton severity="secondary" variant="text" size="small" aria-label="More actions">
+                              <template #icon="iconProps">
+                                <EllipsisHorizontalIcon :class="iconProps.class" />
+                              </template>
+                            </PvButton>
                           </div>
                         </div>
                       </div>
                     </div>
                   </CollapsiblePanel>
 
-                  <CollapsiblePanel header="Expiring Secrets" class="w-full overflow-hidden flex flex-col h-[264px]">
+                  <CollapsiblePanel header="Credential Expired" class="w-full">
                     <template #actions>
                       <PvButton label="View All" severity="secondary" variant="outlined" size="small" />
                     </template>
-                    <div class="flex flex-col gap-sm h-full">
-                      <div class="flex items-center gap-xs flex-shrink-0">
-                        <span class="text-body-sm-bold text-error-base">{{ expiringSecretsSummary.count }}</span>
-                        <span class="text-body-sm text-neutral-base">{{ expiringSecretsSummary.label }}</span>
+                    <div class="flex flex-col gap-sm">
+                      <div class="flex items-center gap-xs text-body-sm">
+                        <span class="text-body-sm-bold text-error-base">{{ credentialExpiredSummary.count }}</span>
+                        <span class="text-body-sm text-neutral-base">{{ credentialExpiredSummary.label }}</span>
+                        <div class="h-4 w-px bg-neutral-default_solid"></div>
+                        <span class="text-body-sm text-neutral-subtle">{{ credentialExpiredSummary.range }}</span>
                       </div>
-                      <div class="flex flex-col divide-y divide-neutral-default_solid border-t border-neutral-default_solid flex-1 overflow-y-auto">
+                      <div class="flex flex-col divide-y divide-neutral-default_solid border-t border-neutral-default_solid">
                         <div
-                          v-for="secret in expiringSecrets"
-                          :key="secret.name"
-                          class="flex items-center justify-between py-3"
+                          v-for="item in credentialExpired"
+                          :key="item.name"
+                          class="flex items-center justify-between py-2"
                         >
-                          <span class="text-body-sm-semi-bold text-neutral-base">{{ secret.name }}</span>
+                          <div class="flex flex-col">
+                            <span class="text-body-sm-semi-bold text-neutral-base">{{ item.name }}</span>
+                            <span v-if="item.email" class="text-body-xs text-neutral-subtle">{{ item.email }}</span>
+                          </div>
                           <div class="flex items-center gap-xs text-body-sm">
-                            <span class="text-neutral-subtle">{{ secret.metaLabel }}</span>
-                            <span class="text-body-sm-semi-bold text-error-base">{{ secret.metaValue }}</span>
+                            <span v-if="item.metaLabel" class="text-neutral-subtle">{{ item.metaLabel }}</span>
+                            <span class="text-body-sm-semi-bold" :class="item.metaClass">{{ item.metaValue }}</span>
+                            <div class="h-4 w-px bg-neutral-default_solid"></div>
+                            <PvButton severity="secondary" variant="text" size="small" aria-label="More actions">
+                              <template #icon="iconProps">
+                                <EllipsisHorizontalIcon :class="iconProps.class" />
+                              </template>
+                            </PvButton>
                           </div>
                         </div>
                       </div>
                     </div>
                   </CollapsiblePanel>
-                </div>
 
-                <div class="grid grid-cols-2 gap-6">
-                  <CollapsiblePanel header="Weak Secrets" class="w-full overflow-hidden flex flex-col h-[264px]">
+                  <CollapsiblePanel header="Weak Credentials" class="w-full">
                     <template #actions>
                       <PvButton label="View All" severity="secondary" variant="outlined" size="small" />
                     </template>
-                    <div class="flex flex-col gap-sm h-full">
-                      <div class="flex items-center gap-xs flex-shrink-0">
-                        <span class="text-body-sm-bold text-error-base">{{ weakSecretsSummary.count }}</span>
-                        <span class="text-body-sm text-neutral-base">{{ weakSecretsSummary.label }}</span>
+                    <div class="flex flex-col gap-sm">
+                      <div class="flex items-center gap-xs text-body-sm">
+                        <span class="text-body-sm-bold text-error-base">{{ weakCredentialsSummary.count }}</span>
+                        <span class="text-body-sm text-neutral-base">{{ weakCredentialsSummary.label }}</span>
                       </div>
-                      <div class="flex flex-col divide-y divide-neutral-default_solid border-t border-neutral-default_solid flex-1 overflow-y-auto">
+                      <div class="flex flex-col divide-y divide-neutral-default_solid border-t border-neutral-default_solid">
                         <div
-                          v-for="secret in weakSecrets"
-                          :key="secret.name"
-                          class="flex items-center justify-between py-3"
+                          v-for="item in weakCredentials"
+                          :key="item.name"
+                          class="flex items-center justify-between py-2"
                         >
-                          <span class="text-body-sm-semi-bold text-neutral-base">{{ secret.name }}</span>
-                          <span class="text-body-sm-semi-bold text-error-base">{{ secret.risk }}</span>
+                          <div class="flex flex-col">
+                            <span class="text-body-sm-semi-bold text-neutral-base">{{ item.name }}</span>
+                          </div>
+                          <div class="flex items-center gap-xs text-body-sm">
+                            <span class="text-body-sm-semi-bold" :class="item.metaClass">{{ item.metaValue }}</span>
+                            <div class="h-4 w-px bg-neutral-default_solid"></div>
+                            <PvButton severity="secondary" variant="text" size="small" aria-label="More actions">
+                              <template #icon="iconProps">
+                                <EllipsisHorizontalIcon :class="iconProps.class" />
+                              </template>
+                            </PvButton>
+                          </div>
                         </div>
                       </div>
                     </div>
                   </CollapsiblePanel>
 
-                  <CollapsiblePanel header="Unused Secrets" class="w-full overflow-hidden flex flex-col h-[264px]">
+                  <CollapsiblePanel header="Unused Credentials" class="w-full">
                     <template #actions>
                       <PvButton label="View All" severity="secondary" variant="outlined" size="small" />
                     </template>
-                    <div class="flex flex-col gap-sm h-full">
-                      <div class="flex items-center gap-xs flex-shrink-0">
-                        <span class="text-body-sm-bold text-error-base">{{ unusedSecretsSummary.count }}</span>
-                        <span class="text-body-sm text-neutral-base">{{ unusedSecretsSummary.label }}</span>
+                    <div class="flex flex-col gap-sm">
+                      <div class="flex items-center gap-xs text-body-sm">
+                        <span class="text-body-sm-bold text-error-base">{{ unusedCredentialsSummary.count }}</span>
+                        <span class="text-body-sm text-neutral-base">{{ unusedCredentialsSummary.label }}</span>
                       </div>
-                      <div class="flex flex-col divide-y divide-neutral-default_solid border-t border-neutral-default_solid flex-1 overflow-y-auto">
+                      <div class="flex flex-col divide-y divide-neutral-default_solid border-t border-neutral-default_solid">
                         <div
-                          v-for="secret in unusedSecrets"
-                          :key="secret.name"
-                          class="flex items-center justify-between py-3"
+                          v-for="item in unusedCredentials"
+                          :key="item.name"
+                          class="flex items-center justify-between py-2"
                         >
-                          <span class="text-body-sm-semi-bold text-neutral-base">{{ secret.name }}</span>
+                          <div class="flex flex-col">
+                            <span class="text-body-sm-semi-bold text-neutral-base">{{ item.name }}</span>
+                          </div>
                           <div class="flex items-center gap-xs text-body-sm">
-                            <span class="text-neutral-subtle">{{ secret.metaLabel }}</span>
-                            <span class="text-body-sm-semi-bold text-error-base">{{ secret.metaValue }}</span>
+                            <span v-if="item.metaLabel" class="text-neutral-subtle">{{ item.metaLabel }}</span>
+                            <span class="text-body-sm-semi-bold" :class="item.metaClass">{{ item.metaValue }}</span>
+                            <div class="h-4 w-px bg-neutral-default_solid"></div>
+                            <PvButton severity="secondary" variant="text" size="small" aria-label="More actions">
+                              <template #icon="iconProps">
+                                <EllipsisHorizontalIcon :class="iconProps.class" />
+                              </template>
+                            </PvButton>
                           </div>
                         </div>
                       </div>
@@ -2527,10 +2670,25 @@ const AdminPortalWithPasswordManagerStory = defineComponent({
                     scrollHeight="flex"
                     :paginator="true"
                     :rows="100"
+                    :selection="vaultWebsitesSelection"
+                    selectionMode="multiple"
+                    @update:selection="vaultWebsitesSelection = $event"
                     :pt="{
                       root: { class: 'flex flex-col h-full min-h-0' },
                       tableContainer: { class: 'flex-1 min-h-0 overflow-auto' },
                       footer: { class: 'shrink-0' },
+                      headerCell: ({ context }) => ({
+                        class: context?.column?.props?.selectionMode || context?.column?.selectionMode
+                          ? 'flex items-center h-12 px-2 gap-0.5'
+                          : '',
+                      }),
+                      bodyCell: ({ context }) => ({
+                        class: context?.column?.props?.selectionMode || context?.column?.selectionMode
+                          ? 'flex items-center h-12 px-2 gap-0.5'
+                          : '',
+                      }),
+                      headerCheckbox: { class: 'flex items-center h-5' },
+                      rowCheckbox: { class: 'flex items-center h-5' },
                     }"
                     :ptOptions="{ mergeSections: true, mergeProps: true }"
                   >
@@ -2725,10 +2883,25 @@ const AdminPortalWithPasswordManagerStory = defineComponent({
               </PvDialog>
             </ListPageLayout>
 
+            <template v-else-if="passwordVaultTab === 'folders'">
+              <div class="flex items-center justify-center h-64 text-neutral-subtle text-body-md">
+                Folders — coming soon
+              </div>
+            </template>
+
+            <template v-else-if="passwordVaultTab === 'users'">
+              <div class="flex items-center justify-center h-64 text-neutral-subtle text-body-md">
+                Users — coming soon
+              </div>
+            </template>
+
       </div>
     </template>
 
-        <ListPageLayout v-else-if="currentPage === 'pam-blocking-rules'" class="w-full! h-full!">
+        <ListPageLayout
+          v-else-if="currentPage === 'pam' && pamTab === 'blocking-rules'"
+          class="w-full! h-full!"
+        >
           <div class="flex flex-col h-full gap-lg">
             <div class="flex flex-col h-full relative">
               <CircuitDataTable
@@ -2742,7 +2915,7 @@ const AdminPortalWithPasswordManagerStory = defineComponent({
               >
                 <template #toolbar>
                   <DataTableToolbar
-                    addButtonLabel="Add Blocking Rule"
+                    addButtonLabel="Add"
                     :showAddButton="true"
                     :showFilterButton="false"
                     :showRefreshButton="false"
@@ -2756,7 +2929,10 @@ const AdminPortalWithPasswordManagerStory = defineComponent({
           </div>
         </ListPageLayout>
 
-        <ListPageLayout v-else-if="currentPage === 'pam-session-history'" class="w-full! h-full!">
+        <ListPageLayout
+          v-else-if="currentPage === 'pam' && pamTab === 'session-history'"
+          class="w-full! h-full!"
+        >
           <div class="flex flex-col h-full gap-lg">
             <div class="flex flex-col h-full relative">
               <CircuitDataTable
@@ -2784,7 +2960,10 @@ const AdminPortalWithPasswordManagerStory = defineComponent({
           </div>
         </ListPageLayout>
 
-        <ListPageLayout v-else-if="currentPage === 'pam-jump-servers'" class="w-full! h-full!">
+        <ListPageLayout
+          v-else-if="currentPage === 'pam' && pamTab === 'jump-servers'"
+          class="w-full! h-full!"
+        >
           <div class="flex flex-col h-full gap-lg">
             <div class="flex flex-col h-full relative">
               <CircuitDataTable
@@ -2812,8 +2991,20 @@ const AdminPortalWithPasswordManagerStory = defineComponent({
           </div>
         </ListPageLayout>
 
-        <ListPageLayout v-else-if="currentPage === 'pam-privileged-resources'" class="w-full! h-full!">
-          <div class="flex flex-col h-full relative">
+        <ListPageLayout
+          v-else-if="currentPage === 'pam' && pamTab === 'privileged-resources'"
+          class="w-full! h-full!"
+        >
+          <div class="flex flex-col h-full relative -mt-2">
+            <div class="mb-4">
+              <PvSelectButton
+                v-model="privilegedResourcesTab"
+                :options="privilegedResourcesTabs"
+                optionLabel="label"
+                optionValue="value"
+                :allowEmpty="false"
+              />
+            </div>
             <template v-if="privilegedResourcesTab === 'web-shield'">
               <div class="flex flex-col h-full min-h-0">
                 <CircuitDataTable
@@ -3819,7 +4010,10 @@ const AdminPortalWithPasswordManagerStory = defineComponent({
           </PvDialog>
         </ListPageLayout>
 
-        <ListPageLayout v-else-if="privilegedManagementTab === 'user-groups'" class="w-full! h-full!">
+        <ListPageLayout
+          v-else-if="currentPage === 'pam' && pamTab === 'user-groups'"
+          class="w-full! h-full!"
+        >
           <div class="flex flex-col h-full gap-lg">
             <div class="flex flex-col h-full relative">
               <CircuitDataTable
@@ -3917,7 +4111,7 @@ const AdminPortalWithPasswordManagerStory = defineComponent({
 });
 
 const meta: Meta<typeof AdminPortalWithPasswordManagerStory> = {
-  title: "Projects/Gabriel's Playground/Admin Portal/Admin Portal with Password Manager",
+  title: "Projects/Gabriel's Playground/Admin Portal/Admin Portal (PAM and Password Vault)",
   component: AdminPortalWithPasswordManagerStory,
   parameters: {
     layout: 'fullscreen',
