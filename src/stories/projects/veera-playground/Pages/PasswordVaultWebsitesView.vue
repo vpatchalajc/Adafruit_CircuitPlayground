@@ -186,7 +186,7 @@ const websiteColumns = [
         description: row.url,
         href: '#',
         image: faviconSrcForHost(row.url),
-        imageAlt: '',
+        imageAlt: `Favicon for ${row.name}`,
       };
     },
   },
@@ -212,7 +212,7 @@ const websiteColumns = [
   },
   {
     field: 'actions',
-    header: '',
+    header: 'Actions',
     sortable: false,
     width: '120px',
     component: markRaw(DataTableCellAction),
@@ -331,12 +331,11 @@ function handleAddWebsite() {
     </Transition>
 
     <Dialog
-      :visible="showFilterDialog"
+      v-model:visible="showFilterDialog"
       :draggable="false"
       modal
       header="Apply filters"
       :style="{ width: '560px' }"
-      @update:visible="!$event && cancelFilterDialog()"
     >
       <template #closeicon><XMarkIcon /></template>
 

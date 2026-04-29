@@ -134,7 +134,7 @@ const quickViewEye = markRaw(EyeIcon);
 
 const credentialColumns = [
   {
-    field: 'name',
+    field: 'serviceName',
     header: 'Name',
     sortable: true,
     width: 'minmax(200px,1.4fr)',
@@ -142,7 +142,7 @@ const credentialColumns = [
     componentProps: () => ({}),
   },
   {
-    field: 'expiration',
+    field: 'expirationIso',
     header: 'Expiration Date',
     sortable: true,
     width: '160px',
@@ -163,7 +163,7 @@ const credentialColumns = [
     }),
   },
   {
-    field: 'lastUsed',
+    field: 'lastUsedIso',
     header: 'Last Time Used',
     sortable: true,
     width: '200px',
@@ -174,7 +174,7 @@ const credentialColumns = [
   },
   {
     field: 'actions',
-    header: '',
+    header: 'Actions',
     sortable: false,
     width: '200px',
     component: markRaw(DataTableCellAction),
@@ -194,6 +194,7 @@ const credentialColumns = [
         iconButtons: [
           {
             icon: moreIcon,
+            ariaLabel: 'More actions',
             onClick: () => {
               console.info('[PasswordVault Credentials] More menu', row.id);
             },

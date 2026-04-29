@@ -242,12 +242,12 @@ const websiteAccessColumns = [
         description: row.urlDisplay,
         href: '#',
         image: faviconSrcForHost(row.urlDisplay),
-        imageAlt: '',
+        imageAlt: `Favicon for ${row.name}`,
       };
     },
   },
   {
-    field: 'permission',
+    field: 'permissions',
     header: 'Permissions',
     sortable: false,
     width: 'minmax(220px,1.75fr)',
@@ -274,7 +274,7 @@ const credentialAccessColumns = [
     },
   },
   {
-    field: 'permission',
+    field: 'permissions',
     header: 'Permissions',
     sortable: false,
     width: 'minmax(220px,1.75fr)',
@@ -551,12 +551,11 @@ function clearDetailSelection() {
     </div>
 
     <Dialog
-      :visible="showFilterDialog"
+      v-model:visible="showFilterDialog"
       :draggable="false"
       modal
       header="Filter groups"
       :style="{ width: '520px' }"
-      @update:visible="!$event && (showFilterDialog = false)"
     >
       <template #closeicon><XMarkIcon /></template>
 

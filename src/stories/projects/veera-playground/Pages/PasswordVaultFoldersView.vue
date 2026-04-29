@@ -11,10 +11,13 @@ import type { Action, SelectedItem } from '@jumpcloud/circuit/components';
 import FolderPrimaryCell from './FolderPrimaryCell.vue';
 import ListPageLayout from '@/components/layout/page-layouts/ListPageLayout.vue';
 import type { FolderRow } from './folderTypes';
+import { EllipsisVerticalIcon } from '@heroicons/vue/24/outline';
 
 defineOptions({
   name: 'PasswordVaultFoldersView',
 });
+
+const moreIcon = markRaw(EllipsisVerticalIcon);
 
 /** Matches Credentials / Folder spec — MMM DD, YYYY @ h:mm AM/PM */
 function formatLastUpdated(iso: string): string {
@@ -90,7 +93,7 @@ const folderColumns = [
     componentProps: () => ({}),
   },
   {
-    field: 'owner',
+    field: 'ownerFullName',
     header: 'Owner',
     sortable: true,
     width: 'minmax(140px,1fr)',
@@ -100,7 +103,7 @@ const folderColumns = [
     }),
   },
   {
-    field: 'users',
+    field: 'usersWithAccessCount',
     header: 'Users',
     sortable: true,
     width: '100px',
@@ -121,7 +124,7 @@ const folderColumns = [
   },
   {
     field: 'actions',
-    header: '',
+    header: 'Actions',
     sortable: false,
     width: '240px',
     component: markRaw(DataTableCellAction),
@@ -136,14 +139,17 @@ const folderColumns = [
               console.info('[PasswordVault Folders] Manage Access', row.id);
             },
           },
-          /** Second slot enables ellipsis “more” UI in Circuit DataTableCellAction */
+        ],
+        iconButtons: [
           {
-            label: '\u00a0',
+            icon: moreIcon,
+            ariaLabel: 'More actions',
             onClick: () => {
               console.info('[PasswordVault Folders] More menu', row.id);
             },
           },
         ],
+        maxVisibleIconButtons: 2,
       };
     },
   },
