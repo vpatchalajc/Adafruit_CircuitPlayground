@@ -183,54 +183,59 @@ function handleAddFolder() {
 <template>
   <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-neutral-surface">
     <ListPageLayout class="w-full! h-full! min-h-0! border-0">
-      <CircuitDataTable
-        v-model:selection="selection"
-        :columns="folderColumns"
-        :data="filteredRows"
-        data-key="id"
-        selection-mode="multiple"
-        :card="true"
-        scrollable
-        scroll-height="flex"
-        :loading="false"
-        :paginator="true"
-        :lazy="false"
-        :total-records="filteredRows.length"
-        :rows="10"
-        :show-rows-per-page-options="true"
-        :show-page-report="true"
+      <div
+        class="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-md border border-neutral-default_solid shadow-e100"
       >
-        <template #toolbar>
-          <DataTableToolbar
-            add-button-label="Add Folder"
-            :show-save-view-button="false"
-            search-placeholder="Search folders…"
-            :show-add-button="true"
-            :show-filter-button="false"
-            :show-refresh-button="true"
-            :show-columns-button="false"
-            :show-download-button="false"
-            @add="handleAddFolder"
-            @search="handleSearch"
-          >
-            <template #saved-views>
-              <span class="mr-md text-body-md text-neutral-subtle">{{ filteredRows.length }} Folders</span>
-            </template>
-          </DataTableToolbar>
-        </template>
-        <template #empty>
-          <div class="flex flex-col items-center justify-center py-16 text-neutral-subtle">
-            <span class="text-body-md">No folders match your search</span>
-            <span class="mt-1 text-body-sm">Try a different term</span>
-          </div>
-        </template>
-        <template #initialEmpty>
-          <div class="flex flex-col items-center justify-center py-16 text-neutral-subtle">
-            <span class="text-body-md">No folders yet</span>
-            <span class="mt-1 text-body-sm">Add a folder to get started</span>
-          </div>
-        </template>
-      </CircuitDataTable>
+        <CircuitDataTable
+          v-model:selection="selection"
+          class="min-h-0 flex-1"
+          :columns="folderColumns"
+          :data="filteredRows"
+          data-key="id"
+          selection-mode="multiple"
+          :card="true"
+          scrollable
+          scroll-height="flex"
+          :loading="false"
+          :paginator="true"
+          :lazy="false"
+          :total-records="filteredRows.length"
+          :rows="10"
+          :show-rows-per-page-options="true"
+          :show-page-report="true"
+        >
+          <template #toolbar>
+            <DataTableToolbar
+              add-button-label="Add Folder"
+              :show-save-view-button="false"
+              search-placeholder="Search folders…"
+              :show-add-button="true"
+              :show-filter-button="false"
+              :show-refresh-button="true"
+              :show-columns-button="false"
+              :show-download-button="false"
+              @add="handleAddFolder"
+              @search="handleSearch"
+            >
+              <template #saved-views>
+                <span class="mr-md text-body-md text-neutral-subtle">{{ filteredRows.length }} Folders</span>
+              </template>
+            </DataTableToolbar>
+          </template>
+          <template #empty>
+            <div class="flex flex-col items-center justify-center py-16 text-neutral-subtle">
+              <span class="text-body-md">No folders match your search</span>
+              <span class="mt-1 text-body-sm">Try a different term</span>
+            </div>
+          </template>
+          <template #initialEmpty>
+            <div class="flex flex-col items-center justify-center py-16 text-neutral-subtle">
+              <span class="text-body-md">No folders yet</span>
+              <span class="mt-1 text-body-sm">Add a folder to get started</span>
+            </div>
+          </template>
+        </CircuitDataTable>
+      </div>
     </ListPageLayout>
 
     <Transition
