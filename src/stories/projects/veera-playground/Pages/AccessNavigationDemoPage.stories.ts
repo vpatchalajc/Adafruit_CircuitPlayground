@@ -2,7 +2,8 @@ import type { Meta, StoryObj } from '@storybook/vue3';
 import AccessNavigationDemoPage from './AccessNavigationDemoPage.vue';
 
 const meta = {
-  title: 'PROJECTS/Veera Playground/Access & Password Vault',
+  id: 'projects-veera-playground-access-password-vault',
+  title: 'Projects/Veera Playground/Access & Password Vault',
   component: AccessNavigationDemoPage,
   tags: ['autodocs'],
   parameters: {

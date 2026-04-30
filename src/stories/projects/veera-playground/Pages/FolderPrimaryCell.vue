@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useDataTableSmallSize } from '@jumpcloud/circuit/components';
-import { FolderIcon } from '@heroicons/vue/24/outline';
+import VaultTypes from './VaultTypes.vue';
 import type { FolderRow } from './folderTypes';
 
 defineOptions({
@@ -28,18 +28,14 @@ function resourceSubtitle(count: number): string {
 
 <template>
   <div
-    class="relative flex h-full items-center gap-2 overflow-hidden px-2 py-1.5"
+    class="relative flex h-full items-center gap-sm overflow-hidden px-sm py-xs"
     :class="smallSize ? 'text-body-sm' : 'text-body-md'"
   >
-    <!-- Turquoise folder (Circuit info surface + info foreground) -->
-    <div
-      class="flex size-7 shrink-0 items-center justify-center rounded-md shadow-e100 ring-1 ring-neutral-default_solid bg-info-surface"
-      aria-hidden="true"
-    >
-      <FolderIcon class="size-5 text-info-base shrink-0" />
+    <div class="shrink-0">
+      <VaultTypes type="Folder" :shared="Boolean(row?.shared)" density="compact" />
     </div>
 
-    <div class="flex min-w-0 flex-1 flex-col items-start gap-0.5">
+    <div class="flex min-w-0 flex-1 flex-col items-start gap-xs">
       <span
         class="w-full truncate text-neutral-base"
         :class="smallSize ? 'text-body-sm-bold' : 'text-body-md-bold'"

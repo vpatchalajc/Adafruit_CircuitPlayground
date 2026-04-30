@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { markRaw, ref } from 'vue';
+import { markRaw, ref, watch } from 'vue';
 import {
   CollapsiblePanel,
   DataTable,
@@ -8,10 +8,10 @@ import {
 } from '@jumpcloud/circuit/components';
 import { PasswordManagerIcon } from '@jumpcloud/icons';
 import {
+  ArrowLeftIcon,
   ArrowUpIcon,
   ChevronRightIcon,
   EllipsisHorizontalIcon,
-  EllipsisVerticalIcon,
   RectangleStackIcon,
 } from '@heroicons/vue/24/outline';
 import Button from 'primevue/button';
@@ -38,6 +38,13 @@ const vaultTabs = [
 ];
 
 const activeTab = ref('overview');
+
+/** Synced with PasswordVaultWebsitesView add flow so the header can switch to "Add Website". */
+const websitesMode = ref<'list' | 'add'>('list');
+
+watch(activeTab, (tab) => {
+  if (tab !== 'websites') websitesMode.value = 'list';
+});
 
 const statCards = [
   { title: 'Websites', value: '386', change: '23%', changeLabel: 'vs last month' },
@@ -113,6 +120,7 @@ const resourcesPanelCollapsed = ref(false);
 <template>
   <div class="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden border-t border-neutral-default_solid bg-neutral-surface">
     <PageHeader
+      v-if="activeTab !== 'websites' || websitesMode === 'list'"
       title="Password Vault"
       :icon="headerIcon"
       :tabs="vaultTabs"
@@ -131,11 +139,48 @@ const resourcesPanelCollapsed = ref(false);
       </template>
     </PageHeader>
 
-    <PasswordVaultWebsitesView v-if="activeTab === 'websites'" class="min-h-0 flex-1" />
+    <header
+      v-else-if="websitesMode === 'add'"
+      class="flex min-h-14 w-full shrink-0 items-center border-b border-neutral-default_solid bg-neutral-base px-xl"
+      aria-labelledby="pwd-vault-add-website-heading"
+      data-layout="add-website-header"
+    >
+      <div class="flex w-full items-center justify-between gap-md">
+        <div class="flex min-w-0 flex-1 items-center justify-start">
+          <Button
+            label="Back"
+            variant="text"
+            severity="secondary"
+            size="large"
+            @click="websitesMode = 'list'"
+          >
+            <template #icon="iconProps">
+              <ArrowLeftIcon :class="iconProps.class" />
+            </template>
+          </Button>
+        </div>
+        <h1 id="pwd-vault-add-website-heading" class="shrink-0 text-center text-heading-2 text-neutral-base">
+          Add Website
+        </h1>
+        <div class="flex min-w-0 flex-1 items-center justify-end" aria-hidden="true" />
+      </div>
+    </header>
 
-    <PasswordVaultCredentialsView v-else-if="activeTab === 'credentials'" class="min-h-0 flex-1" />
+    <PasswordVaultWebsitesView
+      v-if="activeTab === 'websites'"
+      v-model:websites-mode="websitesMode"
+      class="min-h-0 flex-1"
+    />
 
-    <PasswordVaultFoldersView v-else-if="activeTab === 'folders'" class="min-h-0 flex-1" />
+    <PasswordVaultCredentialsView
+      v-else-if="activeTab === 'credentials'"
+      class="min-h-0 min-w-0 h-full flex-1"
+    />
+
+    <PasswordVaultFoldersView
+      v-else-if="activeTab === 'folders'"
+      class="min-h-0 min-w-0 h-full flex-1"
+    />
 
     <PasswordVaultUsersView v-else-if="activeTab === 'users'" class="min-h-0 flex-1" />
 

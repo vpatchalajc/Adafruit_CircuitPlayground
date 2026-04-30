@@ -1,10 +1,9 @@
 <script setup lang="ts">
-import { computed, markRaw, ref } from 'vue';
+import { computed, defineModel, markRaw, ref } from 'vue';
 import {
   ActionsToolbar,
   DataTable as CircuitDataTable,
   DataTableCellAction,
-  DataTableCellLink,
   DataTableCellTags,
   DataTableCellText,
   DataTableToolbar,
@@ -19,18 +18,12 @@ import {
   EllipsisVerticalIcon,
   XMarkIcon,
 } from '@heroicons/vue/24/outline';
-import ListPageLayout from '@/components/layout/page-layouts/ListPageLayout.vue';
+import PasswordVaultAddWebsiteView from './PasswordVaultAddWebsiteView.vue';
+import PasswordVaultWebsiteNameCell from './PasswordVaultWebsiteNameCell.vue';
 
 defineOptions({
   name: 'PasswordVaultWebsitesView',
 });
-
-/** Favicon helper — 28×28 image for DataTableCellLink `image` slot (Circuit) */
-function faviconSrcForHost(urlDisplay: string): string {
-  const host = urlDisplay.replace(/^https?:\/\//, '').split('/')[0]?.trim() ?? '';
-  if (!host) return '';
-  return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(host)}&sz=64`;
-}
 
 export type WebsiteRow = {
   id: string;
@@ -170,41 +163,39 @@ function removeFilterChip(chip: { id?: string }) {
 
 const selection = ref<WebsiteRow[]>([]);
 
+const websitesMode = defineModel<'list' | 'add'>('websitesMode', { default: 'list' });
+
 const launchIcon = markRaw(ArrowTopRightOnSquareIcon);
 const moreIcon = markRaw(EllipsisVerticalIcon);
+
+/** Single source of truth for Tags column width (table + DataTableCellTags overflow math) */
+const TAGS_COLUMN_WIDTH_PX = 260;
 
 const websiteColumns = [
   {
     field: 'name',
     header: 'Name',
     sortable: true,
-    component: markRaw(DataTableCellLink),
-    componentProps: (sp: { data: Record<string, unknown> }) => {
-      const row = sp.data as unknown as WebsiteRow;
-      return {
-        label: row.name,
-        description: row.url,
-        href: '#',
-        image: faviconSrcForHost(row.url),
-        imageAlt: `Favicon for ${row.name}`,
-      };
-    },
+    component: markRaw(PasswordVaultWebsiteNameCell),
+    componentProps: (sp: { data: Record<string, unknown> }) => ({ data: sp.data }),
   },
   {
     field: 'tags',
     header: 'Tags',
     sortable: false,
+    width: `${TAGS_COLUMN_WIDTH_PX}px`,
     component: markRaw(DataTableCellTags),
     componentProps: (sp: { data: Record<string, unknown> }) => ({
       tags: (sp.data.tags as string[]) ?? [],
       maxVisibleTags: 3,
+      width: TAGS_COLUMN_WIDTH_PX,
     }),
   },
   {
     field: 'lastSeen',
     header: 'Last Seen',
     sortable: true,
-    width: '160px',
+    width: '180px',
     component: markRaw(DataTableCellText),
     componentProps: (sp: { data: Record<string, unknown> }) => ({
       label: sp.data.lastSeen,
@@ -214,7 +205,7 @@ const websiteColumns = [
     field: 'actions',
     header: 'Actions',
     sortable: false,
-    width: '120px',
+    width: '200px',
     component: markRaw(DataTableCellAction),
     componentProps: () => ({
       type: 'Button Group',
@@ -250,15 +241,47 @@ function handleClearSelection() {
 }
 
 function handleAddWebsite() {
-  console.info('[PasswordVault Websites] Add website');
+  selection.value = [];
+  websitesMode.value = 'add';
 }
+
+function handleCancelAddWebsite() {
+  websitesMode.value = 'list';
+}
+
+function handleSaveAddWebsite() {
+  websitesMode.value = 'list';
+}
+
+/** `table-fixed` so Circuit column min/max widths (e.g. Tags 260px) apply; body scrolls like Credentials */
+const dataTablePt = {
+  root: { class: 'flex min-h-0 h-full flex-1 flex-col' },
+  tableContainer: {
+    class: 'z-10 flex min-h-0 flex-1 !overflow-x-auto !overflow-y-auto pb-md',
+  },
+  table: { class: '!w-full !max-w-full !table-fixed !overflow-visible' },
+  footer: { class: '!mt-0 !shrink-0 shrink-0' },
+} as const;
 </script>
 
 <template>
-  <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-neutral-surface">
-    <ListPageLayout class="w-full! h-full! min-h-0! border-0">
+  <div
+    class="relative flex min-h-0 min-w-0 flex-1 flex-col bg-neutral-surface"
+    :class="websitesMode === 'list' ? 'overflow-hidden' : 'min-h-0 overflow-x-hidden overflow-y-auto overscroll-contain'"
+  >
+    <PasswordVaultAddWebsiteView
+      v-if="websitesMode === 'add'"
+      class="min-h-0 w-full min-w-0 shrink-0"
+      @cancel="handleCancelAddWebsite"
+      @save="handleSaveAddWebsite"
+    />
+    <div
+      v-else
+      class="flex min-h-0 h-full min-w-0 flex-1 flex-col overflow-hidden px-lg pb-xl pt-lg md:px-xl"
+    >
       <CircuitDataTable
         v-model:selection="selection"
+        class="flex min-h-0 min-w-0 flex-1 flex-col"
         :columns="websiteColumns"
         :data="filteredRows"
         selection-mode="multiple"
@@ -269,55 +292,59 @@ function handleAddWebsite() {
         :paginator="true"
         :rows="10"
         data-key="id"
+        :pt="dataTablePt"
+        :pt-options="{ mergeSections: true, mergeProps: true }"
       >
         <template #toolbar>
-          <DataTableToolbar
-            add-button-label="Add Website"
-            :show-save-view-button="false"
-            search-placeholder="Search websites…"
-            :show-add-button="true"
-            :show-filter-button="true"
-            :show-refresh-button="true"
-            :show-columns-button="false"
-            :show-download-button="false"
-            :active-filters="activeFilterChips"
-            :max-visible-filters="5"
-            @add="handleAddWebsite"
-            @search="handleSearch"
-            @filter="openFilterDialog"
-            @clear-all="clearAllFilters"
-            @filter-remove="removeFilterChip"
-          >
-            <template #saved-views>
-              <span class="mr-md text-body-md text-neutral-subtle">{{ filteredRows.length }} Websites</span>
-            </template>
-          </DataTableToolbar>
+          <div class="relative z-20 shrink-0">
+            <DataTableToolbar
+              add-button-label="Add Website"
+              :show-save-view-button="false"
+              search-placeholder="Search websites…"
+              :show-add-button="true"
+              :show-filter-button="true"
+              :show-refresh-button="true"
+              :show-columns-button="false"
+              :show-download-button="false"
+              :active-filters="activeFilterChips"
+              :max-visible-filters="5"
+              @add="handleAddWebsite"
+              @search="handleSearch"
+              @filter="openFilterDialog"
+              @clear-all="clearAllFilters"
+              @filter-remove="removeFilterChip"
+            >
+              <template #saved-views>
+                <span class="mr-md text-body-md text-neutral-subtle">{{ filteredRows.length }} Websites</span>
+              </template>
+            </DataTableToolbar>
+          </div>
         </template>
         <template #empty>
-          <div class="flex flex-col items-center justify-center py-16 text-neutral-subtle">
+          <div class="flex flex-col items-center justify-center gap-xs py-xl text-neutral-subtle">
             <span class="text-body-md">No websites match your filters</span>
-            <span class="mt-1 text-body-sm">Try adjusting search or filters</span>
+            <span class="text-body-sm">Try adjusting search or filters</span>
           </div>
         </template>
         <template #initialEmpty>
-          <div class="flex flex-col items-center justify-center py-16 text-neutral-subtle">
+          <div class="flex flex-col items-center justify-center gap-xs py-xl text-neutral-subtle">
             <span class="text-body-md">No websites yet</span>
-            <span class="mt-1 text-body-sm">Add a website to get started</span>
+            <span class="text-body-sm">Add a website to get started</span>
           </div>
         </template>
       </CircuitDataTable>
-    </ListPageLayout>
+    </div>
 
     <Transition
       enter-active-class="transition-all duration-200 ease-out"
-      enter-from-class="opacity-0 translate-y-4"
+      enter-from-class="opacity-0 translate-y-md"
       enter-to-class="opacity-100 translate-y-0"
       leave-active-class="transition-all duration-150 ease-in"
       leave-from-class="opacity-100 translate-y-0"
-      leave-to-class="opacity-0 translate-y-4"
+      leave-to-class="opacity-0 translate-y-md"
     >
       <div
-        v-if="toolbarSelectedItems.length > 0"
+        v-if="websitesMode === 'list' && toolbarSelectedItems.length > 0"
         class="absolute bottom-16 left-1/2 z-10 -translate-x-1/2"
       >
         <ActionsToolbar

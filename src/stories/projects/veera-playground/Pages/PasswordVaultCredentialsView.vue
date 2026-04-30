@@ -1,182 +1,200 @@
 <script setup lang="ts">
-import { computed, markRaw, ref } from 'vue';
 import {
   ActionsToolbar,
   DataTable as CircuitDataTable,
   DataTableCellAction,
   DataTableCellTags,
-  DataTableCellText,
   DataTableToolbar,
+  FormField,
 } from '@jumpcloud/circuit/components';
 import type { Action, RowsPerPageOption, SelectedItem } from '@jumpcloud/circuit/components';
-import { EllipsisVerticalIcon, EyeIcon } from '@heroicons/vue/24/outline';
-import CredentialNameCell from './CredentialNameCell.vue';
-import ListPageLayout from '@/components/layout/page-layouts/ListPageLayout.vue';
+import Dialog from 'primevue/dialog';
+import Button from 'primevue/button';
+import MultiSelect from 'primevue/multiselect';
+import {
+  ArrowDownTrayIcon,
+  ArrowPathIcon,
+  ArrowTopRightOnSquareIcon,
+  EllipsisHorizontalIcon,
+  ShareIcon,
+  XMarkIcon,
+} from '@heroicons/vue/24/outline';
+import PasswordVaultCredentialLastSeenCell from './PasswordVaultCredentialLastSeenCell.vue';
+import PasswordVaultWebsiteNameCell from './PasswordVaultWebsiteNameCell.vue';
+import type { CredentialRow } from './credentialTypes';
+import { credentialTypeDisplayLabel, type VaultPreviewType } from './vaultDisplayTypes';
 
-import type { CredentialCategory, CredentialRow } from './credentialTypes';
+import { computed, markRaw, ref, watch } from 'vue';
 
 defineOptions({
   name: 'PasswordVaultCredentialsView',
 });
 
-/** "28 April 2026" style */
-function formatExpiration(iso: string): string {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return '—';
-  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
-}
+const MOCK_URL = 'http://www.example.com/';
 
-/** "Apr 28, 2026 @ 3:45 PM" style */
-function formatLastUsed(iso: string): string {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return '—';
-  const datePart = d.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  });
-  const timePart = d.toLocaleTimeString('en-US', {
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true,
-  });
-  return `${datePart} @ ${timePart}`;
-}
+const CREDENTIAL_NAMES = [
+  'Google',
+  'Microsoft',
+  'Apple',
+  'Facebook',
+  'Netflix',
+  'Tesla',
+  'Spotify',
+  'Airbnb',
+  'Uber',
+  'Salesforce',
+  'Adobe',
+  'Twitter',
+  'Snapchat',
+  'ChatGPT',
+] as const;
+
+const TAG_TRIAD = ['Tag 01', 'Tag 02', 'Tag 03'] as const;
 
 const TOTAL_MOCK_RECORDS = 435;
 
-/** Seeds first rows to mirror Figma / reference column (service + type pairing) */
-const ROW_PRESETS: { serviceName: string; credentialType: CredentialCategory }[] = [
-  { serviceName: 'Google', credentialType: 'password' },
-  { serviceName: 'Netflix', credentialType: 'password' },
-  { serviceName: 'Spotify', credentialType: 'password' },
-  { serviceName: 'Uber', credentialType: 'password' },
-  { serviceName: 'Salesforce', credentialType: 'password' },
-  { serviceName: 'Microsoft', credentialType: 'payment_card' },
-  { serviceName: 'Airbnb', credentialType: 'payment_card' },
-  { serviceName: 'Apple', credentialType: 'secure_note' },
-  { serviceName: 'Adobe', credentialType: 'secure_note' },
-  { serviceName: 'Twitter', credentialType: 'secure_note' },
-  { serviceName: 'Facebook', credentialType: 'key' },
-  { serviceName: 'Snapchat', credentialType: 'key' },
-  { serviceName: 'Tesla', credentialType: 'two_factor' },
+const CREDENTIAL_PREVIEW_CYCLE: VaultPreviewType[] = [
+  'Website',
+  'Password',
+  'Key',
+  'Payment Card',
+  'Note',
+  '2FA',
+  'Identity',
+  'ID Card',
 ];
 
-const CATEGORY_LABELS: Record<CredentialCategory, string> = {
-  password: 'Password',
-  payment_card: 'Payment Card',
-  key: 'Key',
-  secure_note: 'Secured Note',
-  two_factor: '2FA',
-};
-
 function buildCredentialRows(total: number): CredentialRow[] {
-  const base = new Date('2025-06-01T12:00:00.000Z');
+  const baseSeen = Date.UTC(2024, 3, 1, 14, 15, 0);
   return Array.from({ length: total }, (_, i) => {
-    const preset = ROW_PRESETS[i % ROW_PRESETS.length]!;
-    const credentialType = preset.credentialType;
-    const cycle = Math.floor(i / ROW_PRESETS.length);
+    const preset = CREDENTIAL_NAMES[i % CREDENTIAL_NAMES.length]!;
+    const cycle = Math.floor(i / CREDENTIAL_NAMES.length);
+    const name = cycle > 0 ? `${preset} (${cycle})` : preset;
 
-    let serviceName: string;
-    if (credentialType === 'payment_card') {
-      const suffix = cycle > 0 ? ` (${cycle})` : '';
-      serviceName = `${preset.serviceName}${suffix} • Card •••• ${String(4240 + (i % 100)).slice(-4)}`;
-    } else if (cycle > 0) {
-      serviceName = `${preset.serviceName} (${cycle})`;
-    } else {
-      serviceName = preset.serviceName;
-    }
-
-    const monthOffset = (i % 18) + 1;
-    const exp = new Date(base);
-    exp.setMonth(exp.getMonth() + monthOffset);
-    const last = new Date(base);
-    last.setDate(last.getDate() - ((i * 17) % 120));
-    last.setHours(9 + (i % 8), (i * 23) % 60, 0, 0);
-
-    const tagA = `Tag ${String((i % 9) + 1).padStart(2, '0')}`;
-    const tagB = `Tag ${String(((i + 3) % 9) + 1).padStart(2, '0')}`;
+    const t = baseSeen - i * 13 * 60 * 1000;
+    const vaultPreviewType = CREDENTIAL_PREVIEW_CYCLE[i % CREDENTIAL_PREVIEW_CYCLE.length]!;
 
     return {
       id: String(i + 1),
-      credentialType,
-      categoryLabel: CATEGORY_LABELS[credentialType],
-      serviceName,
-      expirationIso: exp.toISOString(),
-      lastUsedIso: last.toISOString(),
-      tags: i % 5 === 0 ? [tagA] : [tagA, tagB],
+      name,
+      url: MOCK_URL,
+      tags: [...TAG_TRIAD],
+      vaultPreviewType,
+      credentialTypeLabel: credentialTypeDisplayLabel(vaultPreviewType),
+      lastSeenIso: new Date(t).toISOString(),
+      tagsSortKey: TAG_TRIAD.join(', '),
     };
   });
 }
 
 const rows = ref<CredentialRow[]>(buildCredentialRows(TOTAL_MOCK_RECORDS));
 
-const searchQuery = ref('');
-const filteredRows = computed(() => {
-  const q = searchQuery.value.trim().toLowerCase();
-  if (!q) return rows.value;
-  return rows.value.filter((row) => {
-    const hay = `${row.serviceName} ${row.categoryLabel} ${row.tags.join(' ')}`.toLowerCase();
-    return hay.includes(q);
-  });
+const toolbarSearchQuery = ref('');
+const draftTags = ref<string[]>([]);
+const appliedTags = ref<string[]>([]);
+const showFilterDialog = ref(false);
+
+function formatGroupedValues(values: string[], maxVisible = 2): string {
+  if (values.length <= maxVisible) return values.join(', ');
+  return `${values.slice(0, maxVisible).join(', ')}, +${values.length - maxVisible}`;
+}
+
+const tagPickerOptions = computed(() =>
+  [...new Set(rows.value.flatMap((r) => r.tags))]
+    .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
+    .map((t) => ({ label: t, value: t })),
+);
+
+const draftFilterCount = computed(() => (draftTags.value.length > 0 ? 1 : 0));
+
+const activeFilterChips = computed(() => {
+  const chips: { id: string; key: string; operator: string; value: string }[] = [];
+  if (appliedTags.value.length > 0) {
+    chips.push({
+      id: 'tags',
+      key: 'Tags',
+      operator: 'is',
+      value: formatGroupedValues(appliedTags.value),
+    });
+  }
+  return chips;
 });
+
+function rowMatchesSearch(row: CredentialRow): boolean {
+  const q = toolbarSearchQuery.value.trim().toLowerCase();
+  if (!q) return true;
+  const haystack =
+    `${row.name} ${row.url} ${row.credentialTypeLabel} ${row.tags.join(' ')}`.toLowerCase();
+  return haystack.includes(q);
+}
+
+function rowMatchesTagFilter(row: CredentialRow): boolean {
+  if (appliedTags.value.length === 0) return true;
+  return appliedTags.value.some((t) => row.tags.includes(t));
+}
+
+const filteredRows = computed(() =>
+  rows.value.filter((r) => rowMatchesTagFilter(r) && rowMatchesSearch(r)),
+);
 
 const selection = ref<CredentialRow[]>([]);
 const rowsPerPage = ref(100);
-const rowsPerPageOptions: RowsPerPageOption[] = [
-  { label: '100', value: 100 },
-  { label: '50', value: 50 },
-  { label: '25', value: 25 },
+const first = ref(0);
+
+const rowsPerPageOptionsTyped: RowsPerPageOption[] = [
+  { label: '100 items per page', value: 100 },
+  { label: '50 items per page', value: 50 },
+  { label: '25 items per page', value: 25 },
 ];
 
-const moreIcon = markRaw(EllipsisVerticalIcon);
-const quickViewEye = markRaw(EyeIcon);
+watch(
+  filteredRows,
+  (next) => {
+    const ids = new Set(next.map((r) => r.id));
+    selection.value = selection.value.filter((r) => ids.has(r.id));
+  },
+  { flush: 'post' },
+);
+
+const launchTrailingIcon = markRaw(ArrowTopRightOnSquareIcon);
+const overflowIcon = markRaw(EllipsisHorizontalIcon);
 
 const credentialColumns = [
   {
-    field: 'serviceName',
+    field: 'name',
     header: 'Name',
     sortable: true,
-    width: 'minmax(200px,1.4fr)',
-    component: markRaw(CredentialNameCell),
-    componentProps: () => ({}),
-  },
-  {
-    field: 'expirationIso',
-    header: 'Expiration Date',
-    sortable: true,
-    width: '160px',
-    component: markRaw(DataTableCellText),
+    component: markRaw(PasswordVaultWebsiteNameCell),
     componentProps: (sp: { data: Record<string, unknown> }) => ({
-      label: formatExpiration((sp.data as CredentialRow).expirationIso),
+      data: sp.data,
     }),
   },
   {
-    field: 'tags',
+    field: 'tagsSortKey',
     header: 'Tags',
-    sortable: false,
-    width: 'minmax(160px,1fr)',
+    sortable: true,
+    width: 'minmax(200px,1fr)',
     component: markRaw(DataTableCellTags),
     componentProps: (sp: { data: Record<string, unknown> }) => ({
-      tags: (sp.data as CredentialRow).tags,
-      maxVisibleTags: 4,
+      tags: ((sp.data as CredentialRow).tags ?? []) as string[],
+      maxVisibleTags: 3,
     }),
   },
   {
-    field: 'lastUsedIso',
-    header: 'Last Time Used',
+    field: 'lastSeenIso',
+    header: 'Last Seen',
     sortable: true,
     width: '200px',
-    component: markRaw(DataTableCellText),
+    component: markRaw(PasswordVaultCredentialLastSeenCell),
     componentProps: (sp: { data: Record<string, unknown> }) => ({
-      label: formatLastUsed((sp.data as CredentialRow).lastUsedIso),
+      data: sp.data,
     }),
   },
   {
     field: 'actions',
-    header: 'Actions',
+    header: '',
     sortable: false,
-    width: '200px',
+    width: '220px',
     component: markRaw(DataTableCellAction),
     componentProps: (sp: { data: Record<string, unknown> }) => {
       const row = sp.data as CredentialRow;
@@ -184,19 +202,16 @@ const credentialColumns = [
         type: 'Button & More' as const,
         actionButtons: [
           {
-            label: 'Quick View',
-            icon: quickViewEye,
-            onClick: () => {
-              console.info('[PasswordVault Credentials] Quick View', row.id);
-            },
+            label: 'Launch',
+            icon: launchTrailingIcon,
           },
         ],
         iconButtons: [
           {
-            icon: moreIcon,
+            icon: overflowIcon,
             ariaLabel: 'More actions',
             onClick: () => {
-              console.info('[PasswordVault Credentials] More menu', row.id);
+              console.info('[Credentials] Overflow menu', row.id);
             },
           },
         ],
@@ -215,13 +230,56 @@ const bulkActions: Action[] = [
 const toolbarSelectedItems = computed<SelectedItem[]>(() =>
   selection.value.map((r) => ({
     id: r.id,
-    label: r.serviceName,
-    description: r.tags.slice(0, 2).join(', ') || r.categoryLabel,
+    label: r.name,
+    description: r.tags.slice(0, 2).join(', '),
   })),
 );
 
-function handleSearch(query: unknown) {
-  searchQuery.value = typeof query === 'string' ? query : '';
+function handleToolbarSearch(query: string) {
+  toolbarSearchQuery.value = query;
+  first.value = 0;
+}
+
+function openFilterDialog() {
+  draftTags.value = [...appliedTags.value];
+  showFilterDialog.value = true;
+}
+
+function applyFilters() {
+  appliedTags.value = [...draftTags.value];
+  showFilterDialog.value = false;
+  first.value = 0;
+}
+
+function cancelFilterDialog() {
+  showFilterDialog.value = false;
+}
+
+function clearDraftFilters() {
+  draftTags.value = [];
+}
+
+function clearAllFilters() {
+  appliedTags.value = [];
+  toolbarSearchQuery.value = '';
+  first.value = 0;
+}
+
+function removeFilterChip(chip: { id?: string }) {
+  if ((chip.id ?? '') === 'tags') appliedTags.value = [];
+  first.value = 0;
+}
+
+function handleCredentialRefresh() {
+  rows.value = buildCredentialRows(TOTAL_MOCK_RECORDS);
+}
+
+function handleShareToolbar() {
+  console.info('[PasswordVault Credentials] Share');
+}
+
+function handleExportToolbar() {
+  console.info('[PasswordVault Credentials] Export');
 }
 
 function handleBulkAction(act: Action) {
@@ -232,72 +290,129 @@ function handleClearSelection() {
   selection.value = [];
 }
 
-function handleAddCredential() {
-  console.info('[PasswordVault Credentials] Add credential');
+function handleOpenAdd() {
+  console.info('[PasswordVault Credentials] Add');
 }
+
+/** Overrides Circuit tableContainer overflow-hidden! — scroll locks to table body, fills tab height */
+const dataTablePt = {
+  root: { class: 'flex min-h-0 h-full flex-1 flex-col' },
+  tableContainer: {
+    class: 'z-10 flex min-h-0 flex-1 !overflow-x-auto !overflow-y-auto pb-md',
+  },
+  table: { class: '!overflow-visible' },
+  footer: { class: '!mt-0 !shrink-0 shrink-0' },
+} as const;
 </script>
 
 <template>
-  <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-neutral-surface">
-    <ListPageLayout class="w-full! h-full! min-h-0! border-0">
+  <div class="relative flex min-h-0 min-w-0 h-full flex-1 flex-col overflow-hidden bg-neutral-surface">
+    <div class="flex min-h-0 min-w-0 flex-1 flex-col px-lg pb-xl pt-lg md:px-xl">
       <CircuitDataTable
         v-model:selection="selection"
+        v-model:first="first"
+        class="flex min-h-0 min-w-0 flex-1 flex-col"
         :columns="credentialColumns"
-        :data="filteredRows"
+        :data="filteredRows.map((r) => r as unknown as Record<string, unknown>)"
         data-key="id"
         selection-mode="multiple"
         :card="true"
+        removable-sort
+        sort-mode="single"
         scrollable
         scroll-height="flex"
-        :loading="false"
+        :highlight-on-select="true"
         :paginator="true"
         :lazy="false"
         :total-records="filteredRows.length"
         v-model:rows="rowsPerPage"
-        :rows-per-page-options="rowsPerPageOptions"
+        :rows-per-page-options="rowsPerPageOptionsTyped"
         :show-rows-per-page-options="true"
         :show-page-report="true"
+        page-report-template="{first}–{last} of {totalRecords}"
+        :page-link-size="6"
+        :loading="false"
+        :pt="dataTablePt"
+        :pt-options="{ mergeSections: true, mergeProps: true }"
       >
-        <template #toolbar>
-          <DataTableToolbar
-            add-button-label="Add Credential"
-            :show-save-view-button="false"
-            search-placeholder="Search credentials…"
-            :show-add-button="true"
-            :show-filter-button="false"
-            :show-refresh-button="true"
-            :show-columns-button="false"
-            :show-download-button="false"
-            @add="handleAddCredential"
-            @search="handleSearch"
-          >
-            <template #saved-views>
-              <span class="mr-md text-body-md text-neutral-subtle">{{ filteredRows.length }} Credentials</span>
+            <template #toolbar>
+              <DataTableToolbar
+                add-button-label="Add"
+                search-placeholder="Search"
+                :show-save-view-button="false"
+                :show-add-button="true"
+                :show-filter-button="true"
+                :show-refresh-button="false"
+                :show-columns-button="false"
+                :show-download-button="false"
+                :active-filters="activeFilterChips"
+                :max-visible-filters="5"
+                @add="handleOpenAdd"
+                @search="handleToolbarSearch"
+                @filter="openFilterDialog"
+                @clear-all="clearAllFilters"
+                @filter-remove="removeFilterChip"
+              >
+                <template #right-section>
+                  <div class="flex items-center gap-xs">
+                    <Button
+                      severity="secondary"
+                      variant="text"
+                      aria-label="Refresh"
+                      rounded
+                      @click="handleCredentialRefresh"
+                    >
+                      <template #icon="iconProps">
+                        <ArrowPathIcon :class="iconProps.class" />
+                      </template>
+                    </Button>
+                    <Button
+                      severity="secondary"
+                      variant="text"
+                      aria-label="Share"
+                      rounded
+                      @click="handleShareToolbar"
+                    >
+                      <template #icon="iconProps">
+                        <ShareIcon :class="iconProps.class" />
+                      </template>
+                    </Button>
+                    <Button
+                      severity="secondary"
+                      variant="text"
+                      aria-label="Export"
+                      rounded
+                      @click="handleExportToolbar"
+                    >
+                      <template #icon="iconProps">
+                        <ArrowDownTrayIcon :class="iconProps.class" />
+                      </template>
+                    </Button>
+                  </div>
+                </template>
+              </DataTableToolbar>
             </template>
-          </DataTableToolbar>
-        </template>
-        <template #empty>
-          <div class="flex flex-col items-center justify-center py-16 text-neutral-subtle">
-            <span class="text-body-md">No credentials match your search</span>
-            <span class="mt-1 text-body-sm">Try a different term</span>
-          </div>
-        </template>
-        <template #initialEmpty>
-          <div class="flex flex-col items-center justify-center py-16 text-neutral-subtle">
-            <span class="text-body-md">No credentials yet</span>
-            <span class="mt-1 text-body-sm">Add a credential to get started</span>
-          </div>
-        </template>
+            <template #empty>
+              <div class="flex flex-col items-center justify-center gap-xs py-xl text-neutral-subtle">
+                <span class="text-body-md">No credentials match filters or search</span>
+                <span class="text-body-sm">Adjust filters, search, or clear all</span>
+              </div>
+            </template>
+            <template #initialEmpty>
+              <div class="flex flex-col items-center justify-center py-xl text-neutral-subtle">
+                <span class="text-body-md">No credentials yet</span>
+              </div>
+            </template>
       </CircuitDataTable>
-    </ListPageLayout>
+    </div>
 
     <Transition
       enter-active-class="transition-all duration-200 ease-out"
-      enter-from-class="opacity-0 translate-y-4"
+      enter-from-class="opacity-0 translate-y-md"
       enter-to-class="opacity-100 translate-y-0"
       leave-active-class="transition-all duration-150 ease-in"
       leave-from-class="opacity-100 translate-y-0"
-      leave-to-class="opacity-0 translate-y-4"
+      leave-to-class="opacity-0 translate-y-md"
     >
       <div
         v-if="toolbarSelectedItems.length > 0"
@@ -312,5 +427,49 @@ function handleAddCredential() {
         />
       </div>
     </Transition>
+
+    <Dialog
+      v-model:visible="showFilterDialog"
+      modal
+      :draggable="false"
+      header="Apply filters"
+      :style="{ width: '560px' }"
+      @update:visible="!$event && cancelFilterDialog()"
+    >
+      <template #closeicon>
+        <XMarkIcon />
+      </template>
+
+      <div class="flex flex-col gap-md">
+        <FormField label="Tags">
+          <template #default="{ inputId }">
+            <MultiSelect
+              :id="inputId"
+              v-model="draftTags"
+              :options="tagPickerOptions"
+              option-label="label"
+              option-value="value"
+              placeholder="All tags"
+              :max-selected-labels="2"
+              class="w-full"
+              filter
+              filter-placeholder="Search tags…"
+              :show-toggle-all="false"
+            />
+          </template>
+        </FormField>
+      </div>
+
+      <template #footer>
+        <div class="flex min-w-0 flex-1 items-center">
+          <span class="text-body-sm text-neutral-subtle">{{ draftFilterCount }} Filters applied</span>
+        </div>
+        <div class="flex shrink-0 gap-sm">
+          <Button label="Cancel" severity="secondary" variant="text" @click="cancelFilterDialog" />
+          <Button label="Clear All" severity="secondary" variant="outlined" @click="clearDraftFilters" />
+          <Button label="Apply" @click="applyFilters" />
+        </div>
+      </template>
+    </Dialog>
   </div>
 </template>

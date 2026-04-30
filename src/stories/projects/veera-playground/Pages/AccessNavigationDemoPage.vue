@@ -106,7 +106,7 @@ async function startEnablePasswordVault() {
         </p>
       </template>
     </AppNavigation>
-    <div class="flex min-w-0 flex-1 flex-col overflow-hidden">
+      <div class="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
       <TopBar />
       <template v-if="mainView === 'password-vault'">
         <div class="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">

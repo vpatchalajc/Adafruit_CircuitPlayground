@@ -17,7 +17,10 @@ const permissions = computed(
 </script>
 
 <template>
-  <div class="flex min-w-0 flex-wrap gap-xs">
+  <!-- Inset matches Circuit DataTable cell padding pattern (semantic spacing tokens, not raw px). -->
+  <div
+    class="flex h-full min-h-0 w-full min-w-0 flex-wrap items-center gap-xs whitespace-normal px-sm py-xs"
+  >
     <Tag
       v-for="(perm, i) in permissions"
       :key="`${perm}-${i}`"

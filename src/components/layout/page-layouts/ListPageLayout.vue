@@ -53,6 +53,8 @@ const hasSidebar = computed(() => !!slots.sidebar);
 .layout-main {
   flex: 1 1 0%;
   height: 100%;
+  /* Required so flex layouts can shrink this pane and activate overflow scrolling */
+  min-height: 0;
   overflow-y: auto;
   padding: 1.5rem;
 }
@@ -80,6 +82,7 @@ const hasSidebar = computed(() => !!slots.sidebar);
   .layout-main.with-sidebar {
     flex: 2 1 0%;
     height: 100%;
+    min-height: 0;
     overflow-y: auto;
     padding: 1.5rem;
   }

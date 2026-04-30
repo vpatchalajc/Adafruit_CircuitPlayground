@@ -8,4 +8,6 @@ export type FolderRow = {
   usersWithAccessCount: number;
   /** ISO string for Last updated */
   lastUpdatedIso: string;
+  /** Shared folder UI (VaultTypes trailing users mark) */
+  shared?: boolean;
 };
