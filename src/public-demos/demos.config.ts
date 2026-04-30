@@ -20,6 +20,11 @@ export const demos = [
     component: '@/stories/projects/mustafa-playground/pages/MustafaPlayground.vue',
   },
   {
+    id: 'mathans-playground',
+    name: "Mathan's Playground",
+    component: '@/stories/projects/mathans-playground/pages/MathansPlayground.vue',
+  },
+  {
     id: 'agent0-composable',
     name: 'Agent Zero — Composable',
     component: '@/stories/projects/burak-agent0/pages/admin-portal/full-demo/Agent0ComposablePage.vue',

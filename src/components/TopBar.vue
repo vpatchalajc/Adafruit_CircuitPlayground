@@ -59,24 +59,29 @@ function handleIconButtonClick(button: TopBarIconButton) {
     class="h-12 border-b border-navigation-top_bar-default flex items-center pl-6 pr-0 shrink-0 bg-navigation-top_bar-default"
   >
     <!-- Left: Back button + Search area -->
-    <div v-if="showBackButton" class="flex items-center h-auto shrink-0">
+    <div
+      v-if="showBackButton"
+      class="flex items-center gap-3 self-stretch shrink-0 pr-0"
+    >
       <Button
         size="small"
         severity="secondary"
         variant="outlined"
         :label="backButtonLabel"
+        class="shrink-0"
         @click="emit('back')"
       >
         <template #icon="iconProps">
           <ArrowLeftIcon :class="iconProps.class" />
         </template>
       </Button>
-      <Divider layout="vertical" class="my-0.5!" />
+      <Divider layout="vertical" class="my-0.5! self-stretch" />
     </div>
 
     <button
       type="button"
       class="flex-1 flex items-center gap-2 h-full min-w-0 overflow-hidden rounded-sm cursor-pointer bg-transparent border-0 p-0 text-left"
+      :class="{ 'ml-3': showBackButton }"
       :aria-label="searchPlaceholder"
       @click="emit('search-click')"
     >

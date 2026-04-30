@@ -23,6 +23,7 @@ import RadioButtonGroup from 'primevue/radiobuttongroup';
 import Select from 'primevue/select';
 import SelectButton from 'primevue/selectbutton';
 import Menu from 'primevue/menu';
+import Paginator from 'primevue/paginator';
 import Tab from 'primevue/tab';
 import TabList from 'primevue/tablist';
 import TabPanel from 'primevue/tabpanel';
@@ -30,6 +31,9 @@ import TabPanels from 'primevue/tabpanels';
 import Tabs from 'primevue/tabs';
 import Tag from 'primevue/tag';
 import Textarea from 'primevue/textarea';
+import Divider from 'primevue/divider';
+import IconField from 'primevue/iconfield';
+import InputIcon from 'primevue/inputicon';
 import {
   RocketLaunchIcon,
   HomeIcon,
@@ -44,6 +48,7 @@ import {
   CommandLineIcon,
   ClipboardDocumentListIcon,
   ClipboardDocumentCheckIcon,
+  CreditCardIcon,
   ArrowRightStartOnRectangleIcon,
   ArrowUpIcon,
   ArrowTopRightOnSquareIcon,
@@ -53,11 +58,19 @@ import {
   ComputerDesktopIcon,
   DocumentTextIcon,
   EllipsisHorizontalIcon,
+  FingerPrintIcon,
+  FolderIcon,
+  FunnelIcon,
   GlobeAltIcon,
+  KeyIcon,
+  LockClosedIcon,
+  MagnifyingGlassIcon,
   NoSymbolIcon,
+  PlusIcon,
   PencilSquareIcon,
   PowerIcon,
   PlayCircleIcon,
+  QuestionMarkCircleIcon,
   ServerIcon,
   Square2StackIcon,
   ServerStackIcon,
@@ -227,10 +240,14 @@ const AdminPortalWithPasswordManagerStory = defineComponent({
     PvButton: Button,
     PvCheckbox: Checkbox,
     PvDialog: Dialog,
+    PvDivider: Divider,
+    PvIconField: IconField,
+    PvInputIcon: InputIcon,
     PvInputText: InputText,
     PvTextarea: Textarea,
     PvSelect: Select,
     PvMultiSelect: MultiSelect,
+    PvPaginator: Paginator,
     PvTabs: Tabs,
     PvTabList: TabList,
     PvTab: Tab,
@@ -241,16 +258,24 @@ const AdminPortalWithPasswordManagerStory = defineComponent({
     PvRadioButtonGroup: RadioButtonGroup,
     PvTag: Tag,
     ChartBarSquareIcon,
+    ClipboardDocumentListIcon,
     CircleStackIcon,
     ArrowTopRightOnSquareIcon,
     ArrowUpIcon,
     ChevronRightIcon,
+    Cog6ToothIcon,
     EllipsisHorizontalIcon,
+    FunnelIcon,
     GlobeAltIcon,
+    KeyIcon,
+    MagnifyingGlassIcon,
     NoSymbolIcon,
+    PlusIcon,
     PowerIcon,
+    QuestionMarkCircleIcon,
     ServerIcon,
     ServerStackIcon,
+    UserGroupIcon,
     VideoCameraIcon,
     XMarkIcon,
   },
@@ -1483,6 +1508,119 @@ const AdminPortalWithPasswordManagerStory = defineComponent({
     ];
     const vaultWebsitesSelection = ref([] as string[]);
 
+    const vaultWebsitesView = ref<'list' | 'add'>('list');
+    const addWebsiteSections = [
+      { id: 'general', label: 'General' },
+      { id: 'link-credentials', label: 'Link Credentials' },
+      { id: 'user-permissions', label: 'User Permissions' },
+      { id: 'autofill-parameters', label: 'Autofill Parameters' },
+    ];
+    const addWebsiteActiveSection = ref('general');
+    const addWebsiteWebsiteDetailsCollapsed = ref(false);
+    const addWebsiteLinkedCredentialsCollapsed = ref(false);
+    const addWebsiteUserPermissionsCollapsed = ref(false);
+    const addWebsiteAutofillParametersCollapsed = ref(false);
+    const addWebsiteFolderOptions = [
+      { label: 'Engineering', value: 'engineering' },
+      { label: 'Marketing', value: 'marketing' },
+      { label: 'Finance', value: 'finance' },
+      { label: 'HR', value: 'hr' },
+      { label: 'Design', value: 'design' },
+    ];
+
+    function makeEmptyAddWebsiteForm() {
+      return {
+        name: '',
+        uri: '',
+        tags: '',
+        folder: null as string | null,
+        notes: '',
+        usernameSelector: '',
+        passwordSelector: '',
+        nextButtonSelector: '',
+        loginButtonSelector: '',
+        fieldSelectorToHide: '',
+        delayAfterNext: '',
+        fillDelay: '',
+        fillMultipleTimes: false,
+        automaticLogin: true,
+      };
+    }
+    const addWebsiteForm = ref(makeEmptyAddWebsiteForm());
+
+    function resetAddWebsiteForm() {
+      addWebsiteForm.value = makeEmptyAddWebsiteForm();
+      addWebsiteWebsiteDetailsCollapsed.value = false;
+      addWebsiteLinkedCredentialsCollapsed.value = false;
+      addWebsiteUserPermissionsCollapsed.value = false;
+      addWebsiteAutofillParametersCollapsed.value = false;
+      addWebsiteActiveSection.value = 'general';
+    }
+
+    function openAddWebsite() {
+      resetAddWebsiteForm();
+      vaultWebsitesView.value = 'add';
+    }
+
+    function closeAddWebsite() {
+      showLinkCredentialsDialog.value = false;
+      showAddUsersDialog.value = false;
+      vaultWebsitesView.value = 'list';
+    }
+
+    function goToAddWebsiteSection(sectionId: string) {
+      addWebsiteActiveSection.value = sectionId;
+      const el = document.getElementById(`add-website-section-${sectionId}`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+
+    const showLinkCredentialsDialog = ref(false);
+    const linkCredentialsPickerSelection = ref<
+      { id: string; name: string; type: string; lastTimeUsed: string }[]
+    >([]);
+    const linkCredentialsPickerSearch = ref('');
+    const linkCredentialsPickerFilter = ref('all');
+
+    function openLinkCredentialsDialog() {
+      linkCredentialsPickerSelection.value = [];
+      showLinkCredentialsDialog.value = true;
+    }
+
+    function closeLinkCredentialsDialog() {
+      showLinkCredentialsDialog.value = false;
+    }
+
+    const showAddUsersDialog = ref(false);
+    const addUsersPickerSearch = ref('');
+    const addUsersPickerSelection = ref<{ id: string; name: string; email: string }[]>([]);
+    const addUsersPickerData = [
+      { id: 'au-1', name: 'Alice Johnson', email: 'alice.johnson@example.com' },
+      { id: 'au-2', name: 'Michael Smith', email: 'michael.smith@domain.com' },
+      { id: 'au-3', name: 'Samantha Lee', email: 'samantha.lee@mailservice.org' },
+      { id: 'au-4', name: 'David Kim', email: 'd.kim123@webmail.net' },
+      { id: 'au-5', name: 'Emily Davis', email: 'emily.davis@inbox.com' },
+      { id: 'au-6', name: 'Carlos Martinez', email: 'carlos.martinez@provider.co' },
+    ];
+    const addUsersPickerDisplayData = computed(() => {
+      const q = addUsersPickerSearch.value.trim().toLowerCase();
+      if (!q) return addUsersPickerData;
+      return addUsersPickerData.filter(
+        (r) => r.name.toLowerCase().includes(q) || r.email.toLowerCase().includes(q),
+      );
+    });
+
+    function openAddUsersDialog() {
+      addUsersPickerSelection.value = [];
+      addUsersPickerSearch.value = '';
+      showAddUsersDialog.value = true;
+    }
+
+    function closeAddUsersDialog() {
+      showAddUsersDialog.value = false;
+    }
+
     function getWebsiteFaviconUrl(address: string): string {
       try {
         const domain = new URL(address).hostname;
@@ -1492,20 +1630,19 @@ const AdminPortalWithPasswordManagerStory = defineComponent({
       }
     }
     const vaultCredentialsData = [
-      { name: 'Gmail Password', address: 'gabriel.ramos@gmail.com', status: 'Available', lastConnection: 'Today 9:15 AM' },
-      { name: 'LinkedIn Password', address: 'gabriel.ramos@linkedin.com', status: 'Available', lastConnection: 'Today 8:30 AM' },
-      { name: 'Slack Password', address: 'gabriel@jumpcloud.com', status: 'In Use', lastConnection: 'Today 10:00 AM' },
-      { name: 'Notion Password', address: 'gabriel.ramos@notion.so', status: 'Available', lastConnection: 'Yesterday 3:00 PM' },
-      { name: 'Figma Password', address: 'gabriel@jumpcloud.com', status: 'Available', lastConnection: 'Today 9:45 AM' },
-      { name: 'GitHub Token', address: 'gabriel-ramos', status: 'In Use', lastConnection: 'Today 11:00 AM' },
-      { name: 'Spotify Password', address: 'gabriel.ramos@gmail.com', status: 'Available', lastConnection: 'Yesterday 6:00 PM' },
-      { name: 'Twitter / X Password', address: 'gabriel_ramos', status: 'Available', lastConnection: 'Mar 30, 2026' },
-      { name: 'Netflix Password', address: 'gabriel.ramos@gmail.com', status: 'Available', lastConnection: 'Apr 1, 2026' },
-      { name: 'Amazon Password', address: 'gabriel.ramos@gmail.com', status: 'Available', lastConnection: 'Mar 28, 2026' },
-      { name: 'Dropbox Password', address: 'gabriel@jumpcloud.com', status: 'Available', lastConnection: 'Apr 2, 2026' },
-      { name: 'Zoom Password', address: 'gabriel@jumpcloud.com', status: 'In Use', lastConnection: 'Today 10:30 AM' },
-      { name: 'Trello Password', address: 'gabriel.ramos@trello.com', status: 'Available', lastConnection: 'Apr 3, 2026' },
-      { name: 'PayPal Password', address: 'gabriel.ramos@gmail.com', status: 'Available', lastConnection: 'Mar 25, 2026' },
+      { name: 'Google', type: 'Password', expirationDate: '20 July 2024', tags: ['Tag 01', 'Tag 02', 'Tag 03'], lastTimeUsed: 'Mar 15, 2024 @ 08:23 AM' },
+      { name: 'Microsoft', type: 'Payment Card', expirationDate: '21 July 2024', tags: ['Tag 01', 'Tag 02', 'Tag 03'], lastTimeUsed: 'Mar 16, 2024 @ 10:05 AM' },
+      { name: 'Apple', type: 'Secured Note', expirationDate: '22 July 2024', tags: ['Tag 01', 'Tag 02', 'Tag 03'], lastTimeUsed: 'Mar 17, 2024 @ 11:47 AM' },
+      { name: 'Facebook', type: 'Key', expirationDate: '23 July 2024', tags: ['Tag 01', 'Tag 02', 'Tag 03'], lastTimeUsed: 'Mar 18, 2024 @ 02:14 PM' },
+      { name: 'Netflix', type: '2FA', expirationDate: '24 July 2024', tags: ['Tag 01', 'Tag 02', 'Tag 03'], lastTimeUsed: 'Mar 19, 2024 @ 04:32 PM' },
+      { name: 'Tesla', type: 'Password', expirationDate: '25 July 2024', tags: ['Tag 01', 'Tag 02', 'Tag 03'], lastTimeUsed: 'Mar 20, 2024 @ 09:08 AM' },
+      { name: 'Spotify', type: 'Payment Card', expirationDate: '26 July 2024', tags: ['Tag 01', 'Tag 02', 'Tag 03'], lastTimeUsed: 'Mar 21, 2024 @ 07:55 AM' },
+      { name: 'Airbnb', type: 'Secured Note', expirationDate: '27 July 2024', tags: ['Tag 01', 'Tag 02', 'Tag 03'], lastTimeUsed: 'Mar 22, 2024 @ 01:19 PM' },
+      { name: 'Uber', type: 'Key', expirationDate: '28 July 2024', tags: ['Tag 01', 'Tag 02', 'Tag 03'], lastTimeUsed: 'Mar 23, 2024 @ 06:42 PM' },
+      { name: 'Salesforce', type: '2FA', expirationDate: '29 July 2024', tags: ['Tag 01', 'Tag 02', 'Tag 03'], lastTimeUsed: 'Mar 24, 2024 @ 12:03 PM' },
+      { name: 'Adobe', type: 'Password', expirationDate: '30 July 2024', tags: ['Tag 01', 'Tag 02', 'Tag 03'], lastTimeUsed: 'Mar 25, 2024 @ 03:27 PM' },
+      { name: 'Twitter', type: 'Payment Card', expirationDate: '31 July 2024', tags: ['Tag 01', 'Tag 02', 'Tag 03'], lastTimeUsed: 'Mar 26, 2024 @ 05:18 PM' },
+      { name: 'Snapchat', type: 'Secured Note', expirationDate: '1 Aug 2024', tags: ['Tag 01', 'Tag 02', 'Tag 03'], lastTimeUsed: 'Mar 27, 2024 @ 08:49 AM' },
     ];
     const vaultWebsitesStatusOptions = [
       { label: 'All', value: 'All' },
@@ -1546,6 +1683,9 @@ const AdminPortalWithPasswordManagerStory = defineComponent({
     const draftVaultWebsitesStatus = ref('All');
     const draftVaultWebsitesConnectors = ref([] as string[]);
     const draftVaultWebsitesJumpServers = ref([] as string[]);
+    const draftVaultWebsitesTags = ref<string[]>([]);
+    const draftVaultWebsitesAddress = ref('');
+    const vaultWebsitesTagOptions = ['aws', 'security', 'dropbox', 'git', 'personal', 'social', 'pic'];
     const showVaultCredentialsFilterDialog = ref(false);
     const appliedVaultCredentialsStatus = ref('All');
     const appliedVaultCredentialsConnectors = ref([] as string[]);
@@ -1553,6 +1693,57 @@ const AdminPortalWithPasswordManagerStory = defineComponent({
     const draftVaultCredentialsStatus = ref('All');
     const draftVaultCredentialsConnectors = ref([] as string[]);
     const draftVaultCredentialsJumpServers = ref([] as string[]);
+    const draftVaultCredentialsTags = ref<string[]>([]);
+    const draftVaultCredentialsExpirationDate = ref('');
+    const vaultCredentialsTagOptions = ['Tag 01', 'Tag 02', 'Tag 03'];
+    const vaultCredentialsSelection = ref([]);
+    const vaultFoldersSelection = ref([]);
+    const vaultUserGroupsSelection = ref([]);
+
+    const vaultFoldersData = [
+      { id: 'vf-1', name: 'Ocean', resourceCount: 23, owner: 'Emma Johnson', users: 47, lastUpdated: 'Mar 15, 2024 @ 08:23 AM' },
+      { id: 'vf-2', name: 'Crimson', resourceCount: 23, owner: 'Liam Smith', users: 83, lastUpdated: 'Apr 02, 2024 @ 02:47 PM' },
+      { id: 'vf-3', name: 'Silent', resourceCount: 12, owner: 'Olivia Brown', users: 29, lastUpdated: 'May 19, 2024 @ 11:01 AM' },
+      { id: 'vf-4', name: 'Twilight', resourceCount: 2, owner: 'Noah Davis', users: 66, lastUpdated: 'Jun 04, 2024 @ 05:33 PM' },
+      { id: 'vf-5', name: 'Golden', resourceCount: 0, owner: 'Ava Wilson', users: 54, lastUpdated: 'Jul 21, 2024 @ 09:12 AM' },
+      { id: 'vf-6', name: 'Mystic', resourceCount: 1, owner: 'Elijah Martinez', users: 91, lastUpdated: 'Aug 08, 2024 @ 01:56 PM' },
+      { id: 'vf-7', name: 'Ironclad', resourceCount: 23, owner: 'Sophia Anderson', users: 38, lastUpdated: 'Sep 14, 2024 @ 10:22 AM' },
+      { id: 'vf-8', name: 'Velvet', resourceCount: 23, owner: 'James Thomas', users: 72, lastUpdated: 'Oct 03, 2024 @ 04:41 PM' },
+      { id: 'vf-9', name: 'Frozen', resourceCount: 15, owner: 'Charlotte White', users: 55, lastUpdated: 'Nov 11, 2024 @ 08:09 AM' },
+      { id: 'vf-10', name: 'Emerald', resourceCount: 1, owner: 'Benjamin Harris', users: 63, lastUpdated: 'Dec 02, 2024 @ 12:58 PM' },
+      { id: 'vf-11', name: 'Shadow', resourceCount: 4, owner: 'Mia Clark', users: 41, lastUpdated: 'Jan 18, 2025 @ 03:14 PM' },
+      { id: 'vf-12', name: 'Crimson', resourceCount: 45, owner: 'Lucas Lewis', users: 19, lastUpdated: 'Feb 07, 2025 @ 07:30 AM' },
+    ];
+
+    const vaultUserGroupsData = [
+      { id: 'vug-1', name: 'Creative Coders', description: 'Group of Users.', members: 12 },
+      { id: 'vug-2', name: 'Data Dynamos', description: 'Group of Users.', members: 3 },
+      { id: 'vug-3', name: 'UX Unicorns', description: 'Group of Users.', members: 12 },
+      { id: 'vug-4', name: 'Marketing Mavericks', description: 'Group of Users.', members: 2 },
+      { id: 'vug-5', name: 'Product Pioneers', description: 'Group of Users.', members: 23 },
+      { id: 'vug-6', name: 'Support Squad', description: 'Group of Users.', members: 32 },
+      { id: 'vug-7', name: 'QA Questers', description: 'Group of Users.', members: 1 },
+      { id: 'vug-8', name: 'Security Sentinels', description: 'Group of Users.', members: 0 },
+      { id: 'vug-9', name: 'DevOps Dreamers', description: 'Group of Users.', members: 1 },
+      { id: 'vug-10', name: 'Analytics Aces', description: 'Group of Users.', members: 54 },
+      { id: 'vug-11', name: 'Content Creators', description: 'Group of Users.', members: 124 },
+      { id: 'vug-12', name: 'Innovation Insiders', description: 'Group of Users.', members: 12 },
+      { id: 'vug-13', name: 'Community Champions', description: 'Group of Users.', members: 7 },
+    ];
+
+    const vaultUserGroupsFirst = ref(0);
+    const vaultUserGroupsRows = ref(100);
+    const vaultUserGroupsTotalRecords = computed(() => vaultUserGroupsData.length);
+    const vaultUserGroupsPageData = computed(() =>
+      vaultUserGroupsData.slice(
+        vaultUserGroupsFirst.value,
+        vaultUserGroupsFirst.value + vaultUserGroupsRows.value,
+      ),
+    );
+    function onVaultUserGroupsPage(event: { first: number; rows: number }) {
+      vaultUserGroupsFirst.value = event.first;
+      vaultUserGroupsRows.value = event.rows;
+    }
 
     const vaultWebsitesDraftFilterCount = computed(() => {
       let count = 0;
@@ -1654,7 +1845,7 @@ const AdminPortalWithPasswordManagerStory = defineComponent({
     }
 
     function openVaultWebsitesDialog() {
-      console.log('Add vault website');
+      openAddWebsite();
     }
 
     function openVaultCredentialsFilterDialog() {
@@ -1696,6 +1887,14 @@ const AdminPortalWithPasswordManagerStory = defineComponent({
 
     function openVaultCredentialsDialog() {
       console.log('Add vault credential');
+    }
+
+    function openVaultNewFolder() {
+      console.log('New folder');
+    }
+
+    function openVaultUsersAdd() {
+      console.log('Add user group');
     }
 
     const VaultActionMenuCell = defineComponent({
@@ -1769,10 +1968,13 @@ const AdminPortalWithPasswordManagerStory = defineComponent({
       },
       template: `
         <div class="flex items-center gap-sm pl-2">
-          <div class="w-7 h-7 rounded-md overflow-hidden flex items-center justify-center bg-neutral-hover">
+          <div class="w-7 h-7 rounded-md overflow-hidden flex items-center justify-center bg-neutral-hover shrink-0">
             <img v-if="faviconUrl" :src="faviconUrl" alt="" class="w-5 h-5" />
           </div>
-          <DataTableCellLink :label="data.name" href="#" />
+          <div class="flex flex-col min-w-0 flex-1">
+            <a href="#" class="text-body-md font-bold text-neutral-base truncate hover:underline">{{ data.name }}</a>
+            <span class="text-body-xs text-neutral-subtle truncate">{{ data.address }}</span>
+          </div>
         </div>
       `,
     });
@@ -1803,6 +2005,113 @@ const AdminPortalWithPasswordManagerStory = defineComponent({
       `,
     });
 
+    const VaultCredentialNameCell = defineComponent({
+      name: 'VaultCredentialNameCell',
+      props: { data: { type: Object, required: true } },
+      components: {
+        LockClosedIcon,
+        CreditCardIcon,
+        DocumentTextIcon,
+        KeyIcon,
+        FingerPrintIcon,
+      },
+      setup() {
+        const typeConfig: Record<string, { bg: string; color: string; component: any }> = {
+          'Password': { bg: '#E0F7F6', color: '#41C8C3', component: markRaw(LockClosedIcon) },
+          'Payment Card': { bg: '#FFF3E0', color: '#FF9800', component: markRaw(CreditCardIcon) },
+          'Secured Note': { bg: '#E3F2FD', color: '#2196F3', component: markRaw(DocumentTextIcon) },
+          'Key': { bg: '#FCE4EC', color: '#E91E63', component: markRaw(KeyIcon) },
+          '2FA': { bg: '#E8F5E9', color: '#4CAF50', component: markRaw(FingerPrintIcon) },
+        };
+        return { typeConfig };
+      },
+      template: `
+        <div class="flex items-center gap-sm pl-2">
+          <div
+            class="flex items-center justify-center rounded-sm shrink-0"
+            style="width: 32px; height: 32px;"
+            :style="{ backgroundColor: typeConfig[data.type]?.bg || '#F5F5F5' }"
+          >
+            <component
+              :is="typeConfig[data.type]?.component"
+              class="w-4 h-4"
+              :style="{ color: typeConfig[data.type]?.color || '#666', strokeWidth: '2px' }"
+            />
+          </div>
+          <div class="flex flex-col min-w-0 flex-1">
+            <a
+              href="#"
+              class="truncate cursor-pointer hover:underline"
+              style="font-size: 14px; font-weight: 600; line-height: 20px; color: var(--color-neutral-base, #0F202F);"
+              @click.prevent
+            >{{ data.name }}</a>
+            <span style="font-size: 10px; font-weight: 400; line-height: 14px; color: var(--color-neutral-muted, #6B7280); overflow: hidden; text-overflow: ellipsis;">{{ data.type }}</span>
+          </div>
+        </div>
+      `,
+    });
+
+    const LinkCredentialsPickerNameCell = defineComponent({
+      name: 'LinkCredentialsPickerNameCell',
+      props: { data: { type: Object, required: true } },
+      components: {
+        LockClosedIcon,
+        CreditCardIcon,
+        DocumentTextIcon,
+        KeyIcon,
+        FingerPrintIcon,
+      },
+      setup() {
+        const typeConfig: Record<string, { bg: string; color: string; component: any }> = {
+          Password: { bg: '#E0F7F6', color: '#41C8C3', component: markRaw(LockClosedIcon) },
+          'Payment Card': { bg: '#FFF3E0', color: '#FF9800', component: markRaw(CreditCardIcon) },
+          'Secured Note': { bg: '#E3F2FD', color: '#2196F3', component: markRaw(DocumentTextIcon) },
+          Key: { bg: '#FCE4EC', color: '#E91E63', component: markRaw(KeyIcon) },
+          '2FA': { bg: '#E8F5E9', color: '#4CAF50', component: markRaw(FingerPrintIcon) },
+        };
+        return { typeConfig };
+      },
+      template: `
+        <div class="flex items-center gap-2 py-1.5 px-2">
+          <div
+            class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md"
+            :style="{ backgroundColor: typeConfig[data.type]?.bg || '#F5F5F5' }"
+          >
+            <component
+              :is="typeConfig[data.type]?.component"
+              class="h-5 w-5"
+              :style="{ color: typeConfig[data.type]?.color || '#666', strokeWidth: '2px' }"
+            />
+          </div>
+          <div class="flex min-w-0 flex-1 flex-col">
+            <span class="truncate text-body-md-link text-neutral-base">{{ data.name }}</span>
+            <span class="truncate text-body-xs text-neutral-muted">{{ data.type }}</span>
+          </div>
+        </div>
+      `,
+    });
+
+    const LinkCredentialsPickerLastUsedCell = defineComponent({
+      name: 'LinkCredentialsPickerLastUsedCell',
+      props: {
+        label: { type: String, default: '' },
+      },
+      template: `
+        <span class="min-w-0 max-w-full truncate text-right text-body-md text-neutral-base">{{ label }}</span>
+      `,
+    });
+
+    const AddUsersPickerUserCell = defineComponent({
+      name: 'AddUsersPickerUserCell',
+      props: { data: { type: Object, required: true } },
+      template: `
+        <div class="flex min-w-0 flex-col py-1.5">
+          <span class="truncate text-body-md font-semibold text-neutral-base">{{ data.name }}</span>
+          <span class="truncate text-body-xs text-neutral-muted">{{ data.email }}</span>
+        </div>
+      `,
+    });
+
     const VaultWebsiteActionCell = defineComponent({
       name: 'VaultWebsiteActionCell',
       components: { PvMenu: Menu, PvButton: Button },
@@ -1828,7 +2137,7 @@ const AdminPortalWithPasswordManagerStory = defineComponent({
       template: `
         <div class="flex items-center gap-xs">
           <PvButton
-            label="Launch"
+            label="Connect"
             severity="secondary"
             variant="outlined"
             size="small"
@@ -1857,6 +2166,116 @@ const AdminPortalWithPasswordManagerStory = defineComponent({
       `,
     });
 
+    const VaultCredentialActionCell = defineComponent({
+      name: 'VaultCredentialActionCell',
+      components: { PvButton: Button, PvMenu: Menu, EllipsisHorizontalIcon },
+      props: { menuItems: { type: Array, required: true } },
+      setup() {
+        const menu = ref<InstanceType<typeof Menu> | null>(null);
+        const toggle = (event: Event) => menu.value?.toggle(event);
+        return { menu, toggle };
+      },
+      template: `
+        <div class="flex items-center gap-xs">
+          <PvButton label="Quick View" severity="secondary" variant="outlined" size="small" />
+          <PvButton severity="secondary" variant="text" size="small" @click="toggle($event)" aria-haspopup="true">
+            <template #icon="iconProps">
+              <EllipsisHorizontalIcon :class="iconProps.class" />
+            </template>
+          </PvButton>
+          <PvMenu ref="menu" :model="menuItems" popup />
+        </div>
+      `,
+    });
+
+    const VaultFolderNameCell = defineComponent({
+      name: 'VaultFolderNameCell',
+      props: { data: { type: Object, required: true } },
+      components: { FolderIcon },
+      setup(props) {
+        const resourceLabel = computed(() => {
+          const n = Number((props.data as Record<string, unknown>).resourceCount ?? 0);
+          return `${n} Resource${n === 1 ? '' : 's'}`;
+        });
+        return { resourceLabel };
+      },
+      template: `
+        <div class="flex items-center gap-3 pl-2">
+          <div
+            class="flex items-center justify-center rounded-sm shrink-0 w-7 h-7"
+            style="background-color: #E0F7F6;"
+          >
+            <FolderIcon
+              class="w-4 h-4"
+              :style="{ color: '#41C8C3', strokeWidth: '2px' }"
+            />
+          </div>
+          <div class="flex flex-col min-w-0 flex-1">
+            <a
+              href="#"
+              class="truncate cursor-pointer hover:underline"
+              style="font-size: 14px; font-weight: 600; line-height: 20px; color: var(--color-neutral-base, #0F202F);"
+              @click.prevent
+            >{{ data.name }}</a>
+            <span style="font-size: 10px; font-weight: 400; line-height: 14px; color: var(--color-neutral-muted, #6B7280); overflow: hidden; text-overflow: ellipsis;">{{ resourceLabel }}</span>
+          </div>
+        </div>
+      `,
+    });
+
+    const VaultFolderActionCell = defineComponent({
+      name: 'VaultFolderActionCell',
+      components: { PvButton: Button, PvMenu: Menu, EllipsisHorizontalIcon },
+      props: { menuItems: { type: Array, required: true } },
+      setup() {
+        const menu = ref<InstanceType<typeof Menu> | null>(null);
+        const toggle = (event: Event) => menu.value?.toggle(event);
+        return { menu, toggle };
+      },
+      template: `
+        <div class="flex items-center gap-xs">
+          <PvButton label="Manage Access" severity="secondary" variant="outlined" size="small" />
+          <PvButton severity="secondary" variant="text" size="small" @click="toggle($event)" aria-haspopup="true">
+            <template #icon="iconProps">
+              <EllipsisHorizontalIcon :class="iconProps.class" />
+            </template>
+          </PvButton>
+          <PvMenu ref="menu" :model="menuItems" popup />
+        </div>
+      `,
+    });
+
+    const VaultUserGroupNameCell = defineComponent({
+      name: 'VaultUserGroupNameCell',
+      props: { data: { type: Object, required: true } },
+      template: `
+        <div class="flex flex-col min-w-0 pl-2">
+          <a
+            href="#"
+            class="truncate cursor-pointer hover:underline"
+            style="font-size: 14px; font-weight: 600; line-height: 20px; color: var(--color-neutral-base, #0F202F);"
+            @click.prevent
+          >{{ data.name }}</a>
+          <span
+            class="truncate"
+            style="font-size: 10px; font-weight: 400; line-height: 14px; color: var(--color-neutral-muted, #6B7280);"
+          >{{ data.description }}</span>
+        </div>
+      `,
+    });
+
+    const VaultUserGroupMembersCell = defineComponent({
+      name: 'VaultUserGroupMembersCell',
+      props: { data: { type: Object, required: true } },
+      template: `
+        <div
+          class="flex min-h-12 w-full min-w-0 items-center self-stretch overflow-hidden py-1.5 px-2 text-neutral-base"
+        >
+          <span class="min-w-0 flex-1 truncate text-body-md tabular-nums">{{ data.members }}</span>
+        </div>
+      `,
+    });
+
     const vaultWebsitesActionMenuItems = [
       { id: 'link-credential', label: 'Link Credential' },
       { id: 'share', label: 'Share' },
@@ -1865,12 +2284,22 @@ const AdminPortalWithPasswordManagerStory = defineComponent({
     ];
 
     const vaultCredentialsActionMenuItems = [
-      { id: 'sessions', label: 'Sessions' },
-      { id: 'details', label: 'Details' },
-      { id: 'activity', label: 'Activity' },
-      { id: 'approval-requests', label: 'Approval Requests' },
-      { id: 'duplicates', label: 'Duplicates' },
-      { id: 'archive', label: 'Archive' },
+      { label: 'Details' },
+      { label: 'Activity' },
+      { label: 'History' },
+      { label: 'Share' },
+      { label: 'Duplicate' },
+      { label: 'Archive' },
+      { separator: true },
+      { label: 'Delete', class: 'text-error-base' },
+    ];
+
+    const vaultFoldersActionMenuItems = [
+      { label: 'Rename' },
+      { label: 'Share' },
+      { label: 'Duplicate' },
+      { separator: true },
+      { label: 'Delete', class: 'text-error-base' },
     ];
 
     const vaultCredentialsActionButtons = [
@@ -1902,29 +2331,143 @@ const AdminPortalWithPasswordManagerStory = defineComponent({
       {
         field: 'actions',
         header: 'Actions',
+        width: '140px',
         component: markRaw(VaultWebsiteActionCell),
         componentProps: () => ({ menuItems: vaultWebsitesActionMenuItems }),
       },
     ];
 
     const vaultCredentialsColumns = [
-      { field: 'name', header: 'Name', sortable: true, component: markRaw(DataTableCellLink), componentProps: (sp: { data: Record<string, unknown> }) => ({ label: sp.data.name, href: '#' }) },
-      { field: 'address', header: 'Username / Email', component: markRaw(DataTableCellText), componentProps: (sp: { data: Record<string, unknown> }) => ({ label: sp.data.address }) },
       {
-        field: 'status',
-        header: 'Status',
-        component: markRaw(DataTableCellStatus),
-        componentProps: (sp: { data: Record<string, unknown> }) => {
-          const status = String(sp.data.status ?? '');
-          return privilegedAvailabilityTokenMapping[status] ?? { label: status, severity: 'info' };
-        },
+        field: 'name',
+        header: 'Name',
+        sortable: true,
+        component: markRaw(VaultCredentialNameCell),
+        componentProps: (sp: { data: Record<string, unknown> }) => ({ data: sp.data }),
       },
-      { field: 'lastConnection', header: 'Last Connection', component: markRaw(DataTableCellText), componentProps: (sp: { data: Record<string, unknown> }) => ({ label: sp.data.lastConnection }) },
+      {
+        field: 'expirationDate',
+        header: 'Expiration Date',
+        sortable: true,
+        component: markRaw(DataTableCellText),
+        componentProps: (sp: { data: Record<string, unknown> }) => ({ label: sp.data.expirationDate }),
+      },
+      {
+        field: 'tags',
+        header: 'Tags',
+        component: markRaw(VaultWebsiteTagsCell),
+        componentProps: (sp: { data: Record<string, unknown> }) => ({ data: sp.data }),
+      },
+      {
+        field: 'lastTimeUsed',
+        header: 'Last Time Used',
+        component: markRaw(DataTableCellText),
+        componentProps: (sp: { data: Record<string, unknown> }) => ({ label: sp.data.lastTimeUsed }),
+      },
       {
         field: 'actions',
         header: 'Actions',
-        component: markRaw(VaultActionMenuCell),
-        componentProps: () => ({ iconButtons: vaultCredentialsActionButtons, menuItems: vaultCredentialsActionMenuItems }),
+        width: '160px',
+        component: markRaw(VaultCredentialActionCell),
+        componentProps: () => ({ menuItems: vaultCredentialsActionMenuItems }),
+      },
+    ];
+
+    const vaultFoldersColumns = [
+      {
+        field: 'name',
+        header: 'Folder',
+        sortable: true,
+        component: markRaw(VaultFolderNameCell),
+        componentProps: (sp: { data: Record<string, unknown> }) => ({ data: sp.data }),
+      },
+      {
+        field: 'owner',
+        header: 'Owner',
+        sortable: true,
+        component: markRaw(DataTableCellText),
+        componentProps: (sp: { data: Record<string, unknown> }) => ({ label: sp.data.owner }),
+      },
+      {
+        field: 'users',
+        header: 'Users',
+        sortable: true,
+        component: markRaw(DataTableCellText),
+        componentProps: (sp: { data: Record<string, unknown> }) => ({ label: String(sp.data.users) }),
+      },
+      {
+        field: 'lastUpdated',
+        header: 'Last Updated',
+        sortable: true,
+        component: markRaw(DataTableCellText),
+        componentProps: (sp: { data: Record<string, unknown> }) => ({ label: sp.data.lastUpdated }),
+      },
+      {
+        field: 'actions',
+        header: 'Actions',
+        width: '200px',
+        component: markRaw(VaultFolderActionCell),
+        componentProps: () => ({ menuItems: vaultFoldersActionMenuItems }),
+      },
+    ];
+
+    const vaultUserGroupsColumns = [
+      {
+        field: 'name',
+        header: 'User Groups',
+        sortable: true,
+        component: markRaw(VaultUserGroupNameCell),
+        componentProps: (sp: { data: Record<string, unknown> }) => ({ data: sp.data }),
+      },
+      {
+        field: 'members',
+        header: 'Members',
+        sortable: true,
+        width: '208px',
+        component: markRaw(VaultUserGroupMembersCell),
+        componentProps: (sp: { data: Record<string, unknown> }) => ({ data: sp.data }),
+      },
+    ];
+
+    const linkCredentialsPickerData = [
+      { id: 'lc-1', name: 'Google', type: 'Password', lastTimeUsed: 'Mar 15, 2024 @ 08:23 AM' },
+      { id: 'lc-2', name: 'Microsoft', type: 'Password', lastTimeUsed: 'Mar 16, 2024 @ 10:05 AM' },
+      { id: 'lc-3', name: 'Apple', type: '2FA', lastTimeUsed: 'Mar 17, 2024 @ 11:47 AM' },
+      { id: 'lc-4', name: 'Facebook', type: 'Key', lastTimeUsed: 'Mar 18, 2024 @ 02:14 PM' },
+      { id: 'lc-5', name: 'Netflix', type: 'Password', lastTimeUsed: 'Mar 19, 2024 @ 04:32 PM' },
+      { id: 'lc-6', name: 'Tesla', type: 'Payment Card', lastTimeUsed: 'Mar 20, 2024 @ 09:08 AM' },
+    ];
+    const linkCredentialsPickerFilterOptions = [
+      { label: 'Credentials: All', value: 'all' },
+      { label: 'Password', value: 'password' },
+      { label: 'Payment Card', value: 'payment-card' },
+      { label: '2FA', value: '2fa' },
+      { label: 'Key', value: 'key' },
+    ];
+    const linkCredentialsPickerColumns = [
+      {
+        field: 'name',
+        header: 'Name',
+        sortable: true,
+        component: markRaw(LinkCredentialsPickerNameCell),
+        componentProps: (sp: { data: Record<string, unknown> }) => ({ data: sp.data }),
+      },
+      {
+        field: 'lastTimeUsed',
+        header: 'Last Time Used',
+        sortable: true,
+        component: markRaw(LinkCredentialsPickerLastUsedCell),
+        componentProps: (sp: { data: Record<string, unknown> }) => ({ label: String(sp.data.lastTimeUsed ?? '') }),
+      },
+    ];
+
+    const addUsersPickerColumns = [
+      {
+        field: 'name',
+        header: 'User',
+        sortable: true,
+        component: markRaw(AddUsersPickerUserCell),
+        componentProps: (sp: { data: Record<string, unknown> }) => ({ data: sp.data }),
       },
     ];
 
@@ -2145,7 +2688,47 @@ const AdminPortalWithPasswordManagerStory = defineComponent({
       pwmRemoveSelectedUserGroups,
       vaultWebsitesData,
       vaultWebsitesSelection,
+      vaultWebsitesView,
+      addWebsiteSections,
+      addWebsiteActiveSection,
+      addWebsiteWebsiteDetailsCollapsed,
+      addWebsiteLinkedCredentialsCollapsed,
+      addWebsiteUserPermissionsCollapsed,
+      addWebsiteAutofillParametersCollapsed,
+      addWebsiteFolderOptions,
+      addWebsiteForm,
+      openAddWebsite,
+      closeAddWebsite,
+      goToAddWebsiteSection,
+      showLinkCredentialsDialog,
+      linkCredentialsPickerSelection,
+      linkCredentialsPickerSearch,
+      linkCredentialsPickerFilter,
+      linkCredentialsPickerData,
+      linkCredentialsPickerFilterOptions,
+      linkCredentialsPickerColumns,
+      openLinkCredentialsDialog,
+      closeLinkCredentialsDialog,
+      showAddUsersDialog,
+      addUsersPickerSearch,
+      addUsersPickerSelection,
+      addUsersPickerDisplayData,
+      addUsersPickerColumns,
+      openAddUsersDialog,
+      closeAddUsersDialog,
       vaultCredentialsData,
+      vaultCredentialsSelection,
+      vaultFoldersData,
+      vaultFoldersSelection,
+      vaultFoldersColumns,
+      vaultUserGroupsData,
+      vaultUserGroupsPageData,
+      vaultUserGroupsFirst,
+      vaultUserGroupsRows,
+      vaultUserGroupsTotalRecords,
+      onVaultUserGroupsPage,
+      vaultUserGroupsSelection,
+      vaultUserGroupsColumns,
       vaultWebsitesStatusOptions,
       vaultCredentialsStatusOptions,
       vaultWebsitesConnectorOptions,
@@ -2156,10 +2739,16 @@ const AdminPortalWithPasswordManagerStory = defineComponent({
       draftVaultWebsitesStatus,
       draftVaultWebsitesConnectors,
       draftVaultWebsitesJumpServers,
+      draftVaultWebsitesTags,
+      draftVaultWebsitesAddress,
+      vaultWebsitesTagOptions,
       showVaultCredentialsFilterDialog,
       draftVaultCredentialsStatus,
       draftVaultCredentialsConnectors,
       draftVaultCredentialsJumpServers,
+      draftVaultCredentialsTags,
+      draftVaultCredentialsExpirationDate,
+      vaultCredentialsTagOptions,
       vaultWebsitesDraftFilterCount,
       vaultCredentialsDraftFilterCount,
       vaultWebsitesFilterChips,
@@ -2178,6 +2767,8 @@ const AdminPortalWithPasswordManagerStory = defineComponent({
       clearAllVaultCredentialsFilters,
       removeVaultCredentialsFilterChip,
       openVaultCredentialsDialog,
+      openVaultNewFolder,
+      openVaultUsersAdd,
       vaultWebsitesColumns,
       vaultCredentialsColumns,
       showWebShieldDialog,
@@ -2215,7 +2806,10 @@ const AdminPortalWithPasswordManagerStory = defineComponent({
         class="flex-1 flex flex-col min-w-0 overflow-auto"
         :style="overlayActive ? 'background-color: #F7F7FB;' : undefined"
       >
-        <TopBar />
+        <TopBar
+          :showBackButton="currentPage === 'password-vault' && passwordVaultTab === 'websites' && vaultWebsitesView === 'add'"
+          @back="closeAddWebsite"
+        />
         <template v-if="currentPage === 'pam' && !overlayConfig">
           <PageHeader
             title="Privileged Access Management"
@@ -2225,7 +2819,18 @@ const AdminPortalWithPasswordManagerStory = defineComponent({
           />
         </template>
         <template v-else-if="currentPage === 'password-vault'">
+          <template v-if="passwordVaultTab === 'websites' && vaultWebsitesView === 'add'">
+            <div
+              class="flex items-center gap-2 self-stretch border-b border-neutral-default_solid bg-neutral-surface py-4 px-6"
+            >
+              <div class="flex size-8 shrink-0 items-center justify-center rounded-md bg-info-soft">
+                <GlobeAltIcon class="size-5 text-branding-base" />
+              </div>
+              <span class="text-heading-3 text-neutral-base">Add Website</span>
+            </div>
+          </template>
           <PageHeader
+            v-else
             :title="pageTitle"
             :icon="passwordVaultIcon"
             :tabs="!overlayConfig ? passwordVaultTabs : undefined"
@@ -2660,7 +3265,7 @@ const AdminPortalWithPasswordManagerStory = defineComponent({
               v-else-if="passwordVaultTab === 'websites'"
               class="w-full! h-full!"
             >
-              <div class="flex flex-col h-full gap-lg">
+              <div v-if="vaultWebsitesView === 'list'" class="flex flex-col h-full gap-lg">
                 <div class="flex flex-col h-full relative">
                   <CircuitDataTable
                     :columns="vaultWebsitesColumns"
@@ -2713,6 +3318,547 @@ const AdminPortalWithPasswordManagerStory = defineComponent({
                 </div>
               </div>
 
+              <div
+                v-else
+                class="flex flex-col h-full overflow-hidden"
+                style="background-color: #F7F7FB;"
+              >
+                <div class="flex-1 overflow-auto">
+                  <div class="flex justify-center px-lg py-lg">
+                    <div class="flex gap-lg" style="max-width: 1024px;">
+                      <div class="flex flex-col gap-md" style="width: 800px;">
+                        <CollapsiblePanel
+                          id="add-website-section-general"
+                          v-model:collapsed="addWebsiteWebsiteDetailsCollapsed"
+                          header="Website Details"
+                          toggleable
+                        >
+                          <template #titleicon="iconProps">
+                            <GlobeAltIcon :class="iconProps.class" />
+                          </template>
+                          <template #toggleicon="iconProps">
+                            <ChevronRightIcon :class="iconProps.class" />
+                          </template>
+                          <div class="flex flex-col gap-lg">
+                            <div class="grid grid-cols-2 gap-md">
+                              <FormField label="Name" :required="true">
+                                <template #default="{ inputId }">
+                                  <PvInputText
+                                    :id="inputId"
+                                    v-model="addWebsiteForm.name"
+                                    placeholder="Ex: JumpCloud"
+                                    class="w-full"
+                                  />
+                                </template>
+                              </FormField>
+                              <FormField label="URI (Hostname, IP, Address, etc.)" :required="true">
+                                <template #default="{ inputId }">
+                                  <PvInputText
+                                    :id="inputId"
+                                    v-model="addWebsiteForm.uri"
+                                    placeholder="Ex: www.jumpcloud.com"
+                                    class="w-full"
+                                  />
+                                </template>
+                              </FormField>
+                            </div>
+                            <div class="grid grid-cols-2 gap-md">
+                              <FormField label="Tags">
+                                <template #default="{ inputId }">
+                                  <PvInputText
+                                    :id="inputId"
+                                    v-model="addWebsiteForm.tags"
+                                    placeholder=""
+                                    class="w-full"
+                                  />
+                                </template>
+                              </FormField>
+                              <FormField label="Folder">
+                                <template #default="{ inputId }">
+                                  <PvSelect
+                                    :id="inputId"
+                                    v-model="addWebsiteForm.folder"
+                                    :options="addWebsiteFolderOptions"
+                                    optionLabel="label"
+                                    optionValue="value"
+                                    placeholder="Select Folder"
+                                    class="w-full!"
+                                  />
+                                </template>
+                              </FormField>
+                            </div>
+                            <FormField label="Notes">
+                              <template #default="{ inputId }">
+                                <PvTextarea
+                                  :id="inputId"
+                                  v-model="addWebsiteForm.notes"
+                                  :rows="4"
+                                  class="w-full"
+                                />
+                              </template>
+                            </FormField>
+                          </div>
+                        </CollapsiblePanel>
+
+                        <CollapsiblePanel
+                          id="add-website-section-link-credentials"
+                          v-model:collapsed="addWebsiteLinkedCredentialsCollapsed"
+                          header="Linked Credentials"
+                          toggleable
+                        >
+                          <template #titleicon="iconProps">
+                            <KeyIcon :class="iconProps.class" />
+                          </template>
+                          <template #toggleicon="iconProps">
+                            <ChevronRightIcon :class="iconProps.class" />
+                          </template>
+                          <div
+                            class="flex flex-col items-center justify-center gap-md rounded-md py-10 px-md"
+                            style="background-color: #FDFDFD;"
+                          >
+                            <div class="flex items-center justify-center rounded-full bg-info-soft p-2.5">
+                              <KeyIcon class="size-4 text-info-base" />
+                            </div>
+                            <p class="text-body-md text-neutral-muted text-center">
+                              No credentials are currently linked.
+                            </p>
+                            <PvButton
+                              label="Link Credentials"
+                              severity="secondary"
+                              variant="outlined"
+                              size="small"
+                              @click="openLinkCredentialsDialog"
+                            />
+                          </div>
+                        </CollapsiblePanel>
+
+                        <CollapsiblePanel
+                          id="add-website-section-user-permissions"
+                          v-model:collapsed="addWebsiteUserPermissionsCollapsed"
+                          header="User Permissions"
+                          toggleable
+                        >
+                          <template #titleicon="iconProps">
+                            <UserGroupIcon :class="iconProps.class" />
+                          </template>
+                          <template #toggleicon="iconProps">
+                            <ChevronRightIcon :class="iconProps.class" />
+                          </template>
+                          <div
+                            class="flex flex-col items-center justify-center gap-md rounded-md py-10 px-md"
+                            style="background-color: #FDFDFD;"
+                          >
+                            <div class="flex items-center justify-center rounded-full bg-info-soft p-2.5">
+                              <UserGroupIcon class="size-4 text-info-base" />
+                            </div>
+                            <p class="text-body-md text-neutral-muted text-center">
+                              Add users to this website to grant access.
+                            </p>
+                            <PvButton
+                              label="Add Users"
+                              severity="secondary"
+                              variant="outlined"
+                              size="small"
+                              @click="openAddUsersDialog"
+                            />
+                          </div>
+                        </CollapsiblePanel>
+
+                        <CollapsiblePanel
+                          id="add-website-section-autofill-parameters"
+                          v-model:collapsed="addWebsiteAutofillParametersCollapsed"
+                          header="Autofill Parameters"
+                          toggleable
+                        >
+                          <template #titleicon="iconProps">
+                            <Cog6ToothIcon :class="iconProps.class" />
+                          </template>
+                          <template #toggleicon="iconProps">
+                            <ChevronRightIcon :class="iconProps.class" />
+                          </template>
+                          <div class="flex flex-col gap-lg">
+                            <div class="flex flex-col gap-lg">
+                              <div class="flex flex-col gap-1">
+                                <span class="text-body-sm-semi-bold text-neutral-base">Field Selectors</span>
+                                <span class="text-body-xs text-neutral-subtle">
+                                  Provide the CSS selectors for the login from elements. Use the inspector tool in your browser to find them.
+                                </span>
+                              </div>
+                              <div class="grid grid-cols-2 gap-md">
+                                <FormField label="Username/ email field selector">
+                                  <template #default="{ inputId }">
+                                    <PvInputText
+                                      :id="inputId"
+                                      v-model="addWebsiteForm.usernameSelector"
+                                      class="w-full"
+                                    />
+                                  </template>
+                                </FormField>
+                                <FormField label="Password field selector">
+                                  <template #default="{ inputId }">
+                                    <PvInputText
+                                      :id="inputId"
+                                      v-model="addWebsiteForm.passwordSelector"
+                                      class="w-full"
+                                    />
+                                  </template>
+                                </FormField>
+                              </div>
+                              <div class="grid grid-cols-2 gap-md">
+                                <FormField label="Next button selector">
+                                  <template #default="{ inputId }">
+                                    <PvInputText
+                                      :id="inputId"
+                                      v-model="addWebsiteForm.nextButtonSelector"
+                                      class="w-full"
+                                    />
+                                  </template>
+                                </FormField>
+                                <FormField label="Login button Selector">
+                                  <template #default="{ inputId }">
+                                    <PvInputText
+                                      :id="inputId"
+                                      v-model="addWebsiteForm.loginButtonSelector"
+                                      class="w-full"
+                                    />
+                                  </template>
+                                </FormField>
+                              </div>
+                              <FormField label="Field selector to hide">
+                                <template #default="{ inputId }">
+                                  <PvTextarea
+                                    :id="inputId"
+                                    v-model="addWebsiteForm.fieldSelectorToHide"
+                                    :rows="3"
+                                    class="w-full"
+                                  />
+                                </template>
+                              </FormField>
+                            </div>
+                            <PvDivider />
+                            <div class="flex flex-col gap-lg">
+                              <div class="flex flex-col gap-1">
+                                <span class="text-body-sm-semi-bold text-neutral-base">Behaviors &amp; Timing</span>
+                                <span class="text-body-xs text-neutral-subtle">
+                                  Adjust how the extension interacts with the page.
+                                </span>
+                              </div>
+                              <div class="grid grid-cols-2 gap-md">
+                                <FormField
+                                  label="Delay after clicking next button (seconds)"
+                                  labelTooltip="Time to wait after clicking the next button before continuing."
+                                  helpText="Recommended: 1\u20132 seconds."
+                                >
+                                  <template #default="{ inputId }">
+                                    <PvInputText
+                                      :id="inputId"
+                                      v-model="addWebsiteForm.delayAfterNext"
+                                      class="w-full"
+                                    />
+                                  </template>
+                                </FormField>
+                                <FormField
+                                  label="Fill delay (seconds)"
+                                  labelTooltip="Time to wait before autofilling the form fields."
+                                  helpText="Recommended: 0\u20131 seconds."
+                                >
+                                  <template #default="{ inputId }">
+                                    <PvInputText
+                                      :id="inputId"
+                                      v-model="addWebsiteForm.fillDelay"
+                                      class="w-full"
+                                    />
+                                  </template>
+                                </FormField>
+                              </div>
+                              <CheckboxWithLabel v-model="addWebsiteForm.fillMultipleTimes" :binary="true">
+                                <template #label>Fill in fields more than once</template>
+                              </CheckboxWithLabel>
+                              <CheckboxWithLabel v-model="addWebsiteForm.automaticLogin" :binary="true">
+                                <template #label>Automatic Login</template>
+                              </CheckboxWithLabel>
+                            </div>
+                          </div>
+                        </CollapsiblePanel>
+                      </div>
+
+                      <nav
+                        class="sticky top-0 shrink-0"
+                        style="width: 180px;"
+                        aria-label="Page sections"
+                      >
+                        <!-- Anchor nav — matches Figma Password Vault (node 187:53567): 1px track, 2px row gap, 32px row height, active = 2×16px bar -->
+                        <div class="relative">
+                          <span
+                            class="pointer-events-none absolute bottom-0 left-0 top-0 w-px bg-neutral-default_solid"
+                            aria-hidden="true"
+                          />
+                          <ul class="relative m-0 flex list-none flex-col gap-0.5 py-1 p-0">
+                            <li
+                              v-for="section in addWebsiteSections"
+                              :key="section.id"
+                              class="relative flex h-8 shrink-0 items-stretch"
+                            >
+                              <button
+                                type="button"
+                                class="relative flex h-full min-h-0 w-full cursor-pointer items-center border-0 bg-transparent px-md text-left outline-none"
+                                @click="goToAddWebsiteSection(section.id)"
+                              >
+                                <span
+                                  v-if="addWebsiteActiveSection === section.id"
+                                  class="pointer-events-none absolute left-0 top-1/2 h-4 w-0.5 -translate-y-1/2 rounded-r-xs bg-branding-base"
+                                  aria-hidden="true"
+                                />
+                                <!-- Figma Body S: 12px / 16px line → Circuit text-body-sm-*; px-md = 16px horizontal padding -->
+                                <span
+                                  class="min-w-0 flex-1 truncate"
+                                  :class="addWebsiteActiveSection === section.id
+                                    ? 'text-body-sm-bold text-neutral-base'
+                                    : 'text-body-sm-semi-bold text-neutral-muted hover:text-neutral-base'"
+                                >
+                                  {{ section.label }}
+                                </span>
+                              </button>
+                            </li>
+                          </ul>
+                        </div>
+                      </nav>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="shrink-0 border-t border-neutral-default_solid bg-neutral-surface px-lg py-md flex justify-end gap-sm">
+                  <PvButton
+                    label="Cancel"
+                    severity="secondary"
+                    variant="text"
+                    @click="closeAddWebsite"
+                  />
+                  <PvButton label="Save" @click="closeAddWebsite" />
+                </div>
+              </div>
+
+              <PvDialog
+                v-model:visible="showLinkCredentialsDialog"
+                :draggable="false"
+                modal
+                header="Link Credentials"
+                :style="{ width: '672px', maxWidth: 'min(672px, 96vw)' }"
+                :pt="{
+                  footer: {
+                    class: 'border-t border-neutral-default_solid bg-neutral-surface min-h-16 items-stretch gap-sm px-md py-0',
+                  },
+                }"
+                :ptOptions="{ mergeSections: true, mergeProps: true }"
+                @update:visible="!$event && closeLinkCredentialsDialog()"
+              >
+                <template #closeicon><XMarkIcon /></template>
+                <div class="flex w-full max-w-[640px] flex-col items-start gap-0 self-center">
+                  <CircuitDataTable
+                    :columns="linkCredentialsPickerColumns"
+                    :data="linkCredentialsPickerData"
+                    :card="true"
+                    :scrollable="true"
+                    scrollHeight="328px"
+                    :paginator="true"
+                    :rows="5"
+                    dataKey="id"
+                    :selection="linkCredentialsPickerSelection"
+                    selectionMode="multiple"
+                    @update:selection="linkCredentialsPickerSelection = $event"
+                    :pt="{
+                      root: { class: 'flex w-full flex-col' },
+                      tableContainer: { class: 'overflow-auto' },
+                      footer: { class: 'flex min-h-16 shrink-0 items-center border-t border-neutral-default_solid' },
+                      headerCell: ({ context }) => {
+                        const col = context?.column;
+                        const field = col?.props?.field;
+                        const isSelection = col?.props?.selectionMode || col?.selectionMode;
+                        const isLastUsed = field === 'lastTimeUsed';
+                        return {
+                          class: [
+                            'flex items-center px-2 h-16',
+                            isSelection ? 'gap-0.5' : '',
+                            isLastUsed ? 'justify-end' : '',
+                          ]
+                            .filter(Boolean)
+                            .join(' '),
+                        };
+                      },
+                      bodyCell: ({ context }) => {
+                        const col = context?.column;
+                        const field = col?.props?.field;
+                        const isSelection = col?.props?.selectionMode || col?.selectionMode;
+                        const isLastUsed = field === 'lastTimeUsed';
+                        return {
+                          class: [
+                            'flex items-center px-2',
+                            isSelection ? 'gap-0.5' : '',
+                            isLastUsed ? 'justify-end' : '',
+                          ]
+                            .filter(Boolean)
+                            .join(' '),
+                        };
+                      },
+                      headerCheckbox: { class: 'flex items-center h-5' },
+                      rowCheckbox: { class: 'flex items-center h-5' },
+                    }"
+                    :ptOptions="{ mergeSections: true, mergeProps: true }"
+                  >
+                    <template #toolbar>
+                      <!-- Figma: table toolbox 672×64 Hug — toolbar row h-16 (64px), gap-4; content column max 640 -->
+                      <div
+                        class="flex h-16 w-full shrink-0 items-center gap-4 border-b border-neutral-default_solid self-stretch"
+                      >
+                        <PvButton label="Add">
+                          <template #icon="iconProps">
+                            <PlusIcon :class="iconProps.class" />
+                          </template>
+                        </PvButton>
+                        <div class="min-w-0 flex-1 basis-[min(100%,240px)]">
+                          <PvIconField>
+                            <PvInputIcon>
+                              <MagnifyingGlassIcon />
+                            </PvInputIcon>
+                            <PvInputText
+                              v-model="linkCredentialsPickerSearch"
+                              placeholder="Search"
+                              class="w-full"
+                            />
+                            <PvInputIcon class="pointer-events-none">
+                              <span class="text-body-md text-field-placeholder select-none" aria-hidden="true">/</span>
+                            </PvInputIcon>
+                          </PvIconField>
+                        </div>
+                        <div class="flex min-w-48 shrink-0 items-center gap-2">
+                          <FunnelIcon class="size-5 shrink-0 text-neutral-muted" aria-hidden="true" />
+                          <PvSelect
+                            v-model="linkCredentialsPickerFilter"
+                            :options="linkCredentialsPickerFilterOptions"
+                            optionLabel="label"
+                            optionValue="value"
+                            placeholder="Credentials"
+                            class="min-w-48 w-full!"
+                          />
+                        </div>
+                      </div>
+                    </template>
+                  </CircuitDataTable>
+                </div>
+                <template #footer>
+                  <div class="flex min-h-16 flex-1 items-center min-w-0" />
+                  <div class="flex min-h-16 shrink-0 items-center gap-sm">
+                    <PvButton
+                      label="Cancel"
+                      severity="secondary"
+                      variant="text"
+                      @click="closeLinkCredentialsDialog"
+                    />
+                    <PvButton label="Link Credentials" @click="closeLinkCredentialsDialog" />
+                  </div>
+                </template>
+              </PvDialog>
+
+              <PvDialog
+                v-model:visible="showAddUsersDialog"
+                :draggable="false"
+                modal
+                header="Add Users"
+                :style="{ width: '672px', maxWidth: 'min(672px, 96vw)' }"
+                :pt="{
+                  footer: {
+                    class: 'border-t border-neutral-default_solid bg-neutral-surface min-h-16 items-stretch gap-sm px-md py-0',
+                  },
+                }"
+                :ptOptions="{ mergeSections: true, mergeProps: true }"
+                @update:visible="!$event && closeAddUsersDialog()"
+              >
+                <template #closeicon><XMarkIcon /></template>
+                <!-- Figma: content column 640×456 Hug — search row 64 + table 328 + paginator 64 -->
+                <div class="flex w-full max-w-[640px] flex-col items-start gap-0 self-center">
+                  <CircuitDataTable
+                    :columns="addUsersPickerColumns"
+                    :data="addUsersPickerDisplayData"
+                    :card="true"
+                    :scrollable="true"
+                    scrollHeight="328px"
+                    :paginator="true"
+                    :rows="5"
+                    dataKey="id"
+                    :selection="addUsersPickerSelection"
+                    selectionMode="multiple"
+                    @update:selection="addUsersPickerSelection = $event"
+                    :pt="{
+                      root: { class: 'flex w-full flex-col' },
+                      tableContainer: { class: 'overflow-auto' },
+                      footer: { class: 'flex min-h-16 shrink-0 items-center border-t border-neutral-default_solid' },
+                      headerCell: ({ context }) => {
+                        const col = context?.column;
+                        const isSelection = col?.props?.selectionMode || col?.selectionMode;
+                        if (isSelection) {
+                          return {
+                            class: 'flex h-16 items-center gap-0.5 pl-2 pr-6',
+                          };
+                        }
+                        return {
+                          class:
+                            'flex h-16 items-center pr-2 !ps-10',
+                        };
+                      },
+                      bodyCell: ({ context }) => {
+                        const col = context?.column;
+                        const isSelection = col?.props?.selectionMode || col?.selectionMode;
+                        if (isSelection) {
+                          return {
+                            class: 'flex items-center gap-0.5 pl-2 pr-6',
+                          };
+                        }
+                        return {
+                          class: 'flex items-center py-0 pr-2 !ps-10',
+                        };
+                      },
+                      headerCheckbox: { class: 'flex items-center h-5' },
+                      rowCheckbox: { class: 'flex items-center h-5' },
+                    }"
+                    :ptOptions="{ mergeSections: true, mergeProps: true }"
+                  >
+                    <template #toolbar>
+                      <div
+                        class="flex h-16 w-full shrink-0 items-center border-b border-neutral-default_solid self-stretch"
+                      >
+                        <div class="min-w-0 w-full">
+                          <PvIconField>
+                            <PvInputIcon>
+                              <MagnifyingGlassIcon />
+                            </PvInputIcon>
+                            <PvInputText
+                              v-model="addUsersPickerSearch"
+                              placeholder="Search"
+                              class="w-full"
+                            />
+                            <PvInputIcon class="pointer-events-none">
+                              <span class="text-body-md text-field-placeholder select-none" aria-hidden="true">/</span>
+                            </PvInputIcon>
+                          </PvIconField>
+                        </div>
+                      </div>
+                    </template>
+                  </CircuitDataTable>
+                </div>
+                <template #footer>
+                  <div class="flex min-h-16 flex-1 items-center min-w-0" />
+                  <div class="flex min-h-16 shrink-0 items-center gap-sm">
+                    <PvButton
+                      label="Cancel"
+                      severity="secondary"
+                      variant="text"
+                      @click="closeAddUsersDialog"
+                    />
+                    <PvButton label="Next" @click="closeAddUsersDialog" />
+                  </div>
+                </template>
+              </PvDialog>
+
               <PvDialog
                 v-model:visible="showVaultWebsitesFilterDialog"
                 :draggable="false"
@@ -2723,42 +3869,27 @@ const AdminPortalWithPasswordManagerStory = defineComponent({
               >
                 <template #closeicon><XMarkIcon /></template>
                 <div class="flex flex-col gap-md">
-                  <FormField label="Status">
-                    <template #default="{ inputId }">
-                      <SelectButton
-                        :id="inputId"
-                        v-model="draftVaultWebsitesStatus"
-                        :options="vaultWebsitesStatusOptions"
-                        optionLabel="label"
-                        optionValue="value"
-                        :allowEmpty="false"
-                      />
-                    </template>
-                  </FormField>
-                  <FormField label="Connector">
+                  <FormField label="Tags">
                     <template #default="{ inputId }">
                       <PvMultiSelect
                         :id="inputId"
-                        v-model="draftVaultWebsitesConnectors"
-                        :options="vaultWebsitesConnectorOptions"
-                        optionLabel="label"
-                        optionValue="value"
-                        placeholder="All connectors"
+                        v-model="draftVaultWebsitesTags"
+                        :options="vaultWebsitesTagOptions"
+                        placeholder="All tags"
                         :maxSelectedLabels="2"
                         class="w-full"
+                        :filter="true"
+                        filterPlaceholder="Search tags..."
+                        :showToggleAll="false"
                       />
                     </template>
                   </FormField>
-                  <FormField label="Jump Server">
+                  <FormField label="Address">
                     <template #default="{ inputId }">
-                      <PvMultiSelect
+                      <PvInputText
                         :id="inputId"
-                        v-model="draftVaultWebsitesJumpServers"
-                        :options="vaultWebsitesJumpServerOptions"
-                        optionLabel="label"
-                        optionValue="value"
-                        placeholder="All jump servers"
-                        :maxSelectedLabels="2"
+                        v-model="draftVaultWebsitesAddress"
+                        placeholder="Filter by domain or URL"
                         class="w-full"
                       />
                     </template>
@@ -2791,6 +3922,9 @@ const AdminPortalWithPasswordManagerStory = defineComponent({
                     scrollHeight="flex"
                     :paginator="true"
                     :rows="100"
+                    :selection="vaultCredentialsSelection"
+                    selectionMode="multiple"
+                    @update:selection="vaultCredentialsSelection = $event"
                     :pt="{
                       root: { class: 'flex flex-col h-full min-h-0' },
                       tableContainer: { class: 'flex-1 min-h-0 overflow-auto' },
@@ -2829,42 +3963,27 @@ const AdminPortalWithPasswordManagerStory = defineComponent({
               >
                 <template #closeicon><XMarkIcon /></template>
                 <div class="flex flex-col gap-md">
-                  <FormField label="Status">
-                    <template #default="{ inputId }">
-                      <SelectButton
-                        :id="inputId"
-                        v-model="draftVaultCredentialsStatus"
-                        :options="vaultCredentialsStatusOptions"
-                        optionLabel="label"
-                        optionValue="value"
-                        :allowEmpty="false"
-                      />
-                    </template>
-                  </FormField>
-                  <FormField label="Connector">
+                  <FormField label="Tags">
                     <template #default="{ inputId }">
                       <PvMultiSelect
                         :id="inputId"
-                        v-model="draftVaultCredentialsConnectors"
-                        :options="vaultCredentialsConnectorOptions"
-                        optionLabel="label"
-                        optionValue="value"
-                        placeholder="All connectors"
+                        v-model="draftVaultCredentialsTags"
+                        :options="vaultCredentialsTagOptions"
+                        placeholder="All tags"
                         :maxSelectedLabels="2"
                         class="w-full"
+                        :filter="true"
+                        filterPlaceholder="Search tags..."
+                        :showToggleAll="false"
                       />
                     </template>
                   </FormField>
-                  <FormField label="Jump Server">
+                  <FormField label="Expiration Date">
                     <template #default="{ inputId }">
-                      <PvMultiSelect
+                      <PvInputText
                         :id="inputId"
-                        v-model="draftVaultCredentialsJumpServers"
-                        :options="vaultCredentialsJumpServerOptions"
-                        optionLabel="label"
-                        optionValue="value"
-                        placeholder="All jump servers"
-                        :maxSelectedLabels="2"
+                        v-model="draftVaultCredentialsExpirationDate"
+                        placeholder="Filter by date"
                         class="w-full"
                       />
                     </template>
@@ -2883,17 +4002,135 @@ const AdminPortalWithPasswordManagerStory = defineComponent({
               </PvDialog>
             </ListPageLayout>
 
-            <template v-else-if="passwordVaultTab === 'folders'">
-              <div class="flex items-center justify-center h-64 text-neutral-subtle text-body-md">
-                Folders — coming soon
+            <ListPageLayout
+              v-else-if="passwordVaultTab === 'folders'"
+              class="w-full! h-full!"
+            >
+              <div class="flex flex-col h-full gap-lg">
+                <div class="flex flex-col h-full relative">
+                  <CircuitDataTable
+                    :columns="vaultFoldersColumns"
+                    :data="vaultFoldersData"
+                    dataKey="id"
+                    :card="true"
+                    :scrollable="true"
+                    scrollHeight="flex"
+                    :paginator="true"
+                    :rows="100"
+                    :selection="vaultFoldersSelection"
+                    selectionMode="multiple"
+                    @update:selection="vaultFoldersSelection = $event"
+                    :pt="{
+                      root: { class: 'flex flex-col h-full min-h-0' },
+                      tableContainer: { class: 'flex-1 min-h-0 overflow-auto' },
+                      footer: { class: 'shrink-0' },
+                    }"
+                    :ptOptions="{ mergeSections: true, mergeProps: true }"
+                  >
+                    <template #toolbar>
+                      <DataTableToolbar
+                        addButtonLabel="New"
+                        :showAddButton="true"
+                        :showFilterButton="false"
+                        :showRefreshButton="false"
+                        :showColumnsButton="false"
+                        :showDownloadButton="false"
+                        :showSaveViewButton="false"
+                        @add="openVaultNewFolder"
+                      />
+                    </template>
+                  </CircuitDataTable>
+                </div>
               </div>
-            </template>
+            </ListPageLayout>
 
-            <template v-else-if="passwordVaultTab === 'users'">
-              <div class="flex items-center justify-center h-64 text-neutral-subtle text-body-md">
-                Users — coming soon
+            <ListPageLayout
+              v-else-if="passwordVaultTab === 'users'"
+              class="w-full! h-full!"
+            >
+              <div class="flex flex-col h-full gap-lg min-h-0">
+                <!-- Toolbar only over the table column; table + resources share one row (no built-in paginator). -->
+                <div class="w-full shrink-0 lg:max-w-[600px]">
+                  <DataTableToolbar
+                    addButtonLabel="Add"
+                    :showAddButton="true"
+                    :showFilterButton="false"
+                    :showRefreshButton="false"
+                    :showColumnsButton="false"
+                    :showDownloadButton="false"
+                    :showSaveViewButton="false"
+                    @add="openVaultUsersAdd"
+                  />
+                </div>
+                <div
+                  class="grid w-full grid-cols-1 items-stretch gap-y-4 lg:grid-cols-[minmax(0,600px)_minmax(0,600px)] lg:gap-x-6 lg:gap-y-0"
+                >
+                  <div class="flex min-h-[400px] min-w-0 flex-col lg:min-h-0">
+                    <CircuitDataTable
+                      :columns="vaultUserGroupsColumns"
+                      :data="vaultUserGroupsPageData"
+                      dataKey="id"
+                      :card="true"
+                      :scrollable="false"
+                      :paginator="false"
+                      :selection="vaultUserGroupsSelection"
+                      selectionMode="multiple"
+                      @update:selection="vaultUserGroupsSelection = $event"
+                      :pt="{
+                        root: { class: 'flex flex-col min-h-0' },
+                        tableContainer: { class: 'min-h-0' },
+                        footer: { class: 'shrink-0' },
+                        headerCell: ({ context }) => {
+                          const col = context?.column;
+                          const props = col?.props ?? col;
+                          const field = props?.field;
+                          const isSel = props?.selectionMode || col?.selectionMode;
+                          if (isSel) return { class: 'flex items-center h-12 px-2 gap-0.5' };
+                          if (field === 'members') {
+                            return {
+                              class:
+                                'min-h-12 p-0 text-start [&_[data-pc-section=columnheadercontent]]:flex [&_[data-pc-section=columnheadercontent]]:min-h-12 [&_[data-pc-section=columnheadercontent]]:w-full [&_[data-pc-section=columnheadercontent]]:items-center [&_[data-pc-section=columnheadercontent]]:justify-start [&_[data-pc-section=columnheadercontent]]:gap-sm [&_[data-pc-section=columnheadercontent]]:overflow-hidden [&_[data-pc-section=columnheadercontent]]:py-1.5 [&_[data-pc-section=columnheadercontent]]:px-2 [&_[data-pc-section=columnheadercontent]]:text-neutral-base',
+                            };
+                          }
+                          return {};
+                        },
+                        bodyCell: ({ context }) => {
+                          const col = context?.column;
+                          const props = col?.props ?? col;
+                          const field = props?.field;
+                          const isSel = props?.selectionMode || col?.selectionMode;
+                          if (isSel) return { class: 'flex items-center h-12 px-2 gap-0.5' };
+                          if (field === 'members') return { class: 'p-0 text-start align-middle' };
+                          return {};
+                        },
+                        headerCheckbox: { class: 'flex items-center h-5' },
+                        rowCheckbox: { class: 'flex items-center h-5' },
+                      }"
+                      :ptOptions="{ mergeSections: true, mergeProps: true }"
+                    />
+                  </div>
+                  <div
+                    class="flex min-h-[320px] min-w-0 w-full flex-col items-center justify-center gap-6 self-stretch overflow-x-auto rounded-lg border border-neutral-default_solid bg-neutral-surface px-lg py-xl lg:min-h-0 lg:w-[600px] lg:max-w-[600px]"
+                  >
+                    <ClipboardDocumentListIcon class="size-16 shrink-0 text-neutral-subtle opacity-80" aria-hidden="true" />
+                    <p
+                      class="text-body-md leading-5 text-neutral-subtle text-center whitespace-nowrap px-md"
+                    >
+                      Resources will be displayed here after selecting a User Group
+                    </p>
+                  </div>
+                </div>
+                <div class="w-full shrink-0 lg:max-w-[600px]">
+                  <PvPaginator
+                    :first="vaultUserGroupsFirst"
+                    :rows="vaultUserGroupsRows"
+                    :totalRecords="vaultUserGroupsTotalRecords"
+                    :rowsPerPageOptions="[10, 25, 50, 100]"
+                    @page="onVaultUserGroupsPage"
+                  />
+                </div>
               </div>
-            </template>
+            </ListPageLayout>
 
       </div>
     </template>
