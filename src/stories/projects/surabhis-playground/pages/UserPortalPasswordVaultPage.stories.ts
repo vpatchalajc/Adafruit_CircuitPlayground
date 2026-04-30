@@ -3,7 +3,7 @@ import { computed, defineComponent, markRaw, ref } from 'vue';
 import {
   CardButton,
   DataTable as CircuitDataTable,
-  DataTableCellButton,
+  DataTableCellAction,
   DataTableCellLink,
   DataTableCellText,
   DataTableToolbar,
@@ -369,10 +369,9 @@ const UserPortalPasswordVaultPage = defineComponent({
         field: 'connect',
         header: 'Connect',
         width: '120px',
-        component: markRaw(DataTableCellButton),
+        component: markRaw(DataTableCellAction),
         componentProps: (sp: { data: WebsiteRecord }) => ({
-          label: 'Connect',
-          onClick: () => connectToWebsite(sp.data),
+          actionButtons: [{ label: 'Connect', onClick: () => connectToWebsite(sp.data) }],
         }),
       },
       {

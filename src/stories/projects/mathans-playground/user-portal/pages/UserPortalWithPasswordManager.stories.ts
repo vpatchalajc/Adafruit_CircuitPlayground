@@ -36,7 +36,6 @@ import TabPanel from 'primevue/tabpanel';
 
 import ListPageLayout from '@/components/layout/page-layouts/ListPageLayout.vue';
 import DashboardPageLayout from '@/components/layout/page-layouts/DashboardPageLayout.vue';
-import DashboardStatCard from '@/stories/projects/burak-agent0/features/agent0/dashboard/DashboardStatCard.vue';
 
 import {
   ArrowLeftIcon,
@@ -44,15 +43,15 @@ import {
   ArrowRightStartOnRectangleIcon,
   ArrowTopRightOnSquareIcon,
   CalendarDaysIcon,
-  ChartBarSquareIcon,
   CheckCircleIcon,
+  ChevronDownIcon,
   ChevronRightIcon,
   ClipboardDocumentCheckIcon,
   ClipboardDocumentListIcon,
   CircleStackIcon,
   CommandLineIcon,
   EllipsisHorizontalIcon,
-  ExclamationTriangleIcon,
+  FunnelIcon,
   GlobeAltIcon,
   HomeIcon,
   KeyIcon,
@@ -1192,7 +1191,6 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
     DataTableToolbar,
     FormField,
     DashboardPageLayout,
-    DashboardStatCard,
     ListPageLayout,
     Password,
     Paginator,
@@ -1216,13 +1214,18 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
     PvTabPanel: TabPanel,
     ArrowPathIcon,
     CalendarDaysIcon,
-    ChartBarSquareIcon,
     GlobeAltIcon,
     MagnifyingGlassIcon,
     ArrowLeftIcon,
     ArrowTopRightOnSquareIcon,
     CheckCircleIcon,
+    ChevronDownIcon,
     ChevronRightIcon,
+    FunnelIcon,
+    KeyIcon,
+    PencilSquareIcon,
+    TrashIcon,
+    XMarkIcon,
     BookmarkIcon,
     ClipboardDocumentListIcon,
     AppLogo,
@@ -1273,69 +1276,80 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
       { label: 'Credentials', value: 'credentials' },
       { label: 'Websites', value: 'websites' },
     ];
-    const vaultPasswordVaultStatCards = [
+    const vaultOverviewPasswordHealthPercent = 89;
+    const vaultOverviewMetricCards = [
       {
-        header: 'Total Secrets',
-        value: '3,482',
-        icon: markRaw(ClipboardDocumentListIcon),
-        changeValue: '9%',
-        changeLabel: 'vs last month',
-        showArrow: true,
+        title: 'Total Websites',
+        valueLine: '122 Websites',
+        trend: '↑ 2 new this month',
       },
       {
-        header: 'Weak Credentials',
-        value: '11',
-        icon: markRaw(ExclamationTriangleIcon),
-        changeValue: '-2',
-        changeLabel: 'vs last month',
-        showArrow: true,
+        title: 'Total Passwords',
+        valueLine: '86 Passwords',
+        trend: '↑ 23% vs last month',
+      },
+      {
+        title: 'Total Secrets',
+        valueLine: '102 Secrets',
+        trend: '↑ 23% vs last month',
       },
     ];
-    const vaultPasswordVaultLoginCount = 26;
-    const vaultPasswordVaultLastLogins = [
-      { name: 'Sarah Chen', email: 'sarah.chen@acme.com', time: '8 minutes ago' },
-      { name: 'Marcus Rodriguez', email: 'marcus.rodriguez@acme.com', time: '36 minutes ago' },
-      { name: 'Emily Johnson', email: 'emily.johnson@acme.com', time: '2 hours ago' },
-      { name: 'Michael Smith', email: 'michael.smith@acme.com', time: '16 hours ago' },
-      { name: 'Olivia Patel', email: 'olivia.patel@acme.com', time: '22 hours ago' },
+    const vaultOverviewUrgentWindowSummary = {
+      urgent: '7 Expiring Soon',
+      window: 'Next 7 days',
+    };
+    const vaultOverviewReusedCredentials = [
+      {
+        name: 'Sarah Chen',
+        email: 'sarah@company.com',
+        match: 'Matching Password: Marcus Rodrigues',
+      },
+      {
+        name: 'Marcus Rodriguez',
+        email: 'marcus@company.com',
+        match: 'Matching Password: Sarah Chen',
+      },
     ];
-    const vaultExpiringSecretsSummary = { count: 9, label: 'Expiring in the next 7 days' };
-    const vaultExpiringSecrets = [
-      { name: 'AWS Root Key', metaLabel: 'Expires in', metaValue: '3 days' },
-      { name: 'Okta Admin', metaLabel: 'Expires in', metaValue: '5 days' },
-      { name: 'Finance MySQL', metaLabel: 'Expires in', metaValue: '6 days' },
-      { name: 'GitHub Deploy Key', metaLabel: 'Expires in', metaValue: '7 days' },
-      { name: 'Azure AD App', metaLabel: 'Expires in', metaValue: '7 days' },
+    const vaultOverviewCredentialExpirations = [
+      {
+        name: 'Sarah Chen',
+        email: 'sarah@company.com',
+        line: 'Key: Expires 1 day',
+        lineClass: 'text-red-600',
+      },
+      {
+        name: 'Marcus Rodriguez',
+        email: 'marcus@company.com',
+        line: 'Password: Expires 2 days',
+        lineClass: 'text-red-800',
+      },
+      {
+        name: 'Emily Johnson',
+        email: 'emily.johnson@company.com',
+        line: 'Password: Expires 3 days',
+        lineClass: 'text-orange-600',
+      },
+      {
+        name: 'Michael Smith',
+        email: 'michael.smith@company.com',
+        line: 'Key: Expires 6 days',
+        lineClass: 'text-blue-600',
+      },
     ];
-    const vaultWeakSecretsSummary = { count: 11, label: 'Secrets' };
+    const vaultWeakSecretsSummary = { count: 11, label: 'Credentials' };
     const vaultWeakSecrets = [
-      { name: 'AWS Billing', risk: 'Weak API Key' },
-      { name: 'Payroll Admin', risk: 'Weak Password' },
-      { name: 'ServiceNow Admin', risk: 'Weak Password' },
-      { name: 'Datadog Root', risk: 'Weak API Key' },
+      { name: 'AWS Gabriel', risk: 'Key Credential' },
+      { name: 'Test 10', risk: 'Password Credential' },
+      { name: 'AWS Gabriel', risk: 'Password Credential' },
+      { name: 'MySQL Admin', risk: 'Key Credential' },
     ];
     const vaultUnusedSecretsSummary = { count: 14, label: 'Unused' };
     const vaultUnusedSecrets = [
-      { name: 'AWS Ops Key', metaLabel: 'Last Used', metaValue: '46 days ago' },
-      { name: 'Stripe Admin', metaLabel: 'Last Used', metaValue: '123 days ago' },
-      { name: 'Grafana Admin', metaLabel: 'Last Used', metaValue: '53 days ago' },
-      { name: 'MySQL Prod', metaLabel: 'Last Used', metaValue: '66 days ago' },
+      { name: 'AWS Gabriel', detail: 'Key: Last Used 46 days ago', detailClass: 'text-red-600' },
+      { name: 'Test 10', detail: 'Password: Last Used 123 days ago', detailClass: 'text-red-600' },
+      { name: 'AWS Gabriel', detail: 'Password: Last Used 53 days ago', detailClass: 'text-red-600' },
+      { name: 'MySQL Admin', detail: 'Key: Last Used 66 days ago', detailClass: 'text-red-600' },
     ];
-    const vaultSecretsAddedBars = [
-      { date: 'Aug 1', value: 68 },
-      { date: 'Sep 1', value: 74 },
-      { date: 'Oct 1', value: 88 },
-      { date: 'Nov 1', value: 92 },
-      { date: 'Dec 1', value: 124 },
-      { date: 'Jan 1', value: 158 },
-      { date: 'Feb 1', value: 142 },
-      { date: 'Mar 1', value: 176 },
-      { date: 'Apr 1', value: 168 },
-      { date: 'Apr 7', value: 132 },
-    ];
-    const vaultMaxSecretsAddedValue = computed(() =>
-      Math.max(...vaultSecretsAddedBars.map(item => item.value)),
-    );
     const vaultWebsitesData = [
       { name: 'Gmail', address: 'https://mail.google.com', tags: ['work', 'google'] },
       { name: 'LinkedIn', address: 'https://www.linkedin.com', tags: ['work'] },
@@ -1356,6 +1370,7 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
     const vaultCredentialsData = [
       {
         name: 'Gmail Password',
+        username: 'user123@example.com',
         type: 'Password',
         expirationDate: '--',
         tags: ['work', 'google'],
@@ -1363,6 +1378,7 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
       },
       {
         name: 'LinkedIn Password',
+        username: 'mathan.c@acme.com',
         type: 'Password',
         expirationDate: '--',
         tags: ['work'],
@@ -1370,6 +1386,7 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
       },
       {
         name: 'AWS Root Account',
+        username: 'aws-admin@acme.com',
         type: 'Password',
         expirationDate: 'May 1, 2026',
         tags: ['aws', 'critical'],
@@ -1377,6 +1394,7 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
       },
       {
         name: 'GitHub Token',
+        username: 'github-bot@acme.com',
         type: 'Password',
         expirationDate: 'Jun 15, 2026',
         tags: ['dev', 'github'],
@@ -1384,6 +1402,7 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
       },
       {
         name: 'AWS Access Keys',
+        username: 'devops@acme.com',
         type: 'Secure Note',
         expirationDate: '--',
         tags: ['aws', 'dev'],
@@ -1391,6 +1410,7 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
       },
       {
         name: 'Recovery Codes - Okta',
+        username: 'security@acme.com',
         type: 'Secure Note',
         expirationDate: '--',
         tags: ['mfa', 'okta'],
@@ -1398,6 +1418,7 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
       },
       {
         name: 'SSH Keys - Prod Server',
+        username: 'infra@acme.com',
         type: 'Secure Note',
         expirationDate: '--',
         tags: ['infra', 'prod'],
@@ -1405,6 +1426,7 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
       },
       {
         name: 'Visa Corp Card',
+        username: 'cardholder@acme.com',
         type: 'Payment Card',
         expirationDate: 'Dec 31, 2027',
         tags: ['finance'],
@@ -1412,6 +1434,7 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
       },
       {
         name: 'Amex Travel Card',
+        username: 'travel@acme.com',
         type: 'Payment Card',
         expirationDate: 'Mar 31, 2028',
         tags: ['finance', 'travel'],
@@ -1419,6 +1442,7 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
       },
       {
         name: 'Netflix Password',
+        username: 'personal@example.com',
         type: 'Password',
         expirationDate: '--',
         tags: [],
@@ -1426,6 +1450,7 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
       },
       {
         name: 'Figma Password',
+        username: 'design@acme.com',
         type: 'Password',
         expirationDate: '--',
         tags: ['design'],
@@ -1433,6 +1458,7 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
       },
       {
         name: 'Slack Password',
+        username: 'slack-admin@acme.com',
         type: 'Password',
         expirationDate: '--',
         tags: ['work'],
@@ -1442,7 +1468,11 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
     const filteredVaultCredentialsData = computed(() => {
       const q = vaultCredentialSearch.value.toLowerCase().trim();
       if (!q) return vaultCredentialsData;
-      return vaultCredentialsData.filter(c => c.name.toLowerCase().includes(q));
+      return vaultCredentialsData.filter(
+        c =>
+          c.name.toLowerCase().includes(q) ||
+          (typeof c.username === 'string' && c.username.toLowerCase().includes(q)),
+      );
     });
     const vaultWebsitesTagOptions = [
       'work',
@@ -1550,13 +1580,13 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
       tags: '',
       notes: '',
     });
-    const showAddWebsiteDialog = ref(false);
-    const addWebsiteActiveTab = ref('general');
+    const addWebsitePageActive = ref(false);
     const addWebsiteForm = ref({
       name: '',
       uri: '',
       tags: '',
       notes: '',
+      folder: '' as string,
       usernameFieldSelector: '',
       passwordFieldSelector: '',
       nextButtonSelector: '',
@@ -1775,12 +1805,84 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
       };
     }
 
+    /** Per-credential access in nested table (multi-select: Connect and/or View secret). */
+    type CredentialPermissionLevel = 'connect' | 'view_secret';
+
+    type ShareCredentialAccess = 'off' | CredentialPermissionLevel[];
+
+    /** Website-level permission for the user/group (main grid column). */
+    type WebsiteSharingLevel = 'manage' | 'view_details' | 'connect';
+
+    type AddWebsiteLinkedCredential = {
+      key: string;
+      name: string;
+      type: string;
+      username: string;
+    };
+
+    type AddWebsiteShareUserRow = {
+      userId: string;
+      expanded: boolean;
+      websiteSharing: WebsiteSharingLevel;
+      permissionsByCredentialKey: Record<string, ShareCredentialAccess>;
+    };
+
+    type AddWebsiteShareGroupRow = {
+      groupId: string;
+      expanded: boolean;
+      websiteSharing: WebsiteSharingLevel;
+      permissionsByCredentialKey: Record<string, ShareCredentialAccess>;
+    };
+
+    const websiteFolderOptions = [
+      { label: 'Personal', value: 'personal' },
+      { label: 'Work', value: 'work' },
+      { label: 'Shared', value: 'shared' },
+    ];
+
+    const addWebsiteDirectoryUsers = [
+      { id: 'u1', name: 'Alice Johnson', email: 'alice.johnson@acme.com' },
+      { id: 'u2', name: 'Bob Smith', email: 'bob.smith@acme.com' },
+      { id: 'u3', name: 'Carol Davis', email: 'carol.davis@acme.com' },
+    ];
+
+    const addWebsiteDirectoryGroups = [
+      { id: 'g1', name: 'Engineering Team' },
+      { id: 'g2', name: 'Security Operations' },
+    ];
+
+    const websiteSharingOptions = [
+      { label: 'Manage', value: 'manage' as const },
+      { label: 'View details', value: 'view_details' as const },
+      { label: 'Connect', value: 'connect' as const },
+    ];
+
+    const credentialPermissionOptions = [
+      { label: 'Connect', value: 'connect' as const },
+      { label: 'View secret', value: 'view_secret' as const },
+    ];
+
+    const linkedWebsiteCredentials = ref<AddWebsiteLinkedCredential[]>([]);
+    const linkedCredentialSearch = ref('');
+    const showLinkCredentialsPicker = ref(false);
+    const linkCredentialsPickerSelection = ref<string[]>([]);
+    const linkPickerSearch = ref('');
+
+    const sharingAudience = ref<'users' | 'groups'>('users');
+    const shareUserRows = ref<AddWebsiteShareUserRow[]>([]);
+    const shareGroupRows = ref<AddWebsiteShareGroupRow[]>([]);
+    const shareSearchQuery = ref('');
+    const showShareTargetsPicker = ref(false);
+    const shareTargetsPickerSelection = ref<string[]>([]);
+    const sharePickerSearch = ref('');
+
     function resetAddWebsiteForm() {
       addWebsiteForm.value = {
         name: '',
         uri: '',
         tags: '',
         notes: '',
+        folder: '',
         usernameFieldSelector: '',
         passwordFieldSelector: '',
         nextButtonSelector: '',
@@ -1791,8 +1893,329 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
         fillMoreThanOnce: false,
         automaticLogin: true,
       };
-      addWebsiteActiveTab.value = 'general';
+      linkedWebsiteCredentials.value = [];
+      linkedCredentialSearch.value = '';
+      linkCredentialsPickerSelection.value = [];
+      linkPickerSearch.value = '';
+      showLinkCredentialsPicker.value = false;
+      sharingAudience.value = 'users';
+      shareUserRows.value = [];
+      shareGroupRows.value = [];
+      shareSearchQuery.value = '';
+      shareTargetsPickerSelection.value = [];
+      sharePickerSearch.value = '';
+      showShareTargetsPicker.value = false;
     }
+
+    function credentialKeyForName(name: string) {
+      return `cred:${name}`;
+    }
+
+    function normalizeCredentialLevels(levels: CredentialPermissionLevel[]): CredentialPermissionLevel[] {
+      const u = [...new Set(levels.filter(x => x === 'connect' || x === 'view_secret'))];
+      return u.length ? u : ['connect'];
+    }
+
+    function migrateLegacyCredentialAccess(prev: unknown): ShareCredentialAccess {
+      if (prev === 'off') return 'off';
+      if (Array.isArray(prev)) return normalizeCredentialLevels(prev as CredentialPermissionLevel[]);
+      if (prev && typeof prev === 'object' && !Array.isArray(prev)) {
+        const o = prev as Record<string, boolean>;
+        const next: CredentialPermissionLevel[] = [];
+        if (o.viewPassword || o.viewDetails || o.manage) next.push('view_secret');
+        if (o.connect !== false) next.push('connect');
+        return normalizeCredentialLevels(next);
+      }
+      return ['connect'];
+    }
+
+    function syncSharePermissionsWithLinkedCredentials() {
+      const keys = linkedWebsiteCredentials.value.map(c => c.key);
+      for (const row of shareUserRows.value) {
+        const next: Record<string, ShareCredentialAccess> = {};
+        for (const k of keys) {
+          const prev = row.permissionsByCredentialKey[k];
+          if (prev === 'off') next[k] = 'off';
+          else next[k] = migrateLegacyCredentialAccess(prev);
+        }
+        row.permissionsByCredentialKey = next;
+      }
+      for (const row of shareGroupRows.value) {
+        const next: Record<string, ShareCredentialAccess> = {};
+        for (const k of keys) {
+          const prev = row.permissionsByCredentialKey[k];
+          if (prev === 'off') next[k] = 'off';
+          else next[k] = migrateLegacyCredentialAccess(prev);
+        }
+        row.permissionsByCredentialKey = next;
+      }
+    }
+
+    function credentialLevelsForRow(
+      map: Record<string, ShareCredentialAccess>,
+      key: string,
+    ): CredentialPermissionLevel[] {
+      const v = map[key];
+      if (v === 'off') return ['connect'];
+      if (Array.isArray(v)) return normalizeCredentialLevels(v);
+      return ['connect'];
+    }
+
+    function setUserCredentialLevels(userId: string, credKey: string, value: CredentialPermissionLevel[]) {
+      const row = shareUserRows.value.find(r => r.userId === userId);
+      if (!row || row.permissionsByCredentialKey[credKey] === 'off') return;
+      row.permissionsByCredentialKey[credKey] = normalizeCredentialLevels(value ?? []);
+    }
+
+    function setGroupCredentialLevels(groupId: string, credKey: string, value: CredentialPermissionLevel[]) {
+      const row = shareGroupRows.value.find(r => r.groupId === groupId);
+      if (!row || row.permissionsByCredentialKey[credKey] === 'off') return;
+      row.permissionsByCredentialKey[credKey] = normalizeCredentialLevels(value ?? []);
+    }
+
+    function activeSharedCredentialCount(map: Record<string, ShareCredentialAccess>) {
+      return linkedWebsiteCredentials.value.filter(c => map[c.key] !== 'off').length;
+    }
+
+    const filteredLinkedWebsiteCredentials = computed(() => {
+      const q = linkedCredentialSearch.value.trim().toLowerCase();
+      return linkedWebsiteCredentials.value.filter(row => {
+        if (row.type !== 'Password') return false;
+        if (!q) return true;
+        return (
+          row.name.toLowerCase().includes(q) ||
+          row.username.toLowerCase().includes(q) ||
+          row.type.toLowerCase().includes(q)
+        );
+      });
+    });
+
+    const credentialsAvailableToLink = computed(() =>
+      vaultCredentialsData.filter(
+        c =>
+          c.type === 'Password' &&
+          !linkedWebsiteCredentials.value.some(l => l.key === credentialKeyForName(c.name)),
+      ),
+    );
+
+    const linkPickerFilteredCredentials = computed(() => {
+      const q = linkPickerSearch.value.trim().toLowerCase();
+      const list = credentialsAvailableToLink.value;
+      if (!q) return list;
+      return list.filter(
+        c =>
+          c.name.toLowerCase().includes(q) ||
+          c.type.toLowerCase().includes(q) ||
+          (typeof c.username === 'string' && c.username.toLowerCase().includes(q)),
+      );
+    });
+
+    function linkPickerIsSelected(name: string) {
+      return linkCredentialsPickerSelection.value.includes(name);
+    }
+
+    function toggleLinkPickerSelection(name: string, checked: boolean) {
+      const cur = linkCredentialsPickerSelection.value;
+      if (checked && !cur.includes(name)) {
+        linkCredentialsPickerSelection.value = [...cur, name];
+      } else if (!checked) {
+        linkCredentialsPickerSelection.value = cur.filter(n => n !== name);
+      }
+    }
+
+    function sharePickerIsSelected(id: string) {
+      return shareTargetsPickerSelection.value.includes(id);
+    }
+
+    function toggleSharePickerSelection(id: string, checked: boolean) {
+      const cur = shareTargetsPickerSelection.value;
+      if (checked && !cur.includes(id)) {
+        shareTargetsPickerSelection.value = [...cur, id];
+      } else if (!checked) {
+        shareTargetsPickerSelection.value = cur.filter(x => x !== id);
+      }
+    }
+
+    function closeLinkCredentialsPicker() {
+      showLinkCredentialsPicker.value = false;
+      linkPickerSearch.value = '';
+      linkCredentialsPickerSelection.value = [];
+    }
+
+    function closeShareTargetsPicker() {
+      showShareTargetsPicker.value = false;
+      sharePickerSearch.value = '';
+      shareTargetsPickerSelection.value = [];
+    }
+
+    function openLinkCredentialsPicker() {
+      linkCredentialsPickerSelection.value = [];
+      linkPickerSearch.value = '';
+      showLinkCredentialsPicker.value = true;
+    }
+
+    function applyLinkCredentialsPicker() {
+      for (const name of linkCredentialsPickerSelection.value) {
+        const src = vaultCredentialsData.find(c => c.name === name);
+        if (!src || src.type !== 'Password') continue;
+        if (linkedWebsiteCredentials.value.some(l => l.key === credentialKeyForName(name))) continue;
+        linkedWebsiteCredentials.value.push({
+          key: credentialKeyForName(name),
+          name: src.name,
+          type: src.type,
+          username: typeof src.username === 'string' ? src.username : '—',
+        });
+      }
+      syncSharePermissionsWithLinkedCredentials();
+      closeLinkCredentialsPicker();
+    }
+
+    function removeLinkedWebsiteCredential(key: string) {
+      linkedWebsiteCredentials.value = linkedWebsiteCredentials.value.filter(r => r.key !== key);
+      syncSharePermissionsWithLinkedCredentials();
+    }
+
+    function openShareTargetsPicker() {
+      shareTargetsPickerSelection.value = [];
+      sharePickerSearch.value = '';
+      showShareTargetsPicker.value = true;
+    }
+
+    function applyShareTargetsPicker() {
+      if (sharingAudience.value === 'users') {
+        for (const id of shareTargetsPickerSelection.value) {
+          if (shareUserRows.value.some(r => r.userId === id)) continue;
+          shareUserRows.value.push({
+            userId: id,
+            expanded: true,
+            websiteSharing: 'connect',
+            permissionsByCredentialKey: {},
+          });
+        }
+      } else {
+        for (const id of shareTargetsPickerSelection.value) {
+          if (shareGroupRows.value.some(r => r.groupId === id)) continue;
+          shareGroupRows.value.push({
+            groupId: id,
+            expanded: true,
+            websiteSharing: 'connect',
+            permissionsByCredentialKey: {},
+          });
+        }
+      }
+      syncSharePermissionsWithLinkedCredentials();
+      closeShareTargetsPicker();
+    }
+
+    function removeShareUserRow(userId: string) {
+      shareUserRows.value = shareUserRows.value.filter(r => r.userId !== userId);
+    }
+
+    function removeShareGroupRow(groupId: string) {
+      shareGroupRows.value = shareGroupRows.value.filter(r => r.groupId !== groupId);
+    }
+
+    function toggleShareUserExpanded(userId: string) {
+      const row = shareUserRows.value.find(r => r.userId === userId);
+      if (row) row.expanded = !row.expanded;
+    }
+
+    function toggleShareGroupExpanded(groupId: string) {
+      const row = shareGroupRows.value.find(r => r.groupId === groupId);
+      if (row) row.expanded = !row.expanded;
+    }
+
+    function removeUserShareForCredential(userId: string, credKey: string) {
+      const row = shareUserRows.value.find(r => r.userId === userId);
+      if (!row) return;
+      row.permissionsByCredentialKey[credKey] = 'off';
+      if (activeSharedCredentialCount(row.permissionsByCredentialKey) === 0) {
+        removeShareUserRow(userId);
+      }
+    }
+
+    function removeGroupShareForCredential(groupId: string, credKey: string) {
+      const row = shareGroupRows.value.find(r => r.groupId === groupId);
+      if (!row) return;
+      row.permissionsByCredentialKey[credKey] = 'off';
+      if (activeSharedCredentialCount(row.permissionsByCredentialKey) === 0) {
+        removeShareGroupRow(groupId);
+      }
+    }
+
+    const filteredShareUserRows = computed(() => {
+      const q = shareSearchQuery.value.trim().toLowerCase();
+      let rows = shareUserRows.value.map(r => {
+        const u = addWebsiteDirectoryUsers.find(x => x.id === r.userId);
+        return { row: r, name: u?.name ?? r.userId, email: u?.email ?? '' };
+      });
+      if (q) {
+        rows = rows.filter(
+          x => x.name.toLowerCase().includes(q) || x.email.toLowerCase().includes(q),
+        );
+      }
+      return rows;
+    });
+
+    const filteredShareGroupRows = computed(() => {
+      const q = shareSearchQuery.value.trim().toLowerCase();
+      let rows = shareGroupRows.value.map(r => {
+        const g = addWebsiteDirectoryGroups.find(x => x.id === r.groupId);
+        return { row: r, name: g?.name ?? r.groupId };
+      });
+      if (q) rows = rows.filter(x => x.name.toLowerCase().includes(q));
+      return rows;
+    });
+
+    const shareTargetsPickerOptions = computed(() => {
+      if (sharingAudience.value === 'users') {
+        const taken = new Set(shareUserRows.value.map(r => r.userId));
+        return addWebsiteDirectoryUsers.filter(u => !taken.has(u.id));
+      }
+      const taken = new Set(shareGroupRows.value.map(r => r.groupId));
+      return addWebsiteDirectoryGroups.filter(g => !taken.has(g.id));
+    });
+
+    const sharePickerFilteredOptions = computed(() => {
+      const q = sharePickerSearch.value.trim().toLowerCase();
+      const list = shareTargetsPickerOptions.value;
+      if (!q) return list;
+      return list.filter((item: { name: string; id: string; email?: string }) => {
+        if (item.name.toLowerCase().includes(q) || item.id.toLowerCase().includes(q)) return true;
+        return typeof item.email === 'string' && item.email.toLowerCase().includes(q);
+      });
+    });
+
+    function scrollAddWebsiteSection(sectionId: string) {
+      if (typeof document === 'undefined') return;
+      document.getElementById(`add-website-section-${sectionId}`)?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      });
+    }
+
+    const showAddWebsiteStandalonePage = computed(
+      () =>
+        addWebsitePageActive.value &&
+        ((inPasswordVault.value && currentPage.value === 'vault-websites') ||
+          (currentView.value === 'password-vault' && passwordVaultTab.value === 'websites')),
+    );
+
+    watch(passwordVaultTab, tab => {
+      if (tab !== 'websites') addWebsitePageActive.value = false;
+    });
+
+    watch(currentView, v => {
+      if (!inPasswordVault.value && v !== 'password-vault') {
+        addWebsitePageActive.value = false;
+      }
+    });
+
+    watch(currentPage, p => {
+      if (inPasswordVault.value && p !== 'vault-websites') {
+        addWebsitePageActive.value = false;
+      }
+    });
 
     const credentialDraftFilterCount = computed(() => {
       let count = 0;
@@ -2069,12 +2492,12 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
     }
 
     function openVaultWebsitesDialog() {
-      showAddWebsiteDialog.value = true;
       resetAddWebsiteForm();
+      addWebsitePageActive.value = true;
     }
 
     function closeAddWebsiteDialog() {
-      showAddWebsiteDialog.value = false;
+      addWebsitePageActive.value = false;
       resetAddWebsiteForm();
     }
 
@@ -2217,6 +2640,7 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
     }
 
     function leavePasswordVault() {
+      closeAddWebsiteDialog();
       inPasswordVault.value = false;
       currentView.value = previousUserPortalView.value;
       currentPage.value = 'portal';
@@ -2939,15 +3363,13 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
       passwordVaultTab,
       credentialColumns,
       websiteColumns,
-      vaultPasswordVaultStatCards,
-      vaultPasswordVaultLoginCount,
-      vaultPasswordVaultLastLogins,
-      vaultSecretsAddedBars,
-      vaultMaxSecretsAddedValue,
+      vaultOverviewPasswordHealthPercent,
+      vaultOverviewMetricCards,
+      vaultOverviewUrgentWindowSummary,
+      vaultOverviewReusedCredentials,
+      vaultOverviewCredentialExpirations,
       vaultWeakSecretsSummary,
       vaultWeakSecrets,
-      vaultExpiringSecretsSummary,
-      vaultExpiringSecrets,
       vaultUnusedSecretsSummary,
       vaultUnusedSecrets,
       vaultWebsitesData,
@@ -2996,7 +3418,54 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
       credentialForm,
       addCredentialForm,
       addWebsiteForm,
-      addWebsiteActiveTab,
+      addWebsitePageActive,
+      showAddWebsiteStandalonePage,
+      websiteFolderOptions,
+      linkedWebsiteCredentials,
+      linkedCredentialSearch,
+      filteredLinkedWebsiteCredentials,
+      credentialsAvailableToLink,
+      linkPickerSearch,
+      linkPickerFilteredCredentials,
+      linkPickerIsSelected,
+      toggleLinkPickerSelection,
+      closeLinkCredentialsPicker,
+      showLinkCredentialsPicker,
+      linkCredentialsPickerSelection,
+      openLinkCredentialsPicker,
+      applyLinkCredentialsPicker,
+      removeLinkedWebsiteCredential,
+      sharingAudience,
+      shareUserRows,
+      shareGroupRows,
+      shareSearchQuery,
+      filteredShareUserRows,
+      filteredShareGroupRows,
+      sharePickerSearch,
+      sharePickerFilteredOptions,
+      sharePickerIsSelected,
+      toggleSharePickerSelection,
+      closeShareTargetsPicker,
+      showShareTargetsPicker,
+      shareTargetsPickerSelection,
+      shareTargetsPickerOptions,
+      openShareTargetsPicker,
+      applyShareTargetsPicker,
+      removeShareUserRow,
+      removeShareGroupRow,
+      toggleShareUserExpanded,
+      toggleShareGroupExpanded,
+      credentialLevelsForRow,
+      setUserCredentialLevels,
+      setGroupCredentialLevels,
+      removeUserShareForCredential,
+      removeGroupShareForCredential,
+      activeSharedCredentialCount,
+      addWebsiteDirectoryUsers,
+      addWebsiteDirectoryGroups,
+      websiteSharingOptions,
+      credentialPermissionOptions,
+      scrollAddWebsiteSection,
       websiteForm,
       credentialTypeOptions,
       addCredentialTypeOptions,
@@ -3011,7 +3480,6 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
       websiteDraftFilterCount,
       showCredentialDialog,
       showAddCredentialDialog,
-      showAddWebsiteDialog,
       showWebsiteDialog,
       showCredentialFilterDialog,
       showWebsiteFilterDialog,
@@ -3097,129 +3565,804 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
       </AppNavigation>
 
       <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <template v-if="currentPage === 'vault-home'">
-          <DashboardPageLayout class="w-full! h-full!">
-            <div class="flex flex-col gap-lg w-full">
-              <div class="grid grid-cols-[max-content_1fr] gap-6 items-stretch">
-                <div class="flex flex-col gap-6 items-start">
-                  <DashboardStatCard
-                    v-for="stat in vaultPasswordVaultStatCards"
-                    :key="stat.header"
-                    :header="stat.header"
-                    :value="stat.value"
-                    :icon="stat.icon"
-                    :changeValue="stat.changeValue"
-                    :changeLabel="stat.changeLabel"
-                    :showArrow="stat.showArrow"
-                    class="w-fit h-fit"
-                  />
-                </div>
+        <template v-if="showAddWebsiteStandalonePage">
+          <div class="flex flex-1 flex-col min-h-0 bg-neutral-surface">
+            <div class="flex flex-1 min-h-0 overflow-hidden">
+              <div class="flex-1 overflow-y-auto min-h-0 min-w-0">
+                <div class="w-full max-w-3xl mx-auto px-6 py-6 pb-32 flex flex-col gap-lg">
+                  <div>
+                    <PvButton severity="secondary" variant="text" @click="closeAddWebsiteDialog">
+                      <template #icon><ArrowLeftIcon class="size-4" /></template>
+                      Back
+                    </PvButton>
+                  </div>
+                  <div class="flex items-center gap-sm">
+                    <GlobeAltIcon class="size-8 text-branding-base shrink-0" />
+                    <h1 class="text-heading-1 text-neutral-base m-0">Add Website</h1>
+                  </div>
+                  <section
+                    id="add-website-section-general"
+                    class="scroll-mt-6 rounded-lg border border-neutral-default_solid bg-neutral-base p-6 shadow-sm"
+                  >
+                    <h2 class="text-heading-4 text-neutral-base m-0 mb-4">Website Details</h2>
+                    <div class="flex flex-col gap-md">
+                      <FormField label="Name" required>
+                        <template #default="{ inputId }">
+                          <PvInputText :id="inputId" v-model="addWebsiteForm.name" placeholder="Ex: JumpCloud" class="w-full" />
+                        </template>
+                      </FormField>
+                      <FormField label="URI (Hostname, IP, Address, etc.)" required>
+                        <template #default="{ inputId }">
+                          <PvInputText :id="inputId" v-model="addWebsiteForm.uri" placeholder="Ex: JumpCloud" class="w-full" />
+                        </template>
+                      </FormField>
+                      <FormField label="Tags">
+                        <template #default="{ inputId }">
+                          <PvInputText :id="inputId" v-model="addWebsiteForm.tags" class="w-full" placeholder="Tags" />
+                        </template>
+                      </FormField>
+                      <FormField label="Folder">
+                        <template #default="{ inputId }">
+                          <PvSelect
+                            :inputId="inputId"
+                            v-model="addWebsiteForm.folder"
+                            :options="websiteFolderOptions"
+                            optionLabel="label"
+                            optionValue="value"
+                            placeholder="Select Folder"
+                            class="w-full"
+                            showClear
+                          />
+                        </template>
+                      </FormField>
+                      <FormField label="Notes">
+                        <template #default="{ inputId }">
+                          <PvTextarea :id="inputId" v-model="addWebsiteForm.notes" class="w-full" :rows="4" placeholder="Notes" />
+                        </template>
+                      </FormField>
+                    </div>
+                  </section>
 
-                <CollapsiblePanel header="Secrets Added Over Time" class="w-full h-full">
-                  <template #titleicon="iconProps">
-                    <ChartBarSquareIcon :class="iconProps.class" />
-                  </template>
-                  <div class="flex flex-col h-full">
-                    <div class="flex flex-col gap-sm flex-1">
-                      <div
-                        v-for="item in vaultSecretsAddedBars"
-                        :key="item.date"
-                        class="flex items-center gap-sm"
-                      >
-                        <div class="w-12 text-body-sm text-neutral-subtle text-right shrink-0">
-                          {{ item.date }}
+                  <section
+                    id="add-website-section-linked"
+                    class="scroll-mt-6 rounded-lg border border-neutral-default_solid bg-neutral-base p-6 shadow-sm"
+                  >
+                    <h2 class="text-heading-4 text-neutral-base m-0 mb-4">Linked Credentials</h2>
+                    <div class="flex flex-col gap-md">
+                      <div class="flex flex-wrap items-center gap-sm">
+                        <PvButton label="+ Add" size="small" @click="openLinkCredentialsPicker" />
+                        <div class="min-w-[200px] max-w-md flex-1">
+                          <PvIconField class="w-full">
+                            <PvInputIcon><MagnifyingGlassIcon class="size-4" /></PvInputIcon>
+                            <PvInputText v-model="linkedCredentialSearch" placeholder="Search" class="w-full" />
+                          </PvIconField>
                         </div>
-                        <div class="flex-1">
-                          <div class="w-full h-4 rounded-sm bg-neutral-surface overflow-hidden">
+                      </div>
+                      <div class="border border-neutral-default_solid rounded-md overflow-hidden">
+                        <table class="w-full text-left text-body-sm">
+                          <thead class="bg-neutral-surface border-b border-neutral-default_solid">
+                            <tr>
+                              <th class="p-2 text-body-sm-semi-bold text-neutral-base">Credential</th>
+                              <th class="p-2 text-body-sm-semi-bold text-neutral-base">Username</th>
+                              <th class="w-10 p-2 text-right align-middle">
+                                <span class="sr-only">Remove</span>
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr v-for="row in filteredLinkedWebsiteCredentials" :key="row.key" class="border-b border-neutral-default_solid last:border-b-0">
+                              <td class="p-2 align-middle">
+                                <div class="flex min-w-0 items-center gap-sm">
+                                  <KeyIcon class="size-4 shrink-0 text-neutral-subtle" />
+                                  <div class="min-w-0">
+                                    <div class="text-body-sm-semi-bold text-neutral-base truncate">{{ row.name }}</div>
+                                    <div class="text-body-xs text-neutral-subtle">{{ row.type }}</div>
+                                  </div>
+                                </div>
+                              </td>
+                              <td class="p-2 align-middle text-neutral-base truncate max-w-xs">{{ row.username }}</td>
+                              <td class="w-10 p-2 align-middle text-right">
+                                <button
+                                  type="button"
+                                  class="inline-flex cursor-pointer items-center justify-center rounded-md border-0 bg-transparent p-1.5 text-red-600 hover:bg-red-50"
+                                  aria-label="Remove linked credential"
+                                  @click="removeLinkedWebsiteCredential(row.key)"
+                                >
+                                  <TrashIcon class="size-5 shrink-0 text-red-600" aria-hidden="true" />
+                                </button>
+                              </td>
+                            </tr>
+                            <tr v-if="filteredLinkedWebsiteCredentials.length === 0">
+                              <td colspan="3" class="p-6 text-center text-body-sm text-neutral-subtle">No linked credentials. Use Add to link vault credentials.</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div class="flex flex-wrap items-center justify-between gap-sm text-body-xs text-neutral-subtle">
+                        <span>100 per page</span>
+                        <span>1–{{ filteredLinkedWebsiteCredentials.length }} of {{ linkedWebsiteCredentials.length }}</span>
+                      </div>
+                    </div>
+                  </section>
+
+                  <section
+                    id="add-website-section-sharing"
+                    class="scroll-mt-6 rounded-lg border border-neutral-default_solid bg-neutral-base p-6 shadow-sm"
+                  >
+                    <div class="mb-4 flex items-center gap-2">
+                      <ChevronDownIcon class="size-5 shrink-0 text-neutral-subtle" aria-hidden="true" />
+                      <h2 class="text-heading-4 text-neutral-base m-0 flex-1">Sharing</h2>
+                      <button
+                        type="button"
+                        class="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-md border-0 bg-transparent text-neutral-subtle hover:bg-neutral-surface hover:text-neutral-base"
+                        aria-label="Refresh sharing list"
+                      >
+                        <ArrowPathIcon class="size-5" />
+                      </button>
+                    </div>
+                    <div class="flex flex-col gap-4">
+                      <div class="flex flex-wrap gap-2" role="tablist" aria-label="Sharing audience">
+                        <button
+                          type="button"
+                          role="tab"
+                          class="rounded-full border px-4 py-1.5 text-body-sm-semi-bold transition-colors"
+                          :class="
+                            sharingAudience === 'users'
+                              ? 'border-branding-base bg-branding-base text-white'
+                              : 'border-neutral-default_solid bg-neutral-base text-neutral-subtle hover:border-neutral-subtle'
+                          "
+                          :aria-selected="sharingAudience === 'users'"
+                          @click="sharingAudience = 'users'"
+                        >
+                          Users ({{ shareUserRows.length }})
+                        </button>
+                        <button
+                          type="button"
+                          role="tab"
+                          class="rounded-full border px-4 py-1.5 text-body-sm-semi-bold transition-colors"
+                          :class="
+                            sharingAudience === 'groups'
+                              ? 'border-branding-base bg-branding-base text-white'
+                              : 'border-neutral-default_solid bg-neutral-base text-neutral-subtle hover:border-neutral-subtle'
+                          "
+                          :aria-selected="sharingAudience === 'groups'"
+                          @click="sharingAudience = 'groups'"
+                        >
+                          User Groups
+                        </button>
+                      </div>
+                      <div class="flex w-full flex-wrap items-center gap-3">
+                        <PvButton label="+ Add" size="small" class="shrink-0" @click="openShareTargetsPicker" />
+                        <PvIconField class="min-w-0 flex-1 basis-48">
+                          <PvInputIcon><MagnifyingGlassIcon class="size-4 text-neutral-subtle" /></PvInputIcon>
+                          <PvInputText v-model="shareSearchQuery" placeholder="Search" class="w-full" />
+                        </PvIconField>
+                        <div class="ml-auto flex shrink-0 items-center gap-1">
+                          <PvButton severity="secondary" variant="text" class="size-9" aria-label="Filter">
+                            <FunnelIcon class="size-5 text-neutral-subtle" />
+                          </PvButton>
+                          <PvButton severity="secondary" variant="text" class="size-9" aria-label="Refresh">
+                            <ArrowPathIcon class="size-5 text-neutral-subtle" />
+                          </PvButton>
+                        </div>
+                      </div>
+
+                      <template v-if="sharingAudience === 'users'">
+                        <div class="overflow-hidden rounded-md border border-neutral-default_solid bg-neutral-base">
+                          <div
+                            class="hidden grid-cols-[auto_minmax(0,1fr)_minmax(5.5rem,auto)_minmax(10rem,1fr)_auto] items-center gap-3 border-b border-neutral-default_solid bg-neutral-surface px-4 py-2.5 text-body-xs-bold text-neutral-subtle md:grid"
+                          >
+                            <span class="w-4" aria-hidden="true"></span>
+                            <span>User</span>
+                            <span>Credential count</span>
+                            <span>Website permission</span>
+                            <span class="sr-only">Remove user</span>
+                          </div>
+                          <template v-for="wrap in filteredShareUserRows" :key="wrap.row.userId">
                             <div
-                              class="h-4 rounded-sm bg-branding-base"
-                              :style="{ width: ((item.value / vaultMaxSecretsAddedValue) * 100) + '%' }"
-                            />
+                              class="border-b border-neutral-default_solid last:border-b-0"
+                              :class="wrap.row.expanded ? 'bg-branding-base/5' : ''"
+                            >
+                              <div
+                                class="grid grid-cols-[auto_minmax(0,1fr)_minmax(5.5rem,auto)_minmax(10rem,1fr)_auto] items-center gap-3 px-4 py-3 cursor-pointer"
+                                role="button"
+                                tabindex="0"
+                                @click="toggleShareUserExpanded(wrap.row.userId)"
+                                @keydown.enter.prevent="toggleShareUserExpanded(wrap.row.userId)"
+                                @keydown.space.prevent="toggleShareUserExpanded(wrap.row.userId)"
+                              >
+                                <button
+                                  type="button"
+                                  class="flex w-4 shrink-0 cursor-pointer items-center justify-center border-0 bg-transparent p-0"
+                                  :aria-expanded="wrap.row.expanded"
+                                  aria-label="Expand or collapse credentials"
+                                  @click.stop="toggleShareUserExpanded(wrap.row.userId)"
+                                >
+                                  <ChevronDownIcon
+                                    class="size-4 text-neutral-subtle transition-transform"
+                                    :class="{ '-rotate-90': !wrap.row.expanded }"
+                                  />
+                                </button>
+                                <div class="min-w-0" @click.stop>
+                                  <div class="truncate text-body-sm-semi-bold text-neutral-base">{{ wrap.name }}</div>
+                                  <div class="truncate text-body-xs text-neutral-subtle">{{ wrap.email }}</div>
+                                </div>
+                                <div class="shrink-0 text-body-sm text-neutral-base tabular-nums">
+                                  {{ activeSharedCredentialCount(wrap.row.permissionsByCredentialKey) }}
+                                </div>
+                                <div class="min-w-0 max-w-full shrink-0" @click.stop>
+                                  <PvSelect
+                                    v-model="wrap.row.websiteSharing"
+                                    :options="websiteSharingOptions"
+                                    optionLabel="label"
+                                    optionValue="value"
+                                    class="w-full min-w-[8.5rem]"
+                                  />
+                                </div>
+                                <div class="flex shrink-0 justify-end" @click.stop>
+                                  <button
+                                    type="button"
+                                    class="inline-flex cursor-pointer items-center justify-center rounded-md border-0 bg-transparent p-1.5 text-red-600 hover:bg-red-50"
+                                    aria-label="Remove user from sharing"
+                                    @click="removeShareUserRow(wrap.row.userId)"
+                                  >
+                                    <TrashIcon class="size-5 shrink-0 text-red-600" aria-hidden="true" />
+                                  </button>
+                                </div>
+                              </div>
+                              <div v-if="wrap.row.expanded" class="border-t border-neutral-default_solid bg-neutral-surface px-4 py-3 pl-11">
+                                <div v-if="linkedWebsiteCredentials.length === 0" class="text-body-sm text-neutral-subtle">
+                                  Link credentials above to configure access per credential.
+                                </div>
+                                <table v-else class="w-full table-fixed border-collapse text-left text-body-sm">
+                                  <colgroup>
+                                    <col class="min-w-0" />
+                                    <col class="min-w-[12rem] w-[45%]" />
+                                    <col class="w-12" />
+                                  </colgroup>
+                                  <thead>
+                                    <tr class="border-b border-neutral-default_solid text-body-xs-bold text-neutral-subtle">
+                                      <th class="py-2.5 pr-4 font-medium">Credential</th>
+                                      <th class="py-2.5 pr-4 font-medium">Credential permission</th>
+                                      <th class="py-2.5 pl-2 text-right align-middle">
+                                        <span class="sr-only">Remove</span>
+                                      </th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    <tr
+                                      v-for="cred in linkedWebsiteCredentials"
+                                      v-show="wrap.row.permissionsByCredentialKey[cred.key] !== 'off'"
+                                      :key="wrap.row.userId + cred.key"
+                                      class="border-b border-neutral-default_solid last:border-0 align-middle"
+                                    >
+                                      <td class="py-3 pr-4 align-middle">
+                                        <div class="flex min-w-0 items-start gap-sm">
+                                          <KeyIcon class="mt-0.5 size-4 shrink-0 text-branding-base" />
+                                          <div class="min-w-0">
+                                            <div class="text-body-sm-semi-bold text-neutral-base">{{ cred.name }}</div>
+                                            <div class="text-body-xs text-neutral-subtle">{{ cred.type }}</div>
+                                          </div>
+                                        </div>
+                                      </td>
+                                      <td class="py-3 pr-4 align-middle" @click.stop>
+                                        <PvMultiSelect
+                                          :modelValue="credentialLevelsForRow(wrap.row.permissionsByCredentialKey, cred.key)"
+                                          @update:modelValue="setUserCredentialLevels(wrap.row.userId, cred.key, $event)"
+                                          :options="credentialPermissionOptions"
+                                          optionLabel="label"
+                                          optionValue="value"
+                                          display="chip"
+                                          class="w-full min-w-0"
+                                          placeholder="Permission"
+                                          :showToggleAll="false"
+                                          :maxSelectedLabels="4"
+                                        />
+                                      </td>
+                                      <td class="w-12 py-3 pl-2 align-middle">
+                                        <div class="flex w-full justify-end">
+                                          <button
+                                            type="button"
+                                            class="inline-flex cursor-pointer items-center justify-center rounded-md border-0 bg-transparent p-1.5 text-red-600 hover:bg-red-50"
+                                            aria-label="Remove access to this credential"
+                                            @click.stop="removeUserShareForCredential(wrap.row.userId, cred.key)"
+                                          >
+                                            <TrashIcon class="size-5 shrink-0 text-red-600" aria-hidden="true" />
+                                          </button>
+                                        </div>
+                                      </td>
+                                    </tr>
+                                  </tbody>
+                                </table>
+                              </div>
+                            </div>
+                          </template>
+                          <div
+                            v-if="filteredShareUserRows.length === 0"
+                            class="p-6 text-center text-body-sm text-neutral-subtle"
+                          >
+                            No users added. Use + Add to pick users from the directory.
                           </div>
                         </div>
-                        <div class="w-8 text-body-sm text-neutral-base text-right shrink-0">
-                          {{ item.value }}
+                      </template>
+
+                      <template v-else>
+                        <div class="overflow-hidden rounded-md border border-neutral-default_solid bg-neutral-base">
+                          <div
+                            class="hidden grid-cols-[auto_minmax(0,1fr)_minmax(5.5rem,auto)_minmax(10rem,1fr)_auto] items-center gap-3 border-b border-neutral-default_solid bg-neutral-surface px-4 py-2.5 text-body-xs-bold text-neutral-subtle md:grid"
+                          >
+                            <span class="w-4" aria-hidden="true"></span>
+                            <span>Group</span>
+                            <span>Credential count</span>
+                            <span>Website permission</span>
+                            <span class="sr-only">Remove group</span>
+                          </div>
+                          <template v-for="gwrap in filteredShareGroupRows" :key="gwrap.row.groupId">
+                            <div
+                              class="border-b border-neutral-default_solid last:border-b-0"
+                              :class="gwrap.row.expanded ? 'bg-branding-base/5' : ''"
+                            >
+                              <div
+                                class="grid grid-cols-[auto_minmax(0,1fr)_minmax(5.5rem,auto)_minmax(10rem,1fr)_auto] items-center gap-3 px-4 py-3 cursor-pointer"
+                                role="button"
+                                tabindex="0"
+                                @click="toggleShareGroupExpanded(gwrap.row.groupId)"
+                                @keydown.enter.prevent="toggleShareGroupExpanded(gwrap.row.groupId)"
+                                @keydown.space.prevent="toggleShareGroupExpanded(gwrap.row.groupId)"
+                              >
+                                <button
+                                  type="button"
+                                  class="flex w-4 shrink-0 cursor-pointer items-center justify-center border-0 bg-transparent p-0"
+                                  :aria-expanded="gwrap.row.expanded"
+                                  aria-label="Expand or collapse credentials"
+                                  @click.stop="toggleShareGroupExpanded(gwrap.row.groupId)"
+                                >
+                                  <ChevronDownIcon
+                                    class="size-4 text-neutral-subtle transition-transform"
+                                    :class="{ '-rotate-90': !gwrap.row.expanded }"
+                                  />
+                                </button>
+                                <div class="min-w-0 truncate text-body-sm-semi-bold text-neutral-base" @click.stop>
+                                  {{ gwrap.name }}
+                                </div>
+                                <div class="shrink-0 text-body-sm text-neutral-base tabular-nums">
+                                  {{ activeSharedCredentialCount(gwrap.row.permissionsByCredentialKey) }}
+                                </div>
+                                <div class="min-w-0 max-w-full shrink-0" @click.stop>
+                                  <PvSelect
+                                    v-model="gwrap.row.websiteSharing"
+                                    :options="websiteSharingOptions"
+                                    optionLabel="label"
+                                    optionValue="value"
+                                    class="w-full min-w-[8.5rem]"
+                                  />
+                                </div>
+                                <div class="flex shrink-0 justify-end" @click.stop>
+                                  <button
+                                    type="button"
+                                    class="inline-flex cursor-pointer items-center justify-center rounded-md border-0 bg-transparent p-1.5 text-red-600 hover:bg-red-50"
+                                    aria-label="Remove group from sharing"
+                                    @click="removeShareGroupRow(gwrap.row.groupId)"
+                                  >
+                                    <TrashIcon class="size-5 shrink-0 text-red-600" aria-hidden="true" />
+                                  </button>
+                                </div>
+                              </div>
+                              <div v-if="gwrap.row.expanded" class="border-t border-neutral-default_solid bg-neutral-surface px-4 py-3 pl-11">
+                                <div v-if="linkedWebsiteCredentials.length === 0" class="text-body-sm text-neutral-subtle">
+                                  Link credentials above to configure access per credential.
+                                </div>
+                                <table v-else class="w-full table-fixed border-collapse text-left text-body-sm">
+                                  <colgroup>
+                                    <col class="min-w-0" />
+                                    <col class="min-w-[12rem] w-[45%]" />
+                                    <col class="w-12" />
+                                  </colgroup>
+                                  <thead>
+                                    <tr class="border-b border-neutral-default_solid text-body-xs-bold text-neutral-subtle">
+                                      <th class="py-2.5 pr-4 font-medium">Credential</th>
+                                      <th class="py-2.5 pr-4 font-medium">Credential permission</th>
+                                      <th class="py-2.5 pl-2 text-right align-middle">
+                                        <span class="sr-only">Remove</span>
+                                      </th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    <tr
+                                      v-for="cred in linkedWebsiteCredentials"
+                                      v-show="gwrap.row.permissionsByCredentialKey[cred.key] !== 'off'"
+                                      :key="gwrap.row.groupId + cred.key"
+                                      class="border-b border-neutral-default_solid last:border-0 align-middle"
+                                    >
+                                      <td class="py-3 pr-4 align-middle">
+                                        <div class="flex min-w-0 items-start gap-sm">
+                                          <KeyIcon class="mt-0.5 size-4 shrink-0 text-branding-base" />
+                                          <div class="min-w-0">
+                                            <div class="text-body-sm-semi-bold text-neutral-base">{{ cred.name }}</div>
+                                            <div class="text-body-xs text-neutral-subtle">{{ cred.type }}</div>
+                                          </div>
+                                        </div>
+                                      </td>
+                                      <td class="py-3 pr-4 align-middle" @click.stop>
+                                        <PvMultiSelect
+                                          :modelValue="credentialLevelsForRow(gwrap.row.permissionsByCredentialKey, cred.key)"
+                                          @update:modelValue="setGroupCredentialLevels(gwrap.row.groupId, cred.key, $event)"
+                                          :options="credentialPermissionOptions"
+                                          optionLabel="label"
+                                          optionValue="value"
+                                          display="chip"
+                                          class="w-full min-w-0"
+                                          placeholder="Permission"
+                                          :showToggleAll="false"
+                                          :maxSelectedLabels="4"
+                                        />
+                                      </td>
+                                      <td class="w-12 py-3 pl-2 align-middle">
+                                        <div class="flex w-full justify-end">
+                                          <button
+                                            type="button"
+                                            class="inline-flex cursor-pointer items-center justify-center rounded-md border-0 bg-transparent p-1.5 text-red-600 hover:bg-red-50"
+                                            aria-label="Remove access to this credential"
+                                            @click.stop="removeGroupShareForCredential(gwrap.row.groupId, cred.key)"
+                                          >
+                                            <TrashIcon class="size-5 shrink-0 text-red-600" aria-hidden="true" />
+                                          </button>
+                                        </div>
+                                      </td>
+                                    </tr>
+                                  </tbody>
+                                </table>
+                              </div>
+                            </div>
+                          </template>
+                          <div
+                            v-if="filteredShareGroupRows.length === 0"
+                            class="p-6 text-center text-body-sm text-neutral-subtle"
+                          >
+                            No groups added. Use + Add to pick groups from the directory.
+                          </div>
                         </div>
+                      </template>
+                    </div>
+                  </section>
+
+                  <section
+                    id="add-website-section-autofill"
+                    class="scroll-mt-6 rounded-lg border border-neutral-default_solid bg-neutral-base p-6 shadow-sm"
+                  >
+                    <h2 class="text-heading-4 text-neutral-base m-0 mb-4">Autofill Parameters</h2>
+                    <div class="flex flex-col gap-md">
+                      <div class="flex flex-col gap-xs">
+                        <span class="text-body-lg font-semibold text-neutral-base">Field selectors</span>
+                        <span class="text-body-sm text-neutral-subtle">
+                          Provide the CSS selectors for the login form elements. Use the Inspector tool in your browser to find them.
+                        </span>
                       </div>
+                      <FormField label="Username/email field selector">
+                        <template #default="{ inputId }">
+                          <PvInputText :id="inputId" v-model="addWebsiteForm.usernameFieldSelector" class="w-full" />
+                        </template>
+                      </FormField>
+                      <FormField label="Password field selector">
+                        <template #default="{ inputId }">
+                          <PvInputText :id="inputId" v-model="addWebsiteForm.passwordFieldSelector" class="w-full" />
+                        </template>
+                      </FormField>
+                      <FormField label="Next button selector">
+                        <template #default="{ inputId }">
+                          <PvInputText :id="inputId" v-model="addWebsiteForm.nextButtonSelector" class="w-full" />
+                        </template>
+                      </FormField>
+                      <FormField label="Login button selector">
+                        <template #default="{ inputId }">
+                          <PvInputText :id="inputId" v-model="addWebsiteForm.loginButtonSelector" class="w-full" />
+                        </template>
+                      </FormField>
+                      <FormField label="Field selector list" helpText="Selectors must be separated by a semicolon.">
+                        <template #default="{ inputId }">
+                          <PvTextarea
+                            :id="inputId"
+                            v-model="addWebsiteForm.fieldSelectorToHide"
+                            placeholder="List"
+                            class="w-full"
+                            :rows="3"
+                          />
+                        </template>
+                      </FormField>
+                      <PvDivider />
+                      <div class="flex flex-col gap-xs">
+                        <span class="text-body-lg font-semibold text-neutral-base">Behaviours & timing</span>
+                        <span class="text-body-sm text-neutral-subtle">Adjust how the extension interacts with the page.</span>
+                      </div>
+                      <FormField label="Delay after clicking next button (seconds)" helpText="Minimum: 0.1">
+                        <template #default="{ inputId }">
+                          <PvInputText :id="inputId" v-model="addWebsiteForm.delayAfterNext" class="w-full" />
+                        </template>
+                      </FormField>
+                      <FormField label="Fill delay (seconds)" helpText="Maximum: 3.0">
+                        <template #default="{ inputId }">
+                          <PvInputText :id="inputId" v-model="addWebsiteForm.fillDelay" class="w-full" />
+                        </template>
+                      </FormField>
+                      <FormField label="Fill in fields more than once">
+                        <template #default="{ inputId }">
+                          <div class="flex items-center gap-sm">
+                            <PvCheckbox :inputId="inputId" v-model="addWebsiteForm.fillMoreThanOnce" :binary="true" />
+                            <span class="text-body-md text-neutral-base">Fill in fields more than once</span>
+                          </div>
+                        </template>
+                      </FormField>
+                      <FormField label="Automatic login">
+                        <template #default="{ inputId }">
+                          <div class="flex items-center gap-sm">
+                            <PvCheckbox :inputId="inputId" v-model="addWebsiteForm.automaticLogin" :binary="true" />
+                            <span class="text-body-md text-neutral-base">Automatic login</span>
+                          </div>
+                        </template>
+                      </FormField>
+                    </div>
+                  </section>
+                </div>
+              </div>
+              <nav class="hidden xl:flex flex-col shrink-0 w-44 border-l border-neutral-default_solid py-6 px-4 gap-1 sticky top-0 self-start bg-neutral-base" aria-label="Sections">
+                <button type="button" class="text-left text-body-sm text-link-base hover:underline py-1 border-0 bg-transparent cursor-pointer" @click="scrollAddWebsiteSection('general')">General</button>
+                <button type="button" class="text-left text-body-sm text-link-base hover:underline py-1 border-0 bg-transparent cursor-pointer" @click="scrollAddWebsiteSection('linked')">Linked Credentials</button>
+                <button type="button" class="text-left text-body-sm text-link-base hover:underline py-1 border-0 bg-transparent cursor-pointer" @click="scrollAddWebsiteSection('sharing')">Sharing</button>
+                <button type="button" class="text-left text-body-sm text-link-base hover:underline py-1 border-0 bg-transparent cursor-pointer" @click="scrollAddWebsiteSection('autofill')">Autofill Parameters</button>
+              </nav>
+            </div>
+            <div class="shrink-0 border-t border-neutral-default_solid bg-neutral-base px-6 py-4 flex justify-end gap-sm">
+              <PvButton label="Cancel" severity="secondary" variant="text" @click="closeAddWebsiteDialog" />
+              <PvButton label="Save" @click="closeAddWebsiteDialog" />
+            </div>
+            <PvDialog
+              v-model:visible="showLinkCredentialsPicker"
+              :draggable="false"
+              modal
+              header="Pick Password credentials"
+              :style="{ width: 'min(420px, 100vw - 2rem)' }"
+              @update:visible="!$event && closeLinkCredentialsPicker()"
+            >
+              <template #closeicon><XMarkIcon /></template>
+              <p class="text-body-sm text-neutral-subtle m-0 mb-3">
+                Choose Password vault credentials to link to this website.
+              </p>
+              <PvIconField class="w-full mb-3">
+                <PvInputIcon><MagnifyingGlassIcon class="size-4 text-neutral-subtle" /></PvInputIcon>
+                <PvInputText v-model="linkPickerSearch" placeholder="Search" class="w-full" />
+              </PvIconField>
+              <div class="max-h-64 overflow-y-auto rounded-md border border-neutral-default_solid bg-neutral-base divide-y divide-neutral-default_solid">
+                <label
+                  v-for="c in linkPickerFilteredCredentials"
+                  :key="c.name"
+                  class="flex cursor-pointer items-start gap-sm p-3 hover:bg-neutral-surface"
+                >
+                  <PvCheckbox
+                    :modelValue="linkPickerIsSelected(c.name)"
+                    binary
+                    class="mt-0.5 shrink-0"
+                    @update:modelValue="toggleLinkPickerSelection(c.name, $event)"
+                  />
+                  <div class="min-w-0 flex-1">
+                    <div class="text-body-sm-semi-bold text-neutral-base">{{ c.name }}</div>
+                    <div class="text-body-xs text-neutral-subtle">{{ c.type }} · {{ typeof c.username === 'string' ? c.username : '—' }}</div>
+                  </div>
+                </label>
+                <div
+                  v-if="linkPickerFilteredCredentials.length === 0"
+                  class="p-6 text-center text-body-sm text-neutral-subtle"
+                >
+                  {{
+                    credentialsAvailableToLink.length === 0
+                      ? 'All Password credentials are already linked.'
+                      : 'No matches.'
+                  }}
+                </div>
+              </div>
+              <template #footer>
+                <div class="flex flex-1 min-w-0 items-center text-body-xs text-neutral-subtle">
+                  {{ linkCredentialsPickerSelection.length }} selected
+                </div>
+                <div class="flex shrink-0 gap-sm">
+                  <PvButton label="Cancel" severity="secondary" variant="text" @click="closeLinkCredentialsPicker" />
+                  <PvButton label="Add" :disabled="linkCredentialsPickerSelection.length === 0" @click="applyLinkCredentialsPicker" />
+                </div>
+              </template>
+            </PvDialog>
+            <PvDialog
+              v-model:visible="showShareTargetsPicker"
+              :draggable="false"
+              modal
+              :header="sharingAudience === 'users' ? 'Pick users' : 'Pick groups'"
+              :style="{ width: 'min(420px, 100vw - 2rem)' }"
+              @update:visible="!$event && closeShareTargetsPicker()"
+            >
+              <template #closeicon><XMarkIcon /></template>
+              <p class="text-body-sm text-neutral-subtle m-0 mb-3">
+                <template v-if="sharingAudience === 'users'">Select users to share this website and linked credentials with.</template>
+                <template v-else>Select user groups to share with.</template>
+              </p>
+              <PvIconField class="w-full mb-3">
+                <PvInputIcon><MagnifyingGlassIcon class="size-4 text-neutral-subtle" /></PvInputIcon>
+                <PvInputText v-model="sharePickerSearch" placeholder="Search" class="w-full" />
+              </PvIconField>
+              <div class="max-h-64 overflow-y-auto rounded-md border border-neutral-default_solid bg-neutral-base divide-y divide-neutral-default_solid">
+                <label
+                  v-for="item in sharePickerFilteredOptions"
+                  :key="item.id"
+                  class="flex cursor-pointer items-start gap-sm p-3 hover:bg-neutral-surface"
+                >
+                  <PvCheckbox
+                    :modelValue="sharePickerIsSelected(item.id)"
+                    binary
+                    class="mt-0.5 shrink-0"
+                    @update:modelValue="toggleSharePickerSelection(item.id, $event)"
+                  />
+                  <div class="min-w-0 flex-1">
+                    <div class="text-body-sm-semi-bold text-neutral-base">{{ item.name }}</div>
+                    <div v-if="sharingAudience === 'users' && item.email" class="truncate text-body-xs text-neutral-subtle">{{ item.email }}</div>
+                  </div>
+                </label>
+                <div
+                  v-if="sharePickerFilteredOptions.length === 0"
+                  class="p-6 text-center text-body-sm text-neutral-subtle"
+                >
+                  {{ shareTargetsPickerOptions.length === 0 ? 'Everyone available is already added.' : 'No matches.' }}
+                </div>
+              </div>
+              <template #footer>
+                <div class="flex flex-1 min-w-0 items-center text-body-xs text-neutral-subtle">
+                  {{ shareTargetsPickerSelection.length }} selected
+                </div>
+                <div class="flex shrink-0 gap-sm">
+                  <PvButton label="Cancel" severity="secondary" variant="text" @click="closeShareTargetsPicker" />
+                  <PvButton label="Add" :disabled="shareTargetsPickerSelection.length === 0" @click="applyShareTargetsPicker" />
+                </div>
+              </template>
+            </PvDialog>
+          </div>
+        </template>
+        <template v-else>
+        <template v-if="currentPage === 'vault-home'">
+          <DashboardPageLayout class="w-full! h-full!">
+            <div class="flex w-full max-w-[1600px] flex-col gap-lg">
+              <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <div class="rounded-lg border border-neutral-default_solid bg-neutral-base p-5 shadow-sm">
+                  <p class="m-0 mb-3 text-body-sm-semi-bold text-neutral-subtle">Password Health</p>
+                  <div class="flex items-center gap-5">
+                    <div class="relative grid size-24 shrink-0 place-items-center" aria-hidden="true">
+                      <svg class="size-24 -rotate-90 text-neutral-surface" viewBox="0 0 36 36">
+                        <circle cx="18" cy="18" r="15.9155" fill="none" stroke="currentColor" stroke-width="3" />
+                        <circle
+                          cx="18"
+                          cy="18"
+                          r="15.9155"
+                          fill="none"
+                          class="text-success-base"
+                          stroke="currentColor"
+                          stroke-width="3"
+                          stroke-linecap="round"
+                          :stroke-dasharray="vaultOverviewPasswordHealthPercent + ' ' + (100 - vaultOverviewPasswordHealthPercent)"
+                          pathLength="100"
+                        />
+                      </svg>
+                    </div>
+                    <div class="flex min-w-0 flex-1 flex-col gap-1">
+                      <span class="text-heading-1 font-bold leading-none text-neutral-base">{{ vaultOverviewPasswordHealthPercent }}%</span>
+                      <span class="text-body-sm-semi-bold text-success-base">Good</span>
                     </div>
                   </div>
-                </CollapsiblePanel>
+                </div>
+                <div
+                  v-for="card in vaultOverviewMetricCards"
+                  :key="card.title"
+                  class="rounded-lg border border-neutral-default_solid bg-neutral-base p-5 shadow-sm"
+                >
+                  <p class="m-0 mb-3 text-body-sm-semi-bold text-neutral-subtle">{{ card.title }}</p>
+                  <p class="m-0 mb-2 text-heading-1 font-bold leading-tight text-neutral-base">{{ card.valueLine }}</p>
+                  <p class="m-0 text-body-sm font-semibold text-success-base">{{ card.trend }}</p>
+                </div>
               </div>
 
-              <div class="grid grid-cols-2 gap-6">
-                <CollapsiblePanel header="Weak Secrets" class="w-full overflow-hidden flex flex-col h-[264px]">
-                  <template #actions>
+              <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                <div class="flex min-h-[260px] flex-col rounded-lg border border-neutral-default_solid bg-neutral-base p-5 shadow-sm">
+                  <div class="mb-3 flex items-start justify-between gap-3">
+                    <h3 class="m-0 text-heading-4 text-neutral-base">Reused Credentials</h3>
                     <PvButton label="View All" severity="secondary" variant="outlined" size="small" />
-                  </template>
-                  <div class="flex flex-col gap-sm h-full">
-                    <div class="flex items-center gap-xs flex-shrink-0">
-                      <span class="text-body-sm-bold text-error-base">{{ vaultWeakSecretsSummary.count }}</span>
-                      <span class="text-body-sm text-neutral-base">{{ vaultWeakSecretsSummary.label }}</span>
-                    </div>
-                    <div class="flex flex-col divide-y divide-neutral-default_solid border-t border-neutral-default_solid flex-1 overflow-y-auto">
-                      <div
-                        v-for="secret in vaultWeakSecrets"
-                        :key="secret.name"
-                        class="flex items-center justify-between py-3"
-                      >
-                        <span class="text-body-sm-semi-bold text-neutral-base">{{ secret.name }}</span>
-                        <span class="text-body-sm-semi-bold text-error-base">{{ secret.risk }}</span>
-                      </div>
-                    </div>
                   </div>
-                </CollapsiblePanel>
-
-                <CollapsiblePanel header="Expiring Secrets" class="w-full overflow-hidden flex flex-col h-[264px]">
-                  <template #actions>
-                    <PvButton label="View All" severity="secondary" variant="outlined" size="small" />
-                  </template>
-                  <div class="flex flex-col gap-sm h-full">
-                    <div class="flex items-center gap-xs flex-shrink-0">
-                      <span class="text-body-sm-bold text-error-base">{{ vaultExpiringSecretsSummary.count }}</span>
-                      <span class="text-body-sm text-neutral-base">{{ vaultExpiringSecretsSummary.label }}</span>
-                    </div>
-                    <div class="flex flex-col divide-y divide-neutral-default_solid border-t border-neutral-default_solid flex-1 overflow-y-auto">
-                      <div
-                        v-for="secret in vaultExpiringSecrets"
-                        :key="secret.name"
-                        class="flex items-center justify-between py-3"
-                      >
-                        <span class="text-body-sm-semi-bold text-neutral-base">{{ secret.name }}</span>
-                        <div class="flex items-center gap-xs text-body-sm">
-                          <span class="text-neutral-subtle">{{ secret.metaLabel }}</span>
-                          <span class="text-body-sm-semi-bold text-error-base">{{ secret.metaValue }}</span>
+                  <p class="m-0 mb-3 flex flex-wrap items-baseline gap-x-2 gap-y-1 text-body-sm">
+                    <span class="font-semibold text-red-600">{{ vaultOverviewUrgentWindowSummary.urgent }}</span>
+                    <span class="text-neutral-subtle">{{ vaultOverviewUrgentWindowSummary.window }}</span>
+                  </p>
+                  <div class="flex min-h-0 flex-1 flex-col divide-y divide-neutral-default_solid overflow-y-auto border-t border-neutral-default_solid">
+                    <div
+                      v-for="row in vaultOverviewReusedCredentials"
+                      :key="row.email"
+                      class="flex items-start justify-between gap-3 py-3"
+                    >
+                      <div class="flex min-w-0 items-start gap-2">
+                        <div class="min-w-0">
+                          <div class="text-body-sm-semi-bold text-neutral-base">{{ row.name }}</div>
+                          <div class="text-body-xs text-neutral-subtle">{{ row.email }}</div>
                         </div>
+                        <button
+                          type="button"
+                          class="mt-0.5 shrink-0 border-0 bg-transparent p-0 text-neutral-subtle hover:text-neutral-base"
+                          aria-label="Edit"
+                        >
+                          <PencilSquareIcon class="size-4" />
+                        </button>
                       </div>
+                      <span class="max-w-[55%] shrink-0 text-right text-body-xs font-medium text-red-600">{{ row.match }}</span>
                     </div>
                   </div>
-                </CollapsiblePanel>
-              </div>
+                </div>
 
-              <div class="grid grid-cols-2 gap-6">
-                <CollapsiblePanel header="Unused Secrets" class="w-full overflow-hidden flex flex-col h-[264px]">
-                  <template #actions>
+                <div class="flex min-h-[260px] flex-col rounded-lg border border-neutral-default_solid bg-neutral-base p-5 shadow-sm">
+                  <div class="mb-3 flex items-start justify-between gap-3">
+                    <h3 class="m-0 text-heading-4 text-neutral-base">Credential Expirations</h3>
                     <PvButton label="View All" severity="secondary" variant="outlined" size="small" />
-                  </template>
-                  <div class="flex flex-col gap-sm h-full">
-                    <div class="flex items-center gap-xs flex-shrink-0">
-                      <span class="text-body-sm-bold text-error-base">{{ vaultUnusedSecretsSummary.count }}</span>
-                      <span class="text-body-sm text-neutral-base">{{ vaultUnusedSecretsSummary.label }}</span>
-                    </div>
-                    <div class="flex flex-col divide-y divide-neutral-default_solid border-t border-neutral-default_solid flex-1 overflow-y-auto">
-                      <div
-                        v-for="secret in vaultUnusedSecrets"
-                        :key="secret.name"
-                        class="flex items-center justify-between py-3"
-                      >
-                        <span class="text-body-sm-semi-bold text-neutral-base">{{ secret.name }}</span>
-                        <div class="flex items-center gap-xs text-body-sm">
-                          <span class="text-neutral-subtle">{{ secret.metaLabel }}</span>
-                          <span class="text-body-sm-semi-bold text-error-base">{{ secret.metaValue }}</span>
-                        </div>
+                  </div>
+                  <p class="m-0 mb-3 flex flex-wrap items-baseline gap-x-2 gap-y-1 text-body-sm">
+                    <span class="font-semibold text-red-600">{{ vaultOverviewUrgentWindowSummary.urgent }}</span>
+                    <span class="text-neutral-subtle">{{ vaultOverviewUrgentWindowSummary.window }}</span>
+                  </p>
+                  <div class="flex min-h-0 flex-1 flex-col divide-y divide-neutral-default_solid overflow-y-auto border-t border-neutral-default_solid">
+                    <div
+                      v-for="row in vaultOverviewCredentialExpirations"
+                      :key="row.email"
+                      class="flex items-start justify-between gap-3 py-3"
+                    >
+                      <div class="min-w-0">
+                        <div class="text-body-sm-semi-bold text-neutral-base">{{ row.name }}</div>
+                        <div class="text-body-xs text-neutral-subtle">{{ row.email }}</div>
                       </div>
+                      <span class="shrink-0 text-right text-body-xs font-medium" :class="row.lineClass">{{ row.line }}</span>
                     </div>
                   </div>
-                </CollapsiblePanel>
+                </div>
+
+                <div class="flex min-h-[260px] flex-col rounded-lg border border-neutral-default_solid bg-neutral-base p-5 shadow-sm">
+                  <div class="mb-3 flex items-start justify-between gap-3">
+                    <h3 class="m-0 text-heading-4 text-neutral-base">Weak Credentials</h3>
+                    <PvButton label="View All" severity="secondary" variant="outlined" size="small" />
+                  </div>
+                  <p class="m-0 mb-3 text-body-sm">
+                    <span class="font-semibold text-red-600">{{ vaultWeakSecretsSummary.count }}</span>
+                    <span class="text-neutral-base"> {{ vaultWeakSecretsSummary.label }}</span>
+                  </p>
+                  <div class="flex min-h-0 flex-1 flex-col divide-y divide-neutral-default_solid overflow-y-auto border-t border-neutral-default_solid">
+                    <div
+                      v-for="(secret, idx) in vaultWeakSecrets"
+                      :key="'weak-' + idx"
+                      class="flex items-center justify-between gap-3 py-3"
+                    >
+                      <span class="text-body-sm-semi-bold text-neutral-base">{{ secret.name }}</span>
+                      <span class="shrink-0 text-body-xs font-medium text-red-600">{{ secret.risk }}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="flex min-h-[260px] flex-col rounded-lg border border-neutral-default_solid bg-neutral-base p-5 shadow-sm">
+                  <div class="mb-3 flex items-start justify-between gap-3">
+                    <h3 class="m-0 text-heading-4 text-neutral-base">Unused Credentials</h3>
+                    <PvButton label="View All" severity="secondary" variant="outlined" size="small" />
+                  </div>
+                  <p class="m-0 mb-3 text-body-sm">
+                    <span class="font-semibold text-red-600">{{ vaultUnusedSecretsSummary.count }}</span>
+                    <span class="text-neutral-base"> {{ vaultUnusedSecretsSummary.label }}</span>
+                  </p>
+                  <div class="flex min-h-0 flex-1 flex-col divide-y divide-neutral-default_solid overflow-y-auto border-t border-neutral-default_solid">
+                    <div
+                      v-for="(secret, idx) in vaultUnusedSecrets"
+                      :key="'unused-' + idx"
+                      class="flex items-center justify-between gap-3 py-3"
+                    >
+                      <span class="text-body-sm-semi-bold text-neutral-base">{{ secret.name }}</span>
+                      <span class="shrink-0 text-right text-body-xs font-medium" :class="secret.detailClass">{{ secret.detail }}</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </DashboardPageLayout>
@@ -3666,127 +4809,144 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
           <div class="flex flex-col h-full relative">
             <template v-if="passwordVaultTab === 'overview'">
               <DashboardPageLayout class="w-full! h-full!">
-                <div class="flex flex-col gap-lg w-full">
-                  <div class="grid grid-cols-[max-content_1fr] gap-6 items-stretch">
-                    <div class="flex flex-col gap-6 items-start">
-                      <DashboardStatCard
-                        v-for="stat in vaultPasswordVaultStatCards"
-                        :key="stat.header"
-                        :header="stat.header"
-                        :value="stat.value"
-                        :icon="stat.icon"
-                        :changeValue="stat.changeValue"
-                        :changeLabel="stat.changeLabel"
-                        :showArrow="stat.showArrow"
-                        class="w-fit h-fit"
-                      />
+                <div class="flex w-full max-w-[1600px] flex-col gap-lg">
+                  <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                    <div class="rounded-lg border border-neutral-default_solid bg-neutral-base p-5 shadow-sm">
+                      <p class="m-0 mb-3 text-body-sm-semi-bold text-neutral-subtle">Password Health</p>
+                      <div class="flex items-center gap-5">
+                        <div class="relative grid size-24 shrink-0 place-items-center" aria-hidden="true">
+                          <svg class="size-24 -rotate-90 text-neutral-surface" viewBox="0 0 36 36">
+                            <circle cx="18" cy="18" r="15.9155" fill="none" stroke="currentColor" stroke-width="3" />
+                            <circle
+                              cx="18"
+                              cy="18"
+                              r="15.9155"
+                              fill="none"
+                              class="text-success-base"
+                              stroke="currentColor"
+                              stroke-width="3"
+                              stroke-linecap="round"
+                              :stroke-dasharray="vaultOverviewPasswordHealthPercent + ' ' + (100 - vaultOverviewPasswordHealthPercent)"
+                              pathLength="100"
+                            />
+                          </svg>
+                        </div>
+                        <div class="flex min-w-0 flex-1 flex-col gap-1">
+                          <span class="text-heading-1 font-bold leading-none text-neutral-base">{{ vaultOverviewPasswordHealthPercent }}%</span>
+                          <span class="text-body-sm-semi-bold text-success-base">Good</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div
+                      v-for="card in vaultOverviewMetricCards"
+                      :key="card.title"
+                      class="rounded-lg border border-neutral-default_solid bg-neutral-base p-5 shadow-sm"
+                    >
+                      <p class="m-0 mb-3 text-body-sm-semi-bold text-neutral-subtle">{{ card.title }}</p>
+                      <p class="m-0 mb-2 text-heading-1 font-bold leading-tight text-neutral-base">{{ card.valueLine }}</p>
+                      <p class="m-0 text-body-sm font-semibold text-success-base">{{ card.trend }}</p>
+                    </div>
+                  </div>
+
+                  <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                    <div class="flex min-h-[260px] flex-col rounded-lg border border-neutral-default_solid bg-neutral-base p-5 shadow-sm">
+                      <div class="mb-3 flex items-start justify-between gap-3">
+                        <h3 class="m-0 text-heading-4 text-neutral-base">Reused Credentials</h3>
+                        <PvButton label="View All" severity="secondary" variant="outlined" size="small" />
+                      </div>
+                      <p class="m-0 mb-3 flex flex-wrap items-baseline gap-x-2 gap-y-1 text-body-sm">
+                        <span class="font-semibold text-red-600">{{ vaultOverviewUrgentWindowSummary.urgent }}</span>
+                        <span class="text-neutral-subtle">{{ vaultOverviewUrgentWindowSummary.window }}</span>
+                      </p>
+                      <div class="flex min-h-0 flex-1 flex-col divide-y divide-neutral-default_solid overflow-y-auto border-t border-neutral-default_solid">
+                        <div
+                          v-for="row in vaultOverviewReusedCredentials"
+                          :key="row.email"
+                          class="flex items-start justify-between gap-3 py-3"
+                        >
+                          <div class="flex min-w-0 items-start gap-2">
+                            <div class="min-w-0">
+                              <div class="text-body-sm-semi-bold text-neutral-base">{{ row.name }}</div>
+                              <div class="text-body-xs text-neutral-subtle">{{ row.email }}</div>
+                            </div>
+                            <button
+                              type="button"
+                              class="mt-0.5 shrink-0 border-0 bg-transparent p-0 text-neutral-subtle hover:text-neutral-base"
+                              aria-label="Edit"
+                            >
+                              <PencilSquareIcon class="size-4" />
+                            </button>
+                          </div>
+                          <span class="max-w-[55%] shrink-0 text-right text-body-xs font-medium text-red-600">{{ row.match }}</span>
+                        </div>
+                      </div>
                     </div>
 
-                    <CollapsiblePanel header="Secrets Added Over Time" class="w-full h-full">
-                      <template #titleicon="iconProps">
-                        <ChartBarSquareIcon :class="iconProps.class" />
-                      </template>
-                      <div class="flex flex-col h-full">
-                        <div class="flex flex-col gap-sm flex-1">
-                          <div
-                            v-for="item in vaultSecretsAddedBars"
-                            :key="item.date"
-                            class="flex items-center gap-sm"
-                          >
-                            <div class="w-12 text-body-sm text-neutral-subtle text-right shrink-0">
-                              {{ item.date }}
-                            </div>
-                            <div class="flex-1">
-                              <div class="w-full h-4 rounded-sm bg-neutral-surface overflow-hidden">
-                                <div
-                                  class="h-4 rounded-sm bg-branding-base"
-                                  :style="{ width: ((item.value / vaultMaxSecretsAddedValue) * 100) + '%' }"
-                                />
-                              </div>
-                            </div>
-                            <div class="w-8 text-body-sm text-neutral-base text-right shrink-0">
-                              {{ item.value }}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </CollapsiblePanel>
-                  </div>
-
-                  <div class="grid grid-cols-2 gap-6">
-                    <CollapsiblePanel header="Weak Secrets" class="w-full overflow-hidden flex flex-col h-[264px]">
-                      <template #actions>
+                    <div class="flex min-h-[260px] flex-col rounded-lg border border-neutral-default_solid bg-neutral-base p-5 shadow-sm">
+                      <div class="mb-3 flex items-start justify-between gap-3">
+                        <h3 class="m-0 text-heading-4 text-neutral-base">Credential Expirations</h3>
                         <PvButton label="View All" severity="secondary" variant="outlined" size="small" />
-                      </template>
-                      <div class="flex flex-col gap-sm h-full">
-                        <div class="flex items-center gap-xs flex-shrink-0">
-                          <span class="text-body-sm-bold text-error-base">{{ vaultWeakSecretsSummary.count }}</span>
-                          <span class="text-body-sm text-neutral-base">{{ vaultWeakSecretsSummary.label }}</span>
-                        </div>
-                        <div class="flex flex-col divide-y divide-neutral-default_solid border-t border-neutral-default_solid flex-1 overflow-y-auto">
-                          <div
-                            v-for="secret in vaultWeakSecrets"
-                            :key="secret.name"
-                            class="flex items-center justify-between py-3"
-                          >
-                            <span class="text-body-sm-semi-bold text-neutral-base">{{ secret.name }}</span>
-                            <span class="text-body-sm-semi-bold text-error-base">{{ secret.risk }}</span>
+                      </div>
+                      <p class="m-0 mb-3 flex flex-wrap items-baseline gap-x-2 gap-y-1 text-body-sm">
+                        <span class="font-semibold text-red-600">{{ vaultOverviewUrgentWindowSummary.urgent }}</span>
+                        <span class="text-neutral-subtle">{{ vaultOverviewUrgentWindowSummary.window }}</span>
+                      </p>
+                      <div class="flex min-h-0 flex-1 flex-col divide-y divide-neutral-default_solid overflow-y-auto border-t border-neutral-default_solid">
+                        <div
+                          v-for="row in vaultOverviewCredentialExpirations"
+                          :key="row.email"
+                          class="flex items-start justify-between gap-3 py-3"
+                        >
+                          <div class="min-w-0">
+                            <div class="text-body-sm-semi-bold text-neutral-base">{{ row.name }}</div>
+                            <div class="text-body-xs text-neutral-subtle">{{ row.email }}</div>
                           </div>
+                          <span class="shrink-0 text-right text-body-xs font-medium" :class="row.lineClass">{{ row.line }}</span>
                         </div>
                       </div>
-                    </CollapsiblePanel>
+                    </div>
 
-                    <CollapsiblePanel header="Expiring Secrets" class="w-full overflow-hidden flex flex-col h-[264px]">
-                      <template #actions>
+                    <div class="flex min-h-[260px] flex-col rounded-lg border border-neutral-default_solid bg-neutral-base p-5 shadow-sm">
+                      <div class="mb-3 flex items-start justify-between gap-3">
+                        <h3 class="m-0 text-heading-4 text-neutral-base">Weak Credentials</h3>
                         <PvButton label="View All" severity="secondary" variant="outlined" size="small" />
-                      </template>
-                      <div class="flex flex-col gap-sm h-full">
-                        <div class="flex items-center gap-xs flex-shrink-0">
-                          <span class="text-body-sm-bold text-error-base">{{ vaultExpiringSecretsSummary.count }}</span>
-                          <span class="text-body-sm text-neutral-base">{{ vaultExpiringSecretsSummary.label }}</span>
-                        </div>
-                        <div class="flex flex-col divide-y divide-neutral-default_solid border-t border-neutral-default_solid flex-1 overflow-y-auto">
-                          <div
-                            v-for="secret in vaultExpiringSecrets"
-                            :key="secret.name"
-                            class="flex items-center justify-between py-3"
-                          >
-                            <span class="text-body-sm-semi-bold text-neutral-base">{{ secret.name }}</span>
-                            <div class="flex items-center gap-xs text-body-sm">
-                              <span class="text-neutral-subtle">{{ secret.metaLabel }}</span>
-                              <span class="text-body-sm-semi-bold text-error-base">{{ secret.metaValue }}</span>
-                            </div>
-                          </div>
+                      </div>
+                      <p class="m-0 mb-3 text-body-sm">
+                        <span class="font-semibold text-red-600">{{ vaultWeakSecretsSummary.count }}</span>
+                        <span class="text-neutral-base"> {{ vaultWeakSecretsSummary.label }}</span>
+                      </p>
+                      <div class="flex min-h-0 flex-1 flex-col divide-y divide-neutral-default_solid overflow-y-auto border-t border-neutral-default_solid">
+                        <div
+                          v-for="(secret, idx) in vaultWeakSecrets"
+                          :key="'weak-tab-' + idx"
+                          class="flex items-center justify-between gap-3 py-3"
+                        >
+                          <span class="text-body-sm-semi-bold text-neutral-base">{{ secret.name }}</span>
+                          <span class="shrink-0 text-body-xs font-medium text-red-600">{{ secret.risk }}</span>
                         </div>
                       </div>
-                    </CollapsiblePanel>
-                  </div>
+                    </div>
 
-                  <div class="grid grid-cols-2 gap-6">
-                    <CollapsiblePanel header="Unused Secrets" class="w-full overflow-hidden flex flex-col h-[264px]">
-                      <template #actions>
+                    <div class="flex min-h-[260px] flex-col rounded-lg border border-neutral-default_solid bg-neutral-base p-5 shadow-sm">
+                      <div class="mb-3 flex items-start justify-between gap-3">
+                        <h3 class="m-0 text-heading-4 text-neutral-base">Unused Credentials</h3>
                         <PvButton label="View All" severity="secondary" variant="outlined" size="small" />
-                      </template>
-                      <div class="flex flex-col gap-sm h-full">
-                        <div class="flex items-center gap-xs flex-shrink-0">
-                          <span class="text-body-sm-bold text-error-base">{{ vaultUnusedSecretsSummary.count }}</span>
-                          <span class="text-body-sm text-neutral-base">{{ vaultUnusedSecretsSummary.label }}</span>
-                        </div>
-                        <div class="flex flex-col divide-y divide-neutral-default_solid border-t border-neutral-default_solid flex-1 overflow-y-auto">
-                          <div
-                            v-for="secret in vaultUnusedSecrets"
-                            :key="secret.name"
-                            class="flex items-center justify-between py-3"
-                          >
-                            <span class="text-body-sm-semi-bold text-neutral-base">{{ secret.name }}</span>
-                            <div class="flex items-center gap-xs text-body-sm">
-                              <span class="text-neutral-subtle">{{ secret.metaLabel }}</span>
-                              <span class="text-body-sm-semi-bold text-error-base">{{ secret.metaValue }}</span>
-                            </div>
-                          </div>
+                      </div>
+                      <p class="m-0 mb-3 text-body-sm">
+                        <span class="font-semibold text-red-600">{{ vaultUnusedSecretsSummary.count }}</span>
+                        <span class="text-neutral-base"> {{ vaultUnusedSecretsSummary.label }}</span>
+                      </p>
+                      <div class="flex min-h-0 flex-1 flex-col divide-y divide-neutral-default_solid overflow-y-auto border-t border-neutral-default_solid">
+                        <div
+                          v-for="(secret, idx) in vaultUnusedSecrets"
+                          :key="'unused-tab-' + idx"
+                          class="flex items-center justify-between gap-3 py-3"
+                        >
+                          <span class="text-body-sm-semi-bold text-neutral-base">{{ secret.name }}</span>
+                          <span class="shrink-0 text-right text-body-xs font-medium" :class="secret.detailClass">{{ secret.detail }}</span>
                         </div>
                       </div>
-                    </CollapsiblePanel>
+                    </div>
                   </div>
                 </div>
               </DashboardPageLayout>
@@ -3829,152 +4989,6 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
                   </CircuitDataTable>
                 </div>
               </div>
-
-              <PvDialog
-                v-model:visible="showAddWebsiteDialog"
-                :draggable="false"
-                modal
-                :style="{ width: '680px' }"
-                @update:visible="!$event && closeAddWebsiteDialog()"
-              >
-                <template #header>
-                  <div class="flex items-center gap-sm">
-                    <GlobeAltIcon class="size-5 text-neutral-base" />
-                    <span class="text-heading-3 text-neutral-base">Add Website</span>
-                  </div>
-                </template>
-                <template #closeicon><XMarkIcon /></template>
-
-                <PvTabs v-model:value="addWebsiteActiveTab">
-                  <PvTabList>
-                    <PvTab value="general">General</PvTab>
-                    <PvTab value="autofill">Autofill Parameters</PvTab>
-                  </PvTabList>
-                  <PvTabPanels>
-                    <PvTabPanel value="general">
-                      <div class="flex flex-col gap-md">
-                        <FormField label="Name" required>
-                          <template #default="{ inputId }">
-                            <PvInputText
-                              :id="inputId"
-                              v-model="addWebsiteForm.name"
-                              placeholder="Website Name"
-                              class="w-full"
-                            />
-                          </template>
-                        </FormField>
-                        <FormField label="URI (Hostname, IP, Address, etc.)" required>
-                          <template #default="{ inputId }">
-                            <PvInputText
-                              :id="inputId"
-                              v-model="addWebsiteForm.uri"
-                              placeholder="https://"
-                              class="w-full"
-                            />
-                          </template>
-                        </FormField>
-                        <FormField label="Tags">
-                          <template #default="{ inputId }">
-                            <PvInputText :id="inputId" v-model="addWebsiteForm.tags" class="w-full" />
-                          </template>
-                        </FormField>
-                        <FormField label="Notes">
-                          <template #default="{ inputId }">
-                            <PvTextarea :id="inputId" v-model="addWebsiteForm.notes" class="w-full" :rows="3" />
-                          </template>
-                        </FormField>
-                      </div>
-                    </PvTabPanel>
-                    <PvTabPanel value="autofill">
-                      <div class="flex flex-col gap-md">
-                        <div class="flex flex-col gap-xs">
-                          <span class="text-body-lg font-semibold text-neutral-base">Field Selectors</span>
-                          <span class="text-body-sm text-neutral-subtle">
-                            Provide the CSS selectors for the login form elements. Use the inspector tool in your browser to find them.
-                          </span>
-                        </div>
-                        <FormField label="Username/Email Field Selector">
-                          <template #default="{ inputId }">
-                            <PvInputText :id="inputId" v-model="addWebsiteForm.usernameFieldSelector" class="w-full" />
-                          </template>
-                        </FormField>
-                        <FormField label="Password Field Selector">
-                          <template #default="{ inputId }">
-                            <PvInputText :id="inputId" v-model="addWebsiteForm.passwordFieldSelector" class="w-full" />
-                          </template>
-                        </FormField>
-                        <FormField label="Next Button Selector">
-                          <template #default="{ inputId }">
-                            <PvInputText :id="inputId" v-model="addWebsiteForm.nextButtonSelector" class="w-full" />
-                          </template>
-                        </FormField>
-                        <FormField label="Login Button Selector">
-                          <template #default="{ inputId }">
-                            <PvInputText :id="inputId" v-model="addWebsiteForm.loginButtonSelector" class="w-full" />
-                          </template>
-                        </FormField>
-                        <FormField
-                          label="Field Selector to Hide"
-                          helpText="Selectors must be separated by semicolon"
-                        >
-                          <template #default="{ inputId }">
-                            <PvTextarea
-                              :id="inputId"
-                              v-model="addWebsiteForm.fieldSelectorToHide"
-                              placeholder="Type here selectors separated by ; if you have more than one."
-                              class="w-full"
-                              :rows="3"
-                            />
-                          </template>
-                        </FormField>
-
-                        <PvDivider />
-
-                        <div class="flex flex-col gap-xs">
-                          <span class="text-body-lg font-semibold text-neutral-base">Behaviours & Timing</span>
-                          <span class="text-body-sm text-neutral-subtle">
-                            Adjust how the extension interacts with the page.
-                          </span>
-                        </div>
-                        <FormField label="Delay after clicking next button (seconds)" helpText="Maximum 15 seconds">
-                          <template #default="{ inputId }">
-                            <PvInputText :id="inputId" v-model="addWebsiteForm.delayAfterNext" class="w-full" />
-                          </template>
-                        </FormField>
-                        <FormField label="Fill Delay (Seconds)" helpText="Maximum 15 seconds">
-                          <template #default="{ inputId }">
-                            <PvInputText :id="inputId" v-model="addWebsiteForm.fillDelay" class="w-full" />
-                          </template>
-                        </FormField>
-                        <FormField label="Fill in Fields More than Once">
-                          <template #default="{ inputId }">
-                            <div class="flex items-center gap-sm">
-                              <PvCheckbox :inputId="inputId" v-model="addWebsiteForm.fillMoreThanOnce" :binary="true" />
-                              <span class="text-body-md text-neutral-base">Fill in Fields More than Once</span>
-                            </div>
-                          </template>
-                        </FormField>
-                        <FormField label="Automatic Login">
-                          <template #default="{ inputId }">
-                            <div class="flex items-center gap-sm">
-                              <PvCheckbox :inputId="inputId" v-model="addWebsiteForm.automaticLogin" :binary="true" />
-                              <span class="text-body-md text-neutral-base">Automatic Login</span>
-                            </div>
-                          </template>
-                        </FormField>
-                      </div>
-                    </PvTabPanel>
-                  </PvTabPanels>
-                </PvTabs>
-
-                <template #footer>
-                  <div class="flex items-center flex-1 min-w-0"></div>
-                  <div class="flex gap-sm shrink-0">
-                    <PvButton label="Cancel" severity="secondary" variant="text" @click="closeAddWebsiteDialog" />
-                    <PvButton label="Save" @click="closeAddWebsiteDialog" />
-                  </div>
-                </template>
-              </PvDialog>
 
               <PvDialog
                 v-model:visible="showVaultWebsitesFilterDialog"
@@ -5459,6 +6473,7 @@ const UserPortalAllAppsWithPrivilegedResourcesPage = defineComponent({
           />
         </div>
 
+        </template>
         </template>
         </template>
       </div>
